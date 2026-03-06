@@ -9,7 +9,7 @@
 # ===----------------------------------------------------------------------=== #
 
 from std.ffi import c_int
-from std.memory import OpaquePointer
+from std.memory import OpaquePointer, UnsafePointer
 from std.python import PythonObject
 from std.python._cpython import PyObjectPtr, Py_ssize_t, PyType_Slot
 from std.python.bindings import PythonTypeBuilder
@@ -31,31 +31,36 @@ comptime _Py_mp_getitem = Int32(5)
 comptime _Py_tp_richcompare = Int32(67)
 
 
-struct PontoneerTypeBuilder(Copyable):
-    """Wraps `PythonTypeBuilder` and adds `def_method` overloads for the
-    CPython mapping protocol and rich comparison protocol slots.
+struct PontoneerTypeBuilder:
+    """Wraps a `PythonTypeBuilder` reference and adds `def_method` overloads
+    for the CPython mapping protocol and rich comparison protocol slots.
+
+    `PontoneerTypeBuilder` holds a pointer to a `PythonTypeBuilder` that is
+    owned by the enclosing `PythonModuleBuilder`.  The caller must ensure the
+    module builder (and its type_builders list) outlives this object, which is
+    naturally satisfied when both are used within the same `PyInit_*` function.
 
     Usage:
         ```mojo
-        var tb = b.add_type[MyStruct]("MyStruct")
-                   .def_init_defaultable[MyStruct]()
-                   .def_staticmethod[MyStruct.new]("new")
-
-        _ = PontoneerTypeBuilder(tb^)
-                .def_method[MyStruct.py__len__,     PyTypeObjectSlot.mp_length]()
-                .def_method[MyStruct.py__getitem__,  PyTypeObjectSlot.mp_getitem]()
-                .def_method[MyStruct.py__setitem__,  PyTypeObjectSlot.mp_setitem]()
-                .def_method[MyStruct.rich_compare,   PyTypeObjectSlot.tp_richcompare]()
+        var ptb = PontoneerTypeBuilder(
+            b.add_type[MyStruct]("MyStruct")
+             .def_init_defaultable[MyStruct]()
+             .def_staticmethod[MyStruct.new]("new")
+        )
+        ptb.def_method[MyStruct.py__len__,    PyTypeObjectSlot.mp_length]()
+        ptb.def_method[MyStruct.py__getitem__, PyTypeObjectSlot.mp_getitem]()
+        ptb.def_method[MyStruct.py__setitem__, PyTypeObjectSlot.mp_setitem]()
+        ptb.def_method[MyStruct.rich_compare,  PyTypeObjectSlot.tp_richcompare]()
         ```
-
-    The underlying `PythonTypeBuilder` is consumed on construction; use
-    `inner()` if you need to call further stdlib builder methods afterwards.
     """
 
-    var _inner: PythonTypeBuilder
+    # Unsafe pointer into the module builder's type_builders list.
+    # The pointed-to builder must outlive this PontoneerTypeBuilder.
+    var _ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
 
-    fn __init__(out self, var inner: PythonTypeBuilder):
-        self._inner = inner^
+    fn __init__(out self, mut inner: PythonTypeBuilder):
+        var ptr = UnsafePointer(to=inner)
+        self._ptr = ptr
 
     # ------------------------------------------------------------------
     # Mapping Protocol — mp_length (__len__)
@@ -72,12 +77,12 @@ struct PontoneerTypeBuilder(Copyable):
                 `fn(py_self: PythonObject) raises -> Int`.
             slot: Must be `PyTypeObjectSlot.mp_length`.
         """
-        self._inner._insert_slot(
+        comptime _lenfunc = fn (PyObjectPtr) -> Py_ssize_t
+        var fn_ptr: _lenfunc = _mp_length_wrapper[method]
+        self._ptr[]._insert_slot(
             PyType_Slot(
                 _Py_mp_length,
-                rebind[OpaquePointer[MutAnyOrigin]](
-                    _mp_length_wrapper[method]
-                ),
+                rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
             )
         )
         return self
@@ -97,12 +102,12 @@ struct PontoneerTypeBuilder(Copyable):
                 `fn(py_self: PythonObject, key: PythonObject) raises -> PythonObject`.
             slot: Must be `PyTypeObjectSlot.mp_getitem`.
         """
-        self._inner._insert_slot(
+        comptime _binaryfunc = fn (PyObjectPtr, PyObjectPtr) -> PyObjectPtr
+        var fn_ptr: _binaryfunc = _mp_subscript_wrapper[method]
+        self._ptr[]._insert_slot(
             PyType_Slot(
                 _Py_mp_getitem,
-                rebind[OpaquePointer[MutAnyOrigin]](
-                    _mp_subscript_wrapper[method]
-                ),
+                rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
             )
         )
         return self
@@ -128,12 +133,12 @@ struct PontoneerTypeBuilder(Copyable):
                 `fn(py_self, key: PythonObject, value: Variant[PythonObject, Int]) raises -> None`.
             slot: Must be `PyTypeObjectSlot.mp_setitem`.
         """
-        self._inner._insert_slot(
+        comptime _objobjargproc = fn (PyObjectPtr, PyObjectPtr, PyObjectPtr) -> c_int
+        var fn_ptr: _objobjargproc = _mp_ass_subscript_wrapper[method]
+        self._ptr[]._insert_slot(
             PyType_Slot(
                 _Py_mp_setitem,
-                rebind[OpaquePointer[MutAnyOrigin]](
-                    _mp_ass_subscript_wrapper[method]
-                ),
+                rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
             )
         )
         return self
@@ -157,12 +162,16 @@ struct PontoneerTypeBuilder(Copyable):
                 where `op` is one of `RichCompareOps.Py_LT` … `Py_GE`.
             slot: Must be `PyTypeObjectSlot.tp_richcompare`.
         """
-        self._inner._insert_slot(
+        # Assign to a typed variable first so the compiler concretizes the
+        # parameterized function into a plain C function pointer before rebind.
+        # (Functions that take non-pointer C arguments, like `c_int`, remain
+        # as MLIR "generators" otherwise and rebind rejects them.)
+        comptime _richcmpfunc = fn (PyObjectPtr, PyObjectPtr, c_int) -> PyObjectPtr
+        var fn_ptr: _richcmpfunc = _richcompare_wrapper[method]
+        self._ptr[]._insert_slot(
             PyType_Slot(
                 _Py_tp_richcompare,
-                rebind[OpaquePointer[MutAnyOrigin]](
-                    _richcompare_wrapper[method]
-                ),
+                rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
             )
         )
         return self

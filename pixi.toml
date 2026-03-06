@@ -11,5 +11,5 @@ mojo = "*"
 
 [tasks]
 build = "mojo package pontoneer -o pontoneer.mojopkg"
-build-example = { cmd = "mojo build examples/columnar/mojo_module.mojo -o examples/columnar/mojo_module.so", depends-on = ["build"] }
+build-example = { cmd = "mojo build --emit shared-lib -I . examples/columnar/mojo_module.mojo -o examples/columnar/mojo_module.so", depends-on = ["build"] }
 test-example = { cmd = "python3 examples/columnar/test_module.py", depends-on = ["build-example"] }

@@ -195,18 +195,16 @@ fn PyInit_mojo_module() -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
 
-        var tb = b.add_type[DataFrame]("DataFrame")
-            .def_init_defaultable[DataFrame]()
-            .def_staticmethod[DataFrame.with_columns]("with_columns")
-        tb = tb^.def_method[DataFrame.get_call_count]("get_call_count")
-
-        _ = PontoneerTypeBuilder(tb^)
-            .def_method[DataFrame.py__len__,    PyTypeObjectSlot.mp_length]()
-            .def_method[DataFrame.py__getitem__, PyTypeObjectSlot.mp_getitem]()
-            .def_method[DataFrame.py__setitem__, PyTypeObjectSlot.mp_setitem]()
-            .def_method[
-                DataFrame.rich_compare, PyTypeObjectSlot.tp_richcompare
-            ]()
+        var ptb = PontoneerTypeBuilder(
+            b.add_type[DataFrame]("DataFrame")
+                .def_init_defaultable[DataFrame]()
+                .def_staticmethod[DataFrame.with_columns]("with_columns")
+                .def_method[DataFrame.get_call_count]("get_call_count")
+        )
+        _ = ptb.def_method[DataFrame.py__len__,     PyTypeObjectSlot.mp_length]()
+        _ = ptb.def_method[DataFrame.py__getitem__,  PyTypeObjectSlot.mp_getitem]()
+        _ = ptb.def_method[DataFrame.py__setitem__,  PyTypeObjectSlot.mp_setitem]()
+        _ = ptb.def_method[DataFrame.rich_compare,   PyTypeObjectSlot.tp_richcompare]()
 
         return b.finalize()
     except e:
