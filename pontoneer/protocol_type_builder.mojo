@@ -54,7 +54,7 @@ struct PontoneerTypeBuilder(Copyable):
 
     var _inner: PythonTypeBuilder
 
-    fn __init__(out self, owned inner: PythonTypeBuilder):
+    fn __init__(out self, var inner: PythonTypeBuilder):
         self._inner = inner^
 
     # ------------------------------------------------------------------
@@ -167,10 +167,3 @@ struct PontoneerTypeBuilder(Copyable):
         )
         return self
 
-    # ------------------------------------------------------------------
-    # Escape hatch
-    # ------------------------------------------------------------------
-
-    fn inner(ref self) -> ref[self] PythonTypeBuilder:
-        """Borrow the underlying `PythonTypeBuilder` for further configuration."""
-        return self._inner

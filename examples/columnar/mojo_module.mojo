@@ -198,7 +198,7 @@ fn PyInit_mojo_module() -> PythonObject:
         var tb = b.add_type[DataFrame]("DataFrame")
             .def_init_defaultable[DataFrame]()
             .def_staticmethod[DataFrame.with_columns]("with_columns")
-            .def_method[DataFrame.get_call_count]("get_call_count")
+        tb = tb^.def_method[DataFrame.get_call_count]("get_call_count")
 
         _ = PontoneerTypeBuilder(tb^)
             .def_method[DataFrame.py__len__,    PyTypeObjectSlot.mp_length]()

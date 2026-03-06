@@ -9,7 +9,7 @@
 
 from std.ffi import c_int, c_long
 from std.python import Python, PythonObject
-from std.python._cpython import PyObjectPtr, Py_ssize_t
+from std.python._cpython import PyObject, PyObjectPtr, Py_ssize_t
 from std.utils import Variant
 
 from .protocols import NotImplementedError
@@ -135,7 +135,11 @@ fn _richcompare_wrapper[
         # Mojo lacks multiple except branches; dispatch on the error name.
         var msg = String(e)
         if NotImplementedError.name == msg:
-            return cpython.Py_NewRef(cpython.Py_NotImplemented())
+            # Py_CONSTANT_NOT_IMPLEMENTED = 4 (CPython 3.13+ stable ABI)
+            var not_implemented = cpython.lib.call[
+                "Py_GetConstantBorrowed", PyObjectPtr
+            ](4)
+            return cpython.Py_NewRef(not_implemented)
         var error_type = cpython.get_error_global("PyExc_Exception")
         cpython.PyErr_SetString(
             error_type, msg.as_c_string_slice().unsafe_ptr()
