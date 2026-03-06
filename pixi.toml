@@ -1,4 +1,4 @@
-[project]
+[workspace]
 name = "pontoneer"
 version = "0.1.0"
 description = "Mojo library providing mapping protocol and rich comparison extensions for Python interop (based on https://github.com/modular/modular/pull/5562)"
@@ -7,8 +7,9 @@ platforms = ["osx-arm64", "linux-64"]
 
 [dependencies]
 max = "*"
+mojo = "*"
 
 [tasks]
 build = "mojo package pontoneer -o pontoneer.mojopkg"
-build-example = "mojo build examples/columnar/mojo_module.mojo -o examples/columnar/mojo_module.so"
+build-example = { cmd = "mojo build examples/columnar/mojo_module.mojo -o examples/columnar/mojo_module.so", depends-on = ["build"] }
 test-example = { cmd = "python3 examples/columnar/test_module.py", depends-on = ["build-example"] }
