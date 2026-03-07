@@ -105,7 +105,8 @@ struct DataFrame(Defaultable, Movable, Writable):
     fn get_call_count(
         py_self: PythonObject, name: PythonObject
     ) raises -> PythonObject:
-        """Return the number of times a named method was called (for testing)."""
+        """Return the number of times a named method was called (for testing).
+        """
         var self_ptr = Self._get_self_ptr(py_self)
         return self_ptr[].call_counts.get(String(py=name), 0)
 
@@ -143,9 +144,7 @@ struct DataFrame(Defaultable, Movable, Writable):
         var length = len(self_ptr[].pos_x)
         if i < 0 or i >= length:
             raise Error("index out of range")
-        return Python().tuple(
-            self_ptr[].pos_x[i], self_ptr[].pos_y[i]
-        )
+        return Python().tuple(self_ptr[].pos_x[i], self_ptr[].pos_y[i])
 
     @staticmethod
     fn py__setitem__(
@@ -235,7 +234,8 @@ struct DataFrame(Defaultable, Movable, Writable):
     fn py__add__(
         py_self: PythonObject, other: PythonObject
     ) raises -> PythonObject:
-        """Concatenate two DataFrames row-wise. Returns NotImplemented for non-DataFrames."""
+        """Concatenate two DataFrames row-wise. Returns NotImplemented for non-DataFrames.
+        """
         var self_ptr = Self._get_self_ptr(py_self)
         try:
             var other_ptr = other.downcast_value_ptr[Self]()
@@ -258,7 +258,8 @@ struct DataFrame(Defaultable, Movable, Writable):
     fn py__mul__(
         py_self: PythonObject, other: PythonObject
     ) raises -> PythonObject:
-        """Scale all coordinates by a numeric scalar. Returns NotImplemented otherwise."""
+        """Scale all coordinates by a numeric scalar. Returns NotImplemented otherwise.
+        """
         var self_ptr = Self._get_self_ptr(py_self)
         try:
             var scale = Float64(py=other)
@@ -286,9 +287,9 @@ struct DataFrame(Defaultable, Movable, Writable):
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
         var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
         for v in self_ptr[].pos_x:
-            result_x.append(v ** e)
+            result_x.append(v**e)
         for v in self_ptr[].pos_y:
-            result_y.append(v ** e)
+            result_y.append(v**e)
         return PythonObject(alloc=DataFrame(result_x^, result_y^))
 
     fn write_to(self, mut writer: Some[Writer]):
@@ -301,10 +302,12 @@ fn PyInit_mojo_module() -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
 
-        ref tb = b.add_type[DataFrame]("DataFrame")
+        ref tb = (
+            b.add_type[DataFrame]("DataFrame")
             .def_init_defaultable[DataFrame]()
             .def_staticmethod[DataFrame.with_columns]("with_columns")
             .def_method[DataFrame.get_call_count]("get_call_count")
+        )
         var tpb = TypeProtocolBuilder(tb)
         _ = tpb.def_richcompare[DataFrame.rich_compare]()
         var mpb = MappingProtocolBuilder(tb)

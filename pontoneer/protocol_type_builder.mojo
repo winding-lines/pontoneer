@@ -293,36 +293,44 @@ fn _install_objobjargproc[
 
 
 fn _install_ssizeargfunc[
-    method: fn (PythonObject, Int) raises -> PythonObject,
+    method: fn(PythonObject, Int) raises -> PythonObject,
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `ssizeargfunc` slot into the builder pointed to by `ptr`."""
-    comptime _ssizeargfunc = fn (PyObjectPtr, Py_ssize_t) -> PyObjectPtr
+    comptime _ssizeargfunc = fn(PyObjectPtr, Py_ssize_t) -> PyObjectPtr
     var fn_ptr: _ssizeargfunc = _ssizeargfunc_wrapper[method]
-    ptr[]._insert_slot(PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)))
+    ptr[]._insert_slot(
+        PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
+    )
 
 
 fn _install_ssizeobjargproc[
-    method: fn (
-        PythonObject, Int, Variant[PythonObject, Int]
-    ) raises -> None,
+    method: fn(PythonObject, Int, Variant[PythonObject, Int]) raises -> None,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
-    """Insert the `ssizeobjargproc` slot (`sq_ass_item`) into the builder pointed to by `ptr`."""
-    comptime _ssizeobjargproc = fn (PyObjectPtr, Py_ssize_t, PyObjectPtr) -> c_int
+    """Insert the `ssizeobjargproc` slot (`sq_ass_item`) into the builder pointed to by `ptr`.
+    """
+    comptime _ssizeobjargproc = fn(
+        PyObjectPtr, Py_ssize_t, PyObjectPtr
+    ) -> c_int
     var fn_ptr: _ssizeobjargproc = _ssizeobjargproc_wrapper[method]
     ptr[]._insert_slot(
-        PyType_Slot(_PySlotIndex.sq_ass_item, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
+        PyType_Slot(
+            _PySlotIndex.sq_ass_item,
+            rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
+        )
     )
 
 
 fn _install_objobjproc[
-    method: fn (PythonObject, PythonObject) raises -> Bool,
+    method: fn(PythonObject, PythonObject) raises -> Bool,
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert an `objobjproc` slot into the builder pointed to by `ptr`."""
-    comptime _objobjproc = fn (PyObjectPtr, PyObjectPtr) -> c_int
+    comptime _objobjproc = fn(PyObjectPtr, PyObjectPtr) -> c_int
     var fn_ptr: _objobjproc = _objobjproc_wrapper[method]
-    ptr[]._insert_slot(PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)))
+    ptr[]._insert_slot(
+        PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
+    )
 
 
 # ===----------------------------------------------------------------------=== #
@@ -730,29 +738,28 @@ struct SequenceProtocolBuilder:
         self._ptr = ptr
 
     fn def_len[
-        method: fn (PythonObject) raises -> Int
+        method: fn(PythonObject) raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `sq_length` slot."""
-        comptime _lenfunc = fn (PyObjectPtr) -> Py_ssize_t
+        comptime _lenfunc = fn(PyObjectPtr) -> Py_ssize_t
         var fn_ptr: _lenfunc = _mp_length_wrapper[method]
         self._ptr[]._insert_slot(
             PyType_Slot(
-                _PySlotIndex.sq_length, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)
+                _PySlotIndex.sq_length,
+                rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
             )
         )
         return self
 
     fn def_getitem[
-        method: fn (PythonObject, Int) raises -> PythonObject
+        method: fn(PythonObject, Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `sq_item` slot (integer index)."""
         _install_ssizeargfunc[method, _PySlotIndex.sq_item](self._ptr)
         return self
 
     fn def_setitem[
-        method: fn (
-            PythonObject, Int, Variant[PythonObject, Int]
-        ) raises -> None
+        method: fn(PythonObject, Int, Variant[PythonObject, Int]) raises -> None
     ](mut self) -> ref[self] Self:
         """Install `__setitem__`/`__delitem__` via the `sq_ass_item` slot.
 
@@ -764,36 +771,38 @@ struct SequenceProtocolBuilder:
         return self
 
     fn def_contains[
-        method: fn (PythonObject, PythonObject) raises -> Bool
+        method: fn(PythonObject, PythonObject) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__contains__` via the `sq_contains` slot."""
         _install_objobjproc[method, _PySlotIndex.sq_contains](self._ptr)
         return self
 
     fn def_concat[
-        method: fn (PythonObject, PythonObject) raises -> PythonObject
+        method: fn(PythonObject, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__add__` (concatenation) via the `sq_concat` slot."""
         _install_binary[method, _PySlotIndex.sq_concat](self._ptr)
         return self
 
     fn def_repeat[
-        method: fn (PythonObject, Int) raises -> PythonObject
+        method: fn(PythonObject, Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` (repetition) via the `sq_repeat` slot."""
         _install_ssizeargfunc[method, _PySlotIndex.sq_repeat](self._ptr)
         return self
 
     fn def_iconcat[
-        method: fn (PythonObject, PythonObject) raises -> PythonObject
+        method: fn(PythonObject, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__iadd__` (in-place concatenation) via the `sq_inplace_concat` slot."""
+        """Install `__iadd__` (in-place concatenation) via the `sq_inplace_concat` slot.
+        """
         _install_binary[method, _PySlotIndex.sq_inplace_concat](self._ptr)
         return self
 
     fn def_irepeat[
-        method: fn (PythonObject, Int) raises -> PythonObject
+        method: fn(PythonObject, Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__imul__` (in-place repetition) via the `sq_inplace_repeat` slot."""
+        """Install `__imul__` (in-place repetition) via the `sq_inplace_repeat` slot.
+        """
         _install_ssizeargfunc[method, _PySlotIndex.sq_inplace_repeat](self._ptr)
         return self

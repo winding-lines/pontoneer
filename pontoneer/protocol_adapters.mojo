@@ -16,7 +16,7 @@ from .protocols import NotImplementedError
 
 
 fn _mp_length_wrapper[
-    method: fn (PythonObject) raises -> Int
+    method: fn(PythonObject) raises -> Int
 ](py_self: PyObjectPtr) -> Py_ssize_t:
     """CPython `lenfunc` adapter for the `mp_length` slot (__len__).
 
@@ -40,7 +40,7 @@ fn _mp_length_wrapper[
 
 
 fn _mp_subscript_wrapper[
-    method: fn (PythonObject, PythonObject) raises -> PythonObject
+    method: fn(PythonObject, PythonObject) raises -> PythonObject
 ](py_self: PyObjectPtr, key: PyObjectPtr) -> PyObjectPtr:
     """CPython `binaryfunc` adapter for the `mp_subscript` slot (__getitem__).
 
@@ -67,7 +67,7 @@ fn _mp_subscript_wrapper[
 
 
 fn _mp_ass_subscript_wrapper[
-    method: fn (
+    method: fn(
         PythonObject, PythonObject, Variant[PythonObject, Int]
     ) raises -> None
 ](py_self: PyObjectPtr, key: PyObjectPtr, value: PyObjectPtr) -> c_int:
@@ -107,7 +107,7 @@ fn _mp_ass_subscript_wrapper[
 
 
 fn _unaryfunc_wrapper[
-    method: fn (PythonObject) raises -> PythonObject
+    method: fn(PythonObject) raises -> PythonObject
 ](py_self: PyObjectPtr) -> PyObjectPtr:
     """CPython `unaryfunc` adapter for unary nb_ slots (__neg__, __abs__, etc.).
 
@@ -131,7 +131,7 @@ fn _unaryfunc_wrapper[
 
 
 fn _binaryfunc_wrapper[
-    method: fn (PythonObject, PythonObject) raises -> PythonObject
+    method: fn(PythonObject, PythonObject) raises -> PythonObject
 ](lhs: PyObjectPtr, rhs: PyObjectPtr) -> PyObjectPtr:
     """CPython `binaryfunc` adapter for binary nb_ slots (__add__, __mul__, etc.).
 
@@ -167,7 +167,7 @@ fn _binaryfunc_wrapper[
 
 
 fn _ternaryfunc_wrapper[
-    method: fn (PythonObject, PythonObject, PythonObject) raises -> PythonObject
+    method: fn(PythonObject, PythonObject, PythonObject) raises -> PythonObject
 ](py_self: PyObjectPtr, other: PyObjectPtr, mod: PyObjectPtr) -> PyObjectPtr:
     """CPython `ternaryfunc` adapter for nb_power / nb_inplace_power (__pow__).
 
@@ -206,7 +206,7 @@ fn _ternaryfunc_wrapper[
 
 
 fn _inquiry_wrapper[
-    method: fn (PythonObject) raises -> Bool
+    method: fn(PythonObject) raises -> Bool
 ](py_self: PyObjectPtr) -> c_int:
     """CPython `inquiry` adapter for the `nb_bool` slot (__bool__).
 
@@ -230,7 +230,7 @@ fn _inquiry_wrapper[
 
 
 fn _ssizeargfunc_wrapper[
-    method: fn (PythonObject, Int) raises -> PythonObject
+    method: fn(PythonObject, Int) raises -> PythonObject
 ](py_self: PyObjectPtr, index: Py_ssize_t) -> PyObjectPtr:
     """CPython `ssizeargfunc` adapter for sq_item, sq_repeat, sq_inplace_repeat.
 
@@ -254,9 +254,7 @@ fn _ssizeargfunc_wrapper[
 
 
 fn _ssizeobjargproc_wrapper[
-    method: fn (
-        PythonObject, Int, Variant[PythonObject, Int]
-    ) raises -> None
+    method: fn(PythonObject, Int, Variant[PythonObject, Int]) raises -> None
 ](py_self: PyObjectPtr, index: Py_ssize_t, value: PyObjectPtr) -> c_int:
     """CPython `ssizeobjargproc` adapter for the `sq_ass_item` slot.
 
@@ -289,7 +287,7 @@ fn _ssizeobjargproc_wrapper[
 
 
 fn _objobjproc_wrapper[
-    method: fn (PythonObject, PythonObject) raises -> Bool
+    method: fn(PythonObject, PythonObject) raises -> Bool
 ](py_self: PyObjectPtr, other: PyObjectPtr) -> c_int:
     """CPython `objobjproc` adapter for the `sq_contains` slot (__contains__).
 
@@ -316,7 +314,7 @@ fn _objobjproc_wrapper[
 
 
 fn _richcompare_wrapper[
-    method: fn (PythonObject, PythonObject, Int) raises -> Bool
+    method: fn(PythonObject, PythonObject, Int) raises -> Bool
 ](py_self: PyObjectPtr, py_other: PyObjectPtr, op: c_int) -> PyObjectPtr:
     """CPython `richcmpfunc` adapter for the `tp_richcompare` slot.
 
