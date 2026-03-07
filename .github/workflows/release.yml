@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      MODULAR_HOME: "/home/runner/.modular"
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+    - uses: prefix-dev/setup-pixi@v0.8.8
+      with:
+        cache: true
+    - name: Build mojopkg
+      run: pixi run build
+    - name: Build conda package
+      run: pixi run -e package package-conda
+    - name: Upload to prefix.dev
+      run: rattler-build upload prefix -c winding-lines/pontoneer output/*/pontoneer-*.conda
+      env:
+        PREFIX_API_KEY: ${{ secrets.PREFIX_API_TOKEN }}
+    - name: Create GitHub release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          pontoneer.mojopkg
+          output/*/pontoneer-*.conda
+        generate_release_notes: true

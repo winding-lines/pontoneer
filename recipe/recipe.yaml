@@ -1,0 +1,37 @@
+schema_version: 1
+
+package:
+  name: pontoneer
+  version: "0.1.0"
+
+source:
+  url: https://github.com/winding-lines/pontoneer/archive/refs/tags/v${{ version }}.tar.gz
+  # After tagging v0.1.0, compute and fill in the sha256:
+  #   curl -sL <url> | sha256sum
+  sha256: 0000000000000000000000000000000000000000000000000000000000000000
+
+build:
+  number: 0
+  # mojopkg files are architecture-independent source; skip the binary prefix
+  # rewrite pass by marking this as a noarch package.
+  noarch: generic
+  script:
+    - mkdir -p "${PREFIX}/lib/mojo"
+    - mojo package pontoneer -o "${PREFIX}/lib/mojo/pontoneer.mojopkg"
+
+requirements:
+  build:
+    - max
+    - mojo
+
+about:
+  homepage: https://github.com/winding-lines/pontoneer
+  repository: https://github.com/winding-lines/pontoneer
+  license: Apache-2.0 WITH LLVM-exception
+  license_file: LICENSE
+  summary: Mojo library providing mapping protocol and rich comparison protocol extensions for Python interop.
+  description: |
+    Backports the mapping protocol ([], len()) and rich comparison protocol
+    extensions proposed in https://github.com/modular/modular/pull/5562,
+    allowing Mojo Python extension modules to support [], len(), and
+    comparison operators without waiting for the PR to land in the stdlib.

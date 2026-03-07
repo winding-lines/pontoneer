@@ -1,7 +1,11 @@
 [workspace]
 name = "pontoneer"
 version = "0.1.0"
-description = "Mojo library providing mapping protocol and rich comparison extensions for Python interop (based on https://github.com/modular/modular/pull/5562)"
+description = "Mojo library providing additional type protocol extensions for Python interop."
+authors = ["Marius Seritan <39998+winding-lines@users.noreply.github.com>"]
+license = "Apache-2.0 WITH LLVM-exception"
+homepage = "https://github.com/winding-lines/pontoneer"
+repository = "https://github.com/winding-lines/pontoneer"
 channels = ["https://conda.modular.com/max-nightly/", "conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
@@ -10,6 +14,17 @@ max = "*"
 mojo = "*"
 
 [tasks]
+fmt = "mojo format pontoneer examples"
 build = "mojo package pontoneer -o pontoneer.mojopkg"
 build-example = { cmd = "mojo build --emit shared-lib -I . examples/columnar/mojo_module.mojo -o examples/columnar/mojo_module.so", depends-on = ["build"] }
 test-example = { cmd = "python3 examples/columnar/test_module.py", depends-on = ["build-example"] }
+
+[feature.package.dependencies]
+rattler-build = "*"
+
+[feature.package.tasks]
+package-conda = "rattler-build build --recipe recipe/recipe.yaml"
+
+[environments]
+default = { solve-group = "main" }
+package = { features = ["package"], solve-group = "main" }
