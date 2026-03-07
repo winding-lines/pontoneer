@@ -10,7 +10,6 @@ channels = ["https://conda.modular.com/max-nightly/", "conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
 [dependencies]
-max = "*"
 mojo = "*"
 
 [tasks]
@@ -23,7 +22,7 @@ test-example = { cmd = "python3 examples/columnar/test_module.py", depends-on = 
 rattler-build = "*"
 
 [feature.package.tasks]
-package-conda = "rattler-build build --recipe recipe/recipe.yaml"
+package-conda = "rattler-build build --recipe recipe/recipe.yaml -c https://conda.modular.com/max-nightly/ -c conda-forge"
 
 [environments]
 default = { solve-group = "main" }

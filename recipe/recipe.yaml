@@ -24,7 +24,6 @@ build:
 
 requirements:
   build:
-    - max
     - mojo
 
 about:

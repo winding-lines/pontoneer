@@ -27,7 +27,7 @@ jobs:
         sed -i "s/^  version: .*/  version: \"${VERSION}\"/" recipe/recipe.yaml
         pixi run -e package package-conda
     - name: Upload to prefix.dev
-      run: rattler-build upload prefix -c winding-lines/pontoneer output/*/pontoneer-*.conda
+      run: pixi run -e package rattler-build upload prefix -c winding-lines/pontoneer output/*/pontoneer-*.conda
       env:
         PREFIX_API_KEY: ${{ secrets.PREFIX_API_TOKEN }}
     - name: Create GitHub release
