@@ -8,6 +8,12 @@
 #   - df[i] = (x, y)  via mp_ass_subscript
 #   - del df[i]        via mp_ass_subscript (null value)
 #   - df < other       via tp_richcompare
+#   - -df              via nb_negative
+#   - abs(df)          via nb_absolute
+#   - bool(df)         via nb_bool
+#   - df + other       via nb_add
+#   - df * scalar      via nb_multiply
+#   - df ** exp        via nb_power
 # ===----------------------------------------------------------------------=== #
 
 from std.os import abort
@@ -17,10 +23,11 @@ from std.python import Python, PythonObject
 from std.python.bindings import PythonModuleBuilder
 
 from pontoneer import (
-    PyTypeObjectSlot,
     NotImplementedError,
     RichCompareOps,
-    PontoneerTypeBuilder,
+    TypeProtocolBuilder,
+    MappingProtocolBuilder,
+    NumberProtocolBuilder,
 )
 
 comptime Coord1DColumn = List[Float64]
@@ -185,6 +192,105 @@ struct DataFrame(Defaultable, Movable, Writable):
             return self_df[]._bounding_box_area == other_df[]._bounding_box_area
         raise NotImplementedError()
 
+    # ------------------------------------------------------------------
+    # Number protocol — unary
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    fn py__neg__(py_self: PythonObject) raises -> PythonObject:
+        var self_ptr = Self._get_self_ptr(py_self)
+        var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
+        var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
+        for v in self_ptr[].pos_x:
+            result_x.append(-v)
+        for v in self_ptr[].pos_y:
+            result_y.append(-v)
+        return PythonObject(alloc=DataFrame(result_x^, result_y^))
+
+    @staticmethod
+    fn py__abs__(py_self: PythonObject) raises -> PythonObject:
+        var self_ptr = Self._get_self_ptr(py_self)
+        var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
+        var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
+        for v in self_ptr[].pos_x:
+            result_x.append(abs(v))
+        for v in self_ptr[].pos_y:
+            result_y.append(abs(v))
+        return PythonObject(alloc=DataFrame(result_x^, result_y^))
+
+    # ------------------------------------------------------------------
+    # Number protocol — bool
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    fn py__bool__(py_self: PythonObject) raises -> Bool:
+        var self_ptr = Self._get_self_ptr(py_self)
+        return len(self_ptr[].pos_x) > 0
+
+    # ------------------------------------------------------------------
+    # Number protocol — binary
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    fn py__add__(
+        py_self: PythonObject, other: PythonObject
+    ) raises -> PythonObject:
+        """Concatenate two DataFrames row-wise. Returns NotImplemented for non-DataFrames."""
+        var self_ptr = Self._get_self_ptr(py_self)
+        try:
+            var other_ptr = other.downcast_value_ptr[Self]()
+            var n = len(self_ptr[].pos_x) + len(other_ptr[].pos_x)
+            var result_x = Coord1DColumn(capacity=n)
+            var result_y = Coord1DColumn(capacity=n)
+            for v in self_ptr[].pos_x:
+                result_x.append(v)
+            for v in self_ptr[].pos_y:
+                result_y.append(v)
+            for v in other_ptr[].pos_x:
+                result_x.append(v)
+            for v in other_ptr[].pos_y:
+                result_y.append(v)
+            return PythonObject(alloc=DataFrame(result_x^, result_y^))
+        except:
+            raise NotImplementedError()
+
+    @staticmethod
+    fn py__mul__(
+        py_self: PythonObject, other: PythonObject
+    ) raises -> PythonObject:
+        """Scale all coordinates by a numeric scalar. Returns NotImplemented otherwise."""
+        var self_ptr = Self._get_self_ptr(py_self)
+        try:
+            var scale = Float64(py=other)
+            var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
+            var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
+            for v in self_ptr[].pos_x:
+                result_x.append(v * scale)
+            for v in self_ptr[].pos_y:
+                result_y.append(v * scale)
+            return PythonObject(alloc=DataFrame(result_x^, result_y^))
+        except:
+            raise NotImplementedError()
+
+    # ------------------------------------------------------------------
+    # Number protocol — ternary
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    fn py__pow__(
+        py_self: PythonObject, exp: PythonObject, mod: PythonObject
+    ) raises -> PythonObject:
+        """Raise all coordinates to a power. The `mod` argument is ignored."""
+        var self_ptr = Self._get_self_ptr(py_self)
+        var e = Float64(py=exp)
+        var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
+        var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
+        for v in self_ptr[].pos_x:
+            result_x.append(v ** e)
+        for v in self_ptr[].pos_y:
+            result_y.append(v ** e)
+        return PythonObject(alloc=DataFrame(result_x^, result_y^))
+
     fn write_to(self, mut writer: Some[Writer]):
         writer.write("DataFrame( length=", len(self.pos_x), ")")
 
@@ -195,16 +301,23 @@ fn PyInit_mojo_module() -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
 
-        var ptb = PontoneerTypeBuilder(
-            b.add_type[DataFrame]("DataFrame")
-                .def_init_defaultable[DataFrame]()
-                .def_staticmethod[DataFrame.with_columns]("with_columns")
-                .def_method[DataFrame.get_call_count]("get_call_count")
-        )
-        _ = ptb.def_method[DataFrame.py__len__,     PyTypeObjectSlot.mp_length]()
-        _ = ptb.def_method[DataFrame.py__getitem__,  PyTypeObjectSlot.mp_getitem]()
-        _ = ptb.def_method[DataFrame.py__setitem__,  PyTypeObjectSlot.mp_setitem]()
-        _ = ptb.def_method[DataFrame.rich_compare,   PyTypeObjectSlot.tp_richcompare]()
+        ref tb = b.add_type[DataFrame]("DataFrame")
+            .def_init_defaultable[DataFrame]()
+            .def_staticmethod[DataFrame.with_columns]("with_columns")
+            .def_method[DataFrame.get_call_count]("get_call_count")
+        var tpb = TypeProtocolBuilder(tb)
+        _ = tpb.def_richcompare[DataFrame.rich_compare]()
+        var mpb = MappingProtocolBuilder(tb)
+        _ = mpb.def_len[DataFrame.py__len__]()
+        _ = mpb.def_getitem[DataFrame.py__getitem__]()
+        _ = mpb.def_setitem[DataFrame.py__setitem__]()
+        var npb = NumberProtocolBuilder(tb)
+        _ = npb.def_neg[DataFrame.py__neg__]()
+        _ = npb.def_abs[DataFrame.py__abs__]()
+        _ = npb.def_bool[DataFrame.py__bool__]()
+        _ = npb.def_add[DataFrame.py__add__]()
+        _ = npb.def_mul[DataFrame.py__mul__]()
+        _ = npb.def_pow[DataFrame.py__pow__]()
 
         return b.finalize()
     except e:

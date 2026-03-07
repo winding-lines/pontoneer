@@ -29,7 +29,7 @@ pixi add --channel https://prefix.dev/winding-lines/pontoneer --channel https://
 Or in your `pixi,toml`:
 
 ```toml
-channels = ["https://prefix.dev/winding-lines/pontoneer", "https://conda.modular.com/max-nightly/", "conda-forge"]
+channels = ["https://prefix.dev/pontoneer", "https://conda.modular.com/max-nightly/", "conda-forge"]
 
 [dependencies]
 pontoneer = ">=0.1.0"

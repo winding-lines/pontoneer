@@ -61,6 +61,58 @@ def test_mojo_columnar() -> None:
     assert rich_compare_counts(df) == (2, 0, 0)
     assert rich_compare_counts(big_df) == (0, 0, 1)
 
+    # ------------------------------------------------------------------
+    # Number protocol
+    # ------------------------------------------------------------------
+
+    num_df = mojo_module.DataFrame.with_columns([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])
+
+    # __neg__ (nb_negative)
+    neg_df = -num_df
+    assert neg_df[0] == (-1.0, -4.0)
+    assert neg_df[2] == (-3.0, -6.0)
+
+    # __abs__ (nb_absolute)
+    abs_df = abs(neg_df)
+    assert abs_df[0] == (1.0, 4.0)
+    assert abs_df[2] == (3.0, 6.0)
+
+    # __bool__ (nb_bool)
+    assert bool(num_df)
+    assert not bool(mojo_module.DataFrame())
+
+    # __add__ (nb_add) — concatenate two DataFrames
+    df_a = mojo_module.DataFrame.with_columns([1.0, 2.0], [3.0, 4.0])
+    df_b = mojo_module.DataFrame.with_columns([5.0, 6.0], [7.0, 8.0])
+    combined = df_a + df_b
+    assert len(combined) == 4
+    assert combined[0] == (1.0, 3.0)
+    assert combined[2] == (5.0, 7.0)
+
+    # __add__ with a non-DataFrame returns NotImplemented, so Python raises TypeError
+    try:
+        _ = df_a + 42
+        raise Exception("TypeError expected")
+    except TypeError:
+        pass
+
+    # __mul__ (nb_multiply) — scale coordinates by a scalar
+    scaled = df_a * 2.0
+    assert scaled[0] == (2.0, 6.0)
+    assert scaled[1] == (4.0, 8.0)
+
+    # __mul__ with a non-numeric returns NotImplemented → TypeError
+    try:
+        _ = df_a * "oops"
+        raise Exception("TypeError expected")
+    except TypeError:
+        pass
+
+    # __pow__ (nb_power) — raise coordinates to a power
+    squared = df_a ** 2
+    assert squared[0] == (1.0, 9.0)
+    assert squared[1] == (4.0, 16.0)
+
     print("🎉🎉🎉 Mission Success! 🎉🎉🎉")
 
 
