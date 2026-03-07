@@ -16,6 +16,27 @@ because the CPython runtime requires the method to be wired into the type's
 
 ## Getting started
 
+### As a package
+
+To use the published package run the following command:
+
+
+```bash
+pixi add --channel https://prefix.dev/winding-lines/pontoneer --channel https://conda.modular.com/max-nightly pontoneer
+```
+
+
+Or in your `pixi,toml`:
+
+```toml
+channels = ["https://prefix.dev/winding-lines/pontoneer", "https://conda.modular.com/max-nightly/", "conda-forge"]
+
+[dependencies]
+pontoneer = ">=0.1.0"
+```
+
+### From source
+
 ```bash
 git clone git@github.com:winding-lines/pontoneer.git
 cd pontoneer
