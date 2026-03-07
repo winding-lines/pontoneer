@@ -1,14 +1,17 @@
 schema_version: 1
 
+# Bump this to match the git tag before tagging a release (e.g. v0.1.1 → "0.1.1").
+context:
+  version: "0.1.1"
+
 package:
   name: pontoneer
-  version: "0.1.0"
+  version: ${{ version }}
 
 source:
-  url: https://github.com/winding-lines/pontoneer/archive/refs/tags/v${{ version }}.tar.gz
-  # After tagging v0.1.0, compute and fill in the sha256:
-  #   curl -sL <url> | sha256sum
-  sha256: 0000000000000000000000000000000000000000000000000000000000000000
+  # git source requires no sha256 — rattler-build clones the tagged commit directly.
+  git: https://github.com/winding-lines/pontoneer.git
+  tag: v${{ version }}
 
 build:
   number: 0
