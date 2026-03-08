@@ -1,8 +1,9 @@
 name: Pontoneer Test
 
 on:
-  - push
-  - pull_request
+  push:
+  pull_request:
+  workflow_call:
 
 jobs:
   test:
@@ -19,5 +20,4 @@ jobs:
     - name: checks
       run: pixi run fmt
     - name: tests
-      run: |
-        pixi run test-example
+      run: pixi run test-all
