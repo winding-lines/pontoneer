@@ -12,7 +12,7 @@ from std.python import Python, PythonObject
 from std.python._cpython import PyObject, PyObjectPtr, Py_ssize_t
 from std.utils import Variant
 
-from .protocols import NotImplementedError
+from .utils import NotImplementedError
 
 
 fn _mp_length_wrapper[

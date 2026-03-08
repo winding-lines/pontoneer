@@ -16,9 +16,9 @@ without waiting for the PR to land in the stdlib.
 ```
 pontoneer/
 ├── __init__.mojo               # Public API: 4 exports (see below)
-├── protocols.mojo              # PyTypeObjectSlot, NotImplementedError, RichCompareOps
-├── protocol_adapters.mojo      # Internal C-ABI adapters (_mp_length_wrapper, etc.)
-└── protocol_type_builder.mojo  # PontoneerTypeBuilder
+├── utils.mojo                  # PyTypeObjectSlot, NotImplementedError, RichCompareOps
+├── adapters.mojo               # Internal C-ABI adapters (_mp_length_wrapper, etc.)
+└── builders.mojo               # PontoneerTypeBuilder
 examples/columnar/
 ├── mojo_module.mojo            # DataFrame example (Mojo extension module)
 └── test_module.py              # Python integration test
@@ -35,8 +35,8 @@ examples/columnar/
 
 ## Design decisions
 
-- **`protocol_adapters.mojo` is internal** — the `_`-prefixed wrapper functions are
-  not re-exported from `__init__.mojo`; they are only used by `protocol_type_builder.mojo`.
+- **`adapters.mojo` is internal** — the `_`-prefixed wrapper functions are
+  not re-exported from `__init__.mojo`; they are only used by `builders.mojo`.
 - **`PontoneerTypeBuilder` consumes a `PythonTypeBuilder`** via `owned`. Chain regular
   stdlib builder methods first, then pass ownership: `PontoneerTypeBuilder(tb^)`.
 - **`_insert_slot` dependency** — `PontoneerTypeBuilder` calls

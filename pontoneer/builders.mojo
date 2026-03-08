@@ -15,8 +15,8 @@ from std.python._cpython import PyObjectPtr, Py_ssize_t, PyType_Slot
 from std.python.bindings import PythonTypeBuilder
 from std.utils import Variant
 
-from .protocols import NotImplementedError
-from .protocol_adapters import (
+from .utils import NotImplementedError
+from .adapters import (
     _mp_length_wrapper,
     _mp_subscript_wrapper,
     _mp_ass_subscript_wrapper,

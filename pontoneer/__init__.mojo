@@ -1,5 +1,5 @@
-from .protocols import NotImplementedError, RichCompareOps
-from .protocol_type_builder import (
+from .utils import NotImplementedError, RichCompareOps
+from .builders import (
     TypeProtocolBuilder,
     NumberProtocolBuilder,
     MappingProtocolBuilder,

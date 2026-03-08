@@ -1,7 +1,11 @@
 # pontoneer
 
-A Mojo library that adds **mapping protocol** and **rich comparison** support
-to Python extension modules written in Mojo, backporting the extensions
+
+Pontoneer is a Mojo library that provides an extension to the Python extension capabilities
+provided by the standard library.
+
+A Mojo library that adds **mapping protocol**, **number protocol**, **sequent protocol**
+and **rich comparison** support. This is an expansion of the work 
 proposed in [modular/modular#5562](https://github.com/modular/modular/pull/5562).
 
 Without these extensions, a Mojo struct exported to Python can expose
@@ -20,9 +24,8 @@ because the CPython runtime requires the method to be wired into the type's
 
 To use the published package run the following command:
 
-
 ```bash
-pixi add --channel https://prefix.dev/winding-lines/pontoneer --channel https://conda.modular.com/max-nightly pontoneer
+pixi add --channel https://prefix.dev/pontoneer --channel https://conda.modular.com/max-nightly pontoneer
 ```
 
 
@@ -32,7 +35,7 @@ Or in your `pixi,toml`:
 channels = ["https://prefix.dev/pontoneer", "https://conda.modular.com/max-nightly/", "conda-forge"]
 
 [dependencies]
-pontoneer = ">=0.1.0"
+pontoneer = ">=0.2.0"
 ```
 
 ### From source
@@ -50,11 +53,13 @@ pixi run test-example   # builds and runs the columnar DataFrame example
 ```mojo
 from std.python.bindings import PythonModuleBuilder
 from pontoneer import (
-    PyTypeObjectSlot,
     NotImplementedError,
     RichCompareOps,
-    PontoneerTypeBuilder,
+    TypeProtocolBuilder,
+    MappingProtocolBuilder,
+    NumberProtocolBuilder,
 )
+
 
 @export
 fn PyInit_mymodule() -> PythonObject:
@@ -66,12 +71,15 @@ fn PyInit_mymodule() -> PythonObject:
                    .def_init_defaultable[MyStruct]()
                    .def_staticmethod[MyStruct.new]("new")
 
-        # … then hand ownership to PontoneerTypeBuilder for protocol slots.
-        _ = PontoneerTypeBuilder(tb^)
-                .def_method[MyStruct.py__len__,     PyTypeObjectSlot.mp_length]()
-                .def_method[MyStruct.py__getitem__,  PyTypeObjectSlot.mp_getitem]()
-                .def_method[MyStruct.py__setitem__,  PyTypeObjectSlot.mp_setitem]()
-                .def_method[MyStruct.rich_compare,   PyTypeObjectSlot.tp_richcompare]()
+        # Then add the rich compare Time Protocol slot.
+        var tpb = TypeProtocolBuilder(tb)
+        _ = tpb.def_richcompare[MyStruct.rich_compare]()
+
+        # And some Mapping Protocol slots.
+        var mpb = MappingProtocolBuilder(tb)
+        _ = mpb.def_len[MyStruct.py__len__]()
+        _ = mpb.def_getitem[MyStruct.py__getitem__]()
+        _ = mpb.def_setitem[MyStruct.py__setitem__]()
 
         return b.finalize()
     except e:
