@@ -1,12 +1,15 @@
 # pontoneer
 
 
-Pontoneer is a Mojo library that provides an extension to the Python extension capabilities
-provided by the standard library.
+`Pontoneer` is a Mojo library that provides an extension to the Python extension capabilities
+provided by the standard library. `Pontoneer` adds support for:
 
-A Mojo library that adds **mapping protocol**, **number protocol**, **sequent protocol**
-and **rich comparison** support. This is an expansion of the work 
-proposed in [modular/modular#5562](https://github.com/modular/modular/pull/5562).
+- **mapping protocol**
+- **number protocol**
+- **sequent protocol**
+- **rich comparison**
+
+This is an expansion of the work proposed in [modular/modular#5562](https://github.com/modular/modular/pull/5562).
 
 Without these extensions, a Mojo struct exported to Python can expose
 `__getitem__` as a regular method but Python's `obj[key]` syntax won't work —
