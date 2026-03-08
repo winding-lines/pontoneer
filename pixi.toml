@@ -1,6 +1,6 @@
 [workspace]
 name = "pontoneer"
-version = "0.2.0"
+version = "0.2.1"
 description = "Mojo library providing additional type protocol extensions for Python interop."
 authors = ["Marius Seritan <39998+winding-lines@users.noreply.github.com>"]
 license = "Apache-2.0 WITH LLVM-exception"
@@ -13,10 +13,19 @@ platforms = ["osx-arm64", "linux-64"]
 mojo = "*"
 
 [tasks]
-fmt = "mojo format pontoneer examples"
+fmt = "mojo format pontoneer examples tests"
 build = "mojo package pontoneer -o pontoneer.mojopkg"
 build-example = { cmd = "mojo build --emit shared-lib -I . examples/columnar/mojo_module.mojo -o examples/columnar/mojo_module.so", depends-on = ["build"] }
 test-example = { cmd = "python3 examples/columnar/test_module.py", depends-on = ["build-example"] }
+build-test-mapping = { cmd = "mojo build --emit shared-lib -I . tests/mapping/mojo_module.mojo -o tests/mapping/mojo_module.so", depends-on = ["build"] }
+test-mapping = { cmd = "python3 tests/mapping/test_module.py", depends-on = ["build-test-mapping"] }
+build-test-number = { cmd = "mojo build --emit shared-lib -I . tests/number/mojo_module.mojo -o tests/number/mojo_module.so", depends-on = ["build"] }
+test-number = { cmd = "python3 tests/number/test_module.py", depends-on = ["build-test-number"] }
+build-test-sequence = { cmd = "mojo build --emit shared-lib -I . tests/sequence/mojo_module.mojo -o tests/sequence/mojo_module.so", depends-on = ["build"] }
+test-sequence = { cmd = "python3 tests/sequence/test_module.py", depends-on = ["build-test-sequence"] }
+build-test-type-protocol = { cmd = "mojo build --emit shared-lib -I . tests/type_protocol/mojo_module.mojo -o tests/type_protocol/mojo_module.so", depends-on = ["build"] }
+test-type-protocol = { cmd = "python3 tests/type_protocol/test_module.py", depends-on = ["build-test-type-protocol"] }
+test-all = { depends-on = ["test-example", "test-mapping", "test-number", "test-sequence", "test-type-protocol"] }
 
 [feature.package.dependencies]
 rattler-build = "*"

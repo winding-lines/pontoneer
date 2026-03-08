@@ -1,0 +1,71 @@
+"""Integration test for SequenceProtocolBuilder (sq_length, sq_item, sq_ass_item, sq_contains, sq_concat, sq_repeat)."""
+
+import mojo_module
+
+
+def test_sequence_protocol() -> None:
+    print("Testing sequence protocol...")
+
+    obj = mojo_module.Seq.from_list([10, 20, 30])
+
+    # __len__ (sq_length)
+    assert len(obj) == 3
+
+    # __getitem__ (sq_item — integer index)
+    assert obj[0] == 10
+    assert obj[1] == 20
+    assert obj[2] == 30
+
+    # __getitem__ out-of-range raises
+    try:
+        _ = obj[5]
+        raise Exception("Expected an error for out-of-range index")
+    except Exception as ex:
+        assert "range" in str(ex)
+
+    # __setitem__ (sq_ass_item — assignment)
+    obj[1] = 99
+    assert obj[1] == 99
+    assert obj[0] == 10  # neighbours unchanged
+    assert obj[2] == 30
+
+    # __delitem__ (sq_ass_item — deletion)
+    d = mojo_module.Seq.from_list([1, 2, 3])
+    del d[0]
+    assert len(d) == 2
+    assert d[0] == 2
+    assert d[1] == 3
+
+    # __contains__ (sq_contains)
+    s = mojo_module.Seq.from_list([1, 2, 3])
+    assert 1 in s
+    assert 3 in s
+    assert 4 not in s
+
+    # __add__ / sq_concat
+    a = mojo_module.Seq.from_list([1, 2])
+    b = mojo_module.Seq.from_list([3, 4, 5])
+    c = a + b
+    assert len(c) == 5
+    assert c[0] == 1
+    assert c[2] == 3
+    assert c[4] == 5
+
+    # __mul__ / sq_repeat
+    r = mojo_module.Seq.from_list([7, 8]) * 3
+    assert len(r) == 6
+    assert r[0] == 7
+    assert r[1] == 8
+    assert r[2] == 7  # second repetition
+    assert r[4] == 7  # third repetition
+
+    # Empty sequence
+    empty = mojo_module.Seq()
+    assert len(empty) == 0
+    assert 0 not in empty
+
+    print("Sequence protocol tests passed!")
+
+
+if __name__ == "__main__":
+    test_sequence_protocol()
