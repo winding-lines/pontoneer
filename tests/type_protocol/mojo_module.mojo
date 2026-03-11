@@ -47,9 +47,9 @@ struct Box(Defaultable, Movable, Writable):
 
     @staticmethod
     fn rich_compare(
-        py_self: PythonObject, other: PythonObject, op: Int
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject, op: Int
     ) raises -> Bool:
-        var a = Self._get_self_ptr(py_self)[].value
+        var a = self_ptr[].value
         var b = other.downcast_value_ptr[Self]()[].value
         if op == RichCompareOps.Py_LT:
             return a < b
@@ -79,7 +79,7 @@ fn PyInit_mojo_module() -> PythonObject:
             .def_staticmethod[Box.new]("new")
             .def_method[Box.get_value]("get_value")
         )
-        var tpb = TypeProtocolBuilder(tb)
+        var tpb = TypeProtocolBuilder[Box](tb)
         _ = tpb.def_richcompare[Box.rich_compare]()
         return b.finalize()
     except e:

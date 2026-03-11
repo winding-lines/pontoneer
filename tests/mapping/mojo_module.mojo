@@ -24,15 +24,6 @@ struct SimpleList(Defaultable, Movable, Writable):
         self.data = []
 
     @staticmethod
-    fn _get_self_ptr(
-        py_self: PythonObject,
-    ) -> UnsafePointer[Self, MutAnyOrigin]:
-        try:
-            return py_self.downcast_value_ptr[Self]()
-        except e:
-            abort(String("downcast failed: ", e))
-
-    @staticmethod
     fn from_list(items: PythonObject) raises -> PythonObject:
         var result = SimpleList()
         for item in items:
@@ -40,33 +31,31 @@ struct SimpleList(Defaultable, Movable, Writable):
         return PythonObject(alloc=result^)
 
     @staticmethod
-    fn py__len__(py_self: PythonObject) raises -> Int:
-        return len(Self._get_self_ptr(py_self)[].data)
+    fn py__len__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Int:
+        return len(self_ptr[].data)
 
     @staticmethod
     fn py__getitem__(
-        py_self: PythonObject, index: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], index: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         var i = Int(py=index)
-        if i < 0 or i >= len(ptr[].data):
+        if i < 0 or i >= len(self_ptr[].data):
             raise Error("index out of range")
-        return PythonObject(ptr[].data[i])
+        return PythonObject(self_ptr[].data[i])
 
     @staticmethod
     fn py__setitem__(
-        py_self: PythonObject,
+        self_ptr: UnsafePointer[Self, MutAnyOrigin],
         index: PythonObject,
         value: Variant[PythonObject, Int],
     ) raises -> None:
-        var ptr = Self._get_self_ptr(py_self)
         var i = Int(py=index)
-        if i < 0 or i >= len(ptr[].data):
+        if i < 0 or i >= len(self_ptr[].data):
             raise Error("index out of range")
         if value.isa[PythonObject]():
-            ptr[].data[i] = Int(py=value[PythonObject])
+            self_ptr[].data[i] = Int(py=value[PythonObject])
         else:
-            _ = ptr[].data.pop(i)
+            _ = self_ptr[].data.pop(i)
 
     fn write_to(self, mut writer: Some[Writer]):
         writer.write("SimpleList(len=", len(self.data), ")")
@@ -81,7 +70,7 @@ fn PyInit_mojo_module() -> PythonObject:
             .def_init_defaultable[SimpleList]()
             .def_staticmethod[SimpleList.from_list]("from_list")
         )
-        var mpb = MappingProtocolBuilder(tb)
+        var mpb = MappingProtocolBuilder[SimpleList](tb)
         _ = (
             mpb.def_len[SimpleList.py__len__]()
             .def_getitem[SimpleList.py__getitem__]()

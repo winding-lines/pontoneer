@@ -50,46 +50,44 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__neg__(py_self: PythonObject) raises -> PythonObject:
-        return PythonObject(alloc=Number(-Self._get_self_ptr(py_self)[].value))
+    fn py__neg__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+        return PythonObject(alloc=Number(-self_ptr[].value))
 
     @staticmethod
-    fn py__abs__(py_self: PythonObject) raises -> PythonObject:
-        return PythonObject(
-            alloc=Number(abs(Self._get_self_ptr(py_self)[].value))
-        )
+    fn py__abs__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+        return PythonObject(alloc=Number(abs(self_ptr[].value)))
 
     @staticmethod
-    fn py__pos__(py_self: PythonObject) raises -> PythonObject:
-        return PythonObject(alloc=Number(Self._get_self_ptr(py_self)[].value))
+    fn py__pos__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+        return PythonObject(alloc=Number(self_ptr[].value))
 
     @staticmethod
-    fn py__invert__(py_self: PythonObject) raises -> PythonObject:
-        return PythonObject(alloc=Number(~Self._get_self_ptr(py_self)[].value))
+    fn py__invert__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+        return PythonObject(alloc=Number(~self_ptr[].value))
 
     # ------------------------------------------------------------------
     # Bool slot
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__bool__(py_self: PythonObject) raises -> Bool:
-        return Self._get_self_ptr(py_self)[].value != 0
+    fn py__bool__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Bool:
+        return self_ptr[].value != 0
 
     # ------------------------------------------------------------------
     # Conversion slots
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__int__(py_self: PythonObject) raises -> PythonObject:
-        return PythonObject(Self._get_self_ptr(py_self)[].value)
+    fn py__int__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+        return PythonObject(self_ptr[].value)
 
     @staticmethod
-    fn py__float__(py_self: PythonObject) raises -> PythonObject:
-        return PythonObject(Float64(Self._get_self_ptr(py_self)[].value))
+    fn py__float__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+        return PythonObject(Float64(self_ptr[].value))
 
     @staticmethod
-    fn py__index__(py_self: PythonObject) raises -> PythonObject:
-        return PythonObject(Self._get_self_ptr(py_self)[].value)
+    fn py__index__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+        return PythonObject(self_ptr[].value)
 
     # ------------------------------------------------------------------
     # Binary slots — raise NotImplementedError for non-Number operands
@@ -97,111 +95,101 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     fn py__add__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value + o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value + o[].value))
         except:
             raise NotImplementedError()
 
     @staticmethod
     fn py__sub__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value - o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value - o[].value))
         except:
             raise NotImplementedError()
 
     @staticmethod
     fn py__mul__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value * o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value * o[].value))
         except:
             raise NotImplementedError()
 
     @staticmethod
     fn py__floordiv__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value // o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value // o[].value))
         except:
             raise NotImplementedError()
 
     @staticmethod
     fn py__mod__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value % o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value % o[].value))
         except:
             raise NotImplementedError()
 
     @staticmethod
     fn py__and__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value & o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value & o[].value))
         except:
             raise NotImplementedError()
 
     @staticmethod
     fn py__or__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value | o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value | o[].value))
         except:
             raise NotImplementedError()
 
     @staticmethod
     fn py__xor__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value ^ o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value ^ o[].value))
         except:
             raise NotImplementedError()
 
     @staticmethod
     fn py__lshift__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value << o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value << o[].value))
         except:
             raise NotImplementedError()
 
     @staticmethod
     fn py__rshift__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var o = other.downcast_value_ptr[Self]()
-            return PythonObject(alloc=Number(ptr[].value >> o[].value))
+            return PythonObject(alloc=Number(self_ptr[].value >> o[].value))
         except:
             raise NotImplementedError()
 
@@ -211,12 +199,11 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     fn py__pow__(
-        py_self: PythonObject, exp: PythonObject, mod: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], exp: PythonObject, mod: PythonObject
     ) raises -> PythonObject:
-        var ptr = Self._get_self_ptr(py_self)
         try:
             var e = exp.downcast_value_ptr[Self]()
-            var result = Int(Float64(ptr[].value) ** Float64(e[].value))
+            var result = Int(Float64(self_ptr[].value) ** Float64(e[].value))
             return PythonObject(alloc=Number(result))
         except:
             raise NotImplementedError()
@@ -235,7 +222,7 @@ fn PyInit_mojo_module() -> PythonObject:
             .def_staticmethod[Number.new]("new")
             .def_method[Number.get_value]("get_value")
         )
-        var npb = NumberProtocolBuilder(tb)
+        var npb = NumberProtocolBuilder[Number](tb)
         _ = (
             npb.def_neg[Number.py__neg__]()
             .def_abs[Number.py__abs__]()
