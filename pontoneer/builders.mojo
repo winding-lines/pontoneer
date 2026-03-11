@@ -175,6 +175,15 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_richcompare[Self.self_type, method](self._ptr)
         return self
 
+    fn def_richcompare[
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, Int) -> Bool
+    ](mut self) -> ref[self] Self:
+        """Install rich comparison via the `tp_richcompare` slot (non-raising overload)."""
+        _install_richcompare[
+            Self.self_type, _lift_obj_int_to_bool[Self.self_type, method]
+        ](self._ptr)
+        return self
+
 
 # ===----------------------------------------------------------------------=== #
 # Slot-install helpers — free functions usable by any builder
@@ -345,6 +354,84 @@ fn _install_objobjproc[
 
 
 # ===----------------------------------------------------------------------=== #
+# Non-raising → raising lift helpers
+#
+# Each wraps a non-raising user function in a raising function so the same
+# _install_* / adapter infrastructure can be used for both calling conventions.
+# ===----------------------------------------------------------------------=== #
+
+
+fn _lift_to_int[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin]) -> Int,
+](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Int:
+    return method(ptr)
+
+
+fn _lift_to_obj[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin]) -> PythonObject,
+](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject:
+    return method(ptr)
+
+
+fn _lift_to_bool[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin]) -> Bool,
+](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Bool:
+    return method(ptr)
+
+
+fn _lift_obj_to_obj[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject) -> PythonObject,
+](ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject:
+    return method(ptr, other)
+
+
+fn _lift_obj_to_bool[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject) -> Bool,
+](ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> Bool:
+    return method(ptr, other)
+
+
+fn _lift_obj_var_to_none[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject, Variant[PythonObject, Int]) -> None,
+](ptr: UnsafePointer[T, MutAnyOrigin], key: PythonObject, val: Variant[PythonObject, Int]) raises -> None:
+    method(ptr, key, val)
+
+
+fn _lift_int_to_obj[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin], Int) -> PythonObject,
+](ptr: UnsafePointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
+    return method(ptr, index)
+
+
+fn _lift_int_var_to_none[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin], Int, Variant[PythonObject, Int]) -> None,
+](ptr: UnsafePointer[T, MutAnyOrigin], index: Int, val: Variant[PythonObject, Int]) raises -> None:
+    method(ptr, index, val)
+
+
+fn _lift_obj_int_to_bool[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject, Int) -> Bool,
+](ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool:
+    return method(ptr, other, op)
+
+
+fn _lift_obj_obj_to_obj[
+    T: ImplicitlyDestructible,
+    method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject, PythonObject) -> PythonObject,
+](ptr: UnsafePointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject) raises -> PythonObject:
+    return method(ptr, a, b)
+
+
+# ===----------------------------------------------------------------------=== #
 # NumberProtocolBuilder
 # ===----------------------------------------------------------------------=== #
 
@@ -435,6 +522,43 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_unary[Self.self_type, method, _PySlotIndex.nb_positive](self._ptr)
         return self
 
+    # Non-raising unary overloads
+
+    fn def_abs[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__abs__` via the `nb_absolute` slot (non-raising overload)."""
+        _install_unary[Self.self_type, _lift_to_obj[Self.self_type, method], _PySlotIndex.nb_absolute](self._ptr)
+        return self
+
+    fn def_float[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__float__` via the `nb_float` slot (non-raising overload)."""
+        _install_unary[Self.self_type, _lift_to_obj[Self.self_type, method], _PySlotIndex.nb_float](self._ptr)
+        return self
+
+    fn def_index[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__index__` via the `nb_index` slot (non-raising overload)."""
+        _install_unary[Self.self_type, _lift_to_obj[Self.self_type, method], _PySlotIndex.nb_index](self._ptr)
+        return self
+
+    fn def_int[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__int__` via the `nb_int` slot (non-raising overload)."""
+        _install_unary[Self.self_type, _lift_to_obj[Self.self_type, method], _PySlotIndex.nb_int](self._ptr)
+        return self
+
+    fn def_invert[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__invert__` via the `nb_invert` slot (non-raising overload)."""
+        _install_unary[Self.self_type, _lift_to_obj[Self.self_type, method], _PySlotIndex.nb_invert](self._ptr)
+        return self
+
+    fn def_neg[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__neg__` via the `nb_negative` slot (non-raising overload)."""
+        _install_unary[Self.self_type, _lift_to_obj[Self.self_type, method], _PySlotIndex.nb_negative](self._ptr)
+        return self
+
+    fn def_pos[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__pos__` via the `nb_positive` slot (non-raising overload)."""
+        _install_unary[Self.self_type, _lift_to_obj[Self.self_type, method], _PySlotIndex.nb_positive](self._ptr)
+        return self
+
     # ------------------------------------------------------------------
     # Bool slot — C type: inquiry  int(*)(PyObject *)
     # ------------------------------------------------------------------
@@ -444,6 +568,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     ](mut self) -> ref[self] Self:
         """Install `__bool__` via the `nb_bool` slot."""
         _install_inquiry[Self.self_type, method, _PySlotIndex.nb_bool](self._ptr)
+        return self
+
+    fn def_bool[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> Bool](mut self) -> ref[self] Self:
+        """Install `__bool__` via the `nb_bool` slot (non-raising overload)."""
+        _install_inquiry[Self.self_type, _lift_to_bool[Self.self_type, method], _PySlotIndex.nb_bool](self._ptr)
         return self
 
     # ------------------------------------------------------------------
@@ -630,6 +759,133 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_xor](self._ptr)
         return self
 
+    # Non-raising binary overloads
+
+    fn def_add[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__add__` via the `nb_add` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_add](self._ptr)
+        return self
+
+    fn def_and[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__and__` via the `nb_and` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_and](self._ptr)
+        return self
+
+    fn def_divmod[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__divmod__` via the `nb_divmod` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_divmod](self._ptr)
+        return self
+
+    fn def_floordiv[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__floordiv__` via the `nb_floor_divide` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_floor_divide](self._ptr)
+        return self
+
+    fn def_lshift[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__lshift__` via the `nb_lshift` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_lshift](self._ptr)
+        return self
+
+    fn def_matmul[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__matmul__` via the `nb_matrix_multiply` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_matrix_multiply](self._ptr)
+        return self
+
+    fn def_mod[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__mod__` via the `nb_remainder` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_remainder](self._ptr)
+        return self
+
+    fn def_mul[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__mul__` via the `nb_multiply` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_multiply](self._ptr)
+        return self
+
+    fn def_or[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__or__` via the `nb_or` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_or](self._ptr)
+        return self
+
+    fn def_rshift[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__rshift__` via the `nb_rshift` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_rshift](self._ptr)
+        return self
+
+    fn def_sub[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__sub__` via the `nb_subtract` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_subtract](self._ptr)
+        return self
+
+    fn def_truediv[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__truediv__` via the `nb_true_divide` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_true_divide](self._ptr)
+        return self
+
+    fn def_xor[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__xor__` via the `nb_xor` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_xor](self._ptr)
+        return self
+
+    fn def_iadd[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__iadd__` via the `nb_inplace_add` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_add](self._ptr)
+        return self
+
+    fn def_iand[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__iand__` via the `nb_inplace_and` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_and](self._ptr)
+        return self
+
+    fn def_ifloordiv[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_floor_divide](self._ptr)
+        return self
+
+    fn def_ilshift[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__ilshift__` via the `nb_inplace_lshift` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_lshift](self._ptr)
+        return self
+
+    fn def_imatmul[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_matrix_multiply](self._ptr)
+        return self
+
+    fn def_imod[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__imod__` via the `nb_inplace_remainder` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_remainder](self._ptr)
+        return self
+
+    fn def_imul[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__imul__` via the `nb_inplace_multiply` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_multiply](self._ptr)
+        return self
+
+    fn def_ior[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__ior__` via the `nb_inplace_or` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_or](self._ptr)
+        return self
+
+    fn def_irshift[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__irshift__` via the `nb_inplace_rshift` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_rshift](self._ptr)
+        return self
+
+    fn def_isub[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__isub__` via the `nb_inplace_subtract` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_subtract](self._ptr)
+        return self
+
+    fn def_itruediv[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__itruediv__` via the `nb_inplace_true_divide` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_true_divide](self._ptr)
+        return self
+
+    fn def_ixor[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__ixor__` via the `nb_inplace_xor` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_xor](self._ptr)
+        return self
+
     # ------------------------------------------------------------------
     # Ternary slots — C type: ternaryfunc  fn(PyObject *, PyObject *, PyObject *) -> PyObject *
     # `mod` is None unless pow(base, exp, mod) was called.
@@ -652,6 +908,18 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     ](mut self) -> ref[self] Self:
         """Install `__ipow__` via the `nb_inplace_power` slot."""
         _install_ternary[Self.self_type, method, _PySlotIndex.nb_inplace_power](self._ptr)
+        return self
+
+    # Non-raising ternary overloads
+
+    fn def_pow[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__pow__` via the `nb_power` slot (non-raising overload)."""
+        _install_ternary[Self.self_type, _lift_obj_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_power](self._ptr)
+        return self
+
+    fn def_ipow[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__ipow__` via the `nb_inplace_power` slot (non-raising overload)."""
+        _install_ternary[Self.self_type, _lift_obj_obj_to_obj[Self.self_type, method], _PySlotIndex.nb_inplace_power](self._ptr)
         return self
 
 
@@ -714,6 +982,23 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         - `Variant[PythonObject, Int](Int(0))` for deletion (null C pointer).
         """
         _install_objobjargproc[Self.self_type, method](self._ptr)
+        return self
+
+    # Non-raising overloads
+
+    fn def_len[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> Int](mut self) -> ref[self] Self:
+        """Install `__len__` via the `mp_length` slot (non-raising overload)."""
+        _install_lenfunc[Self.self_type, _lift_to_int[Self.self_type, method]](self._ptr)
+        return self
+
+    fn def_getitem[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__getitem__` via the `mp_subscript` slot (non-raising overload)."""
+        _install_mp_getitem[Self.self_type, _lift_obj_to_obj[Self.self_type, method]](self._ptr)
+        return self
+
+    fn def_setitem[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, Variant[PythonObject, Int]) -> None](mut self) -> ref[self] Self:
+        """Install `__setitem__`/`__delitem__` via the `mp_ass_subscript` slot (non-raising overload)."""
+        _install_objobjargproc[Self.self_type, _lift_obj_var_to_none[Self.self_type, method]](self._ptr)
         return self
 
 
@@ -822,4 +1107,48 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         """Install `__imul__` (in-place repetition) via the `sq_inplace_repeat` slot.
         """
         _install_ssizeargfunc[Self.self_type, method, _PySlotIndex.sq_inplace_repeat](self._ptr)
+        return self
+
+    # Non-raising overloads
+
+    fn def_len[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> Int](mut self) -> ref[self] Self:
+        """Install `__len__` via the `sq_length` slot (non-raising overload)."""
+        comptime _lenfunc = fn(PyObjectPtr) -> Py_ssize_t
+        var fn_ptr: _lenfunc = _mp_length_wrapper[Self.self_type, _lift_to_int[Self.self_type, method]]
+        self._ptr[]._insert_slot(PyType_Slot(_PySlotIndex.sq_length, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)))
+        return self
+
+    fn def_getitem[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__getitem__` via the `sq_item` slot (non-raising overload)."""
+        _install_ssizeargfunc[Self.self_type, _lift_int_to_obj[Self.self_type, method], _PySlotIndex.sq_item](self._ptr)
+        return self
+
+    fn def_setitem[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]) -> None](mut self) -> ref[self] Self:
+        """Install `__setitem__`/`__delitem__` via the `sq_ass_item` slot (non-raising overload)."""
+        _install_ssizeobjargproc[Self.self_type, _lift_int_var_to_none[Self.self_type, method]](self._ptr)
+        return self
+
+    fn def_contains[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> Bool](mut self) -> ref[self] Self:
+        """Install `__contains__` via the `sq_contains` slot (non-raising overload)."""
+        _install_objobjproc[Self.self_type, _lift_obj_to_bool[Self.self_type, method], _PySlotIndex.sq_contains](self._ptr)
+        return self
+
+    fn def_concat[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__add__` (concatenation) via the `sq_concat` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.sq_concat](self._ptr)
+        return self
+
+    fn def_repeat[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__mul__` (repetition) via the `sq_repeat` slot (non-raising overload)."""
+        _install_ssizeargfunc[Self.self_type, _lift_int_to_obj[Self.self_type, method], _PySlotIndex.sq_repeat](self._ptr)
+        return self
+
+    fn def_iconcat[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__iadd__` (in-place concatenation) via the `sq_inplace_concat` slot (non-raising overload)."""
+        _install_binary[Self.self_type, _lift_obj_to_obj[Self.self_type, method], _PySlotIndex.sq_inplace_concat](self._ptr)
+        return self
+
+    fn def_irepeat[method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) -> PythonObject](mut self) -> ref[self] Self:
+        """Install `__imul__` (in-place repetition) via the `sq_inplace_repeat` slot (non-raising overload)."""
+        _install_ssizeargfunc[Self.self_type, _lift_int_to_obj[Self.self_type, method], _PySlotIndex.sq_inplace_repeat](self._ptr)
         return self
