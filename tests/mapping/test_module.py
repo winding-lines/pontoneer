@@ -3,10 +3,8 @@
 import mojo_module
 
 
-def test_mapping_protocol() -> None:
-    print("Testing mapping protocol...")
-
-    obj = mojo_module.SimpleList.from_list([10, 20, 30])
+def _run_mapping_assertions(cls) -> None:
+    obj = cls.from_list([10, 20, 30])
 
     # __len__ (mp_length)
     assert len(obj) == 3
@@ -30,16 +28,23 @@ def test_mapping_protocol() -> None:
     assert obj[2] == 30
 
     # __delitem__ (mp_ass_subscript — deletion)
-    d = mojo_module.SimpleList.from_list([1, 2, 3])
+    d = cls.from_list([1, 2, 3])
     del d[0]
     assert len(d) == 2
     assert d[0] == 2
     assert d[1] == 3
 
     # Empty list has length 0
-    empty = mojo_module.SimpleList()
+    empty = cls()
     assert len(empty) == 0
 
+
+def test_mapping_protocol() -> None:
+    print("Testing mapping protocol...")
+    _run_mapping_assertions(mojo_module.SimpleList)
+    print("  ptr-receiver: ok")
+    _run_mapping_assertions(mojo_module.SimpleListV)
+    print("  value-receiver: ok")
     print("Mapping protocol tests passed!")
 
 

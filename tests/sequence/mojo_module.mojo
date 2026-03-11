@@ -88,6 +88,75 @@ struct Seq(Defaultable, Movable, Writable):
         writer.write("Seq(len=", len(self.data), ")")
 
 
+# SeqV uses value-receiver handlers where no mutation is needed, and pointer
+# receivers where the object must be modified in place.
+struct SeqV(Defaultable, Movable, Writable):
+    var data: List[Int]
+
+    fn __init__(out self):
+        self.data = []
+
+    @staticmethod
+    fn from_list(items: PythonObject) raises -> PythonObject:
+        var result = SeqV()
+        for item in items:
+            result.data.append(Int(py=item))
+        return PythonObject(alloc=result^)
+
+    # Non-raising value receiver
+    fn py__len__(self) -> Int:
+        return len(self.data)
+
+    # Raising value receiver
+    fn py__getitem__(self, index: Int) raises -> PythonObject:
+        if index < 0 or index >= len(self.data):
+            raise Error("index out of range")
+        return PythonObject(self.data[index])
+
+    # Mutation uses pointer receiver
+    @staticmethod
+    fn py__setitem__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        index: Int,
+        value: Variant[PythonObject, Int],
+    ) raises -> None:
+        if index < 0 or index >= len(self_ptr[].data):
+            raise Error("index out of range")
+        if value.isa[PythonObject]():
+            self_ptr[].data[index] = Int(py=value[PythonObject])
+        else:
+            _ = self_ptr[].data.pop(index)
+
+    # Non-raising value receiver for contains
+    fn py__contains__(self, item: PythonObject) raises -> Bool:
+        var v = Int(py=item)
+        for elem in self.data:
+            if elem == v:
+                return True
+        return False
+
+    # Raising value receiver for concat
+    fn py__concat__(self, other: PythonObject) raises -> PythonObject:
+        var other_ptr = other.downcast_value_ptr[Self]()
+        var result = SeqV()
+        for v in self.data:
+            result.data.append(v)
+        for v in other_ptr[].data:
+            result.data.append(v)
+        return PythonObject(alloc=result^)
+
+    # Non-raising value receiver for repeat
+    fn py__repeat__(self, count: Int) raises -> PythonObject:
+        var result = SeqV()
+        for _ in range(count):
+            for v in self.data:
+                result.data.append(v)
+        return PythonObject(alloc=result^)
+
+    fn write_to(self, mut writer: Some[Writer]):
+        writer.write("SeqV(len=", len(self.data), ")")
+
+
 @export
 fn PyInit_mojo_module() -> PythonObject:
     try:
@@ -105,6 +174,20 @@ fn PyInit_mojo_module() -> PythonObject:
             .def_contains[Seq.py__contains__]()
             .def_concat[Seq.py__concat__]()
             .def_repeat[Seq.py__repeat__]()
+        )
+        ref tbv = (
+            b.add_type[SeqV]("SeqV")
+            .def_init_defaultable[SeqV]()
+            .def_staticmethod[SeqV.from_list]("from_list")
+        )
+        var spbv = SequenceProtocolBuilder[SeqV](tbv)
+        _ = (
+            spbv.def_len[SeqV.py__len__]()
+            .def_getitem[SeqV.py__getitem__]()
+            .def_setitem[SeqV.py__setitem__]()
+            .def_contains[SeqV.py__contains__]()
+            .def_concat[SeqV.py__concat__]()
+            .def_repeat[SeqV.py__repeat__]()
         )
         return b.finalize()
     except e:

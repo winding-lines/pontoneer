@@ -69,6 +69,55 @@ struct Box(Defaultable, Movable, Writable):
         writer.write("Box(", self.value, ")")
 
 
+# BoxV uses a value-receiver rich_compare handler.
+struct BoxV(Defaultable, Movable, Writable):
+    var value: Float64
+
+    fn __init__(out self):
+        self.value = 0.0
+
+    fn __init__(out self, value: Float64):
+        self.value = value
+
+    @staticmethod
+    fn _get_self_ptr(
+        py_self: PythonObject,
+    ) -> UnsafePointer[Self, MutAnyOrigin]:
+        try:
+            return py_self.downcast_value_ptr[Self]()
+        except e:
+            abort(String("downcast failed: ", e))
+
+    @staticmethod
+    fn new(value: PythonObject) raises -> PythonObject:
+        return PythonObject(alloc=BoxV(Float64(py=value)))
+
+    @staticmethod
+    fn get_value(py_self: PythonObject) raises -> PythonObject:
+        return PythonObject(Self._get_self_ptr(py_self)[].value)
+
+    # Raising value-receiver rich_compare
+    fn rich_compare(self, other: PythonObject, op: Int) raises -> Bool:
+        var a = self.value
+        var b = other.downcast_value_ptr[Self]()[].value
+        if op == RichCompareOps.Py_LT:
+            return a < b
+        if op == RichCompareOps.Py_LE:
+            return a <= b
+        if op == RichCompareOps.Py_EQ:
+            return a == b
+        if op == RichCompareOps.Py_NE:
+            return a != b
+        if op == RichCompareOps.Py_GT:
+            return a > b
+        if op == RichCompareOps.Py_GE:
+            return a >= b
+        raise NotImplementedError()
+
+    fn write_to(self, mut writer: Some[Writer]):
+        writer.write("BoxV(", self.value, ")")
+
+
 @export
 fn PyInit_mojo_module() -> PythonObject:
     try:
@@ -81,6 +130,14 @@ fn PyInit_mojo_module() -> PythonObject:
         )
         var tpb = TypeProtocolBuilder[Box](tb)
         _ = tpb.def_richcompare[Box.rich_compare]()
+        ref tbv = (
+            b.add_type[BoxV]("BoxV")
+            .def_init_defaultable[BoxV]()
+            .def_staticmethod[BoxV.new]("new")
+            .def_method[BoxV.get_value]("get_value")
+        )
+        var tpbv = TypeProtocolBuilder[BoxV](tbv)
+        _ = tpbv.def_richcompare[BoxV.rich_compare]()
         return b.finalize()
     except e:
         abort(String("failed to create Python module: ", e))

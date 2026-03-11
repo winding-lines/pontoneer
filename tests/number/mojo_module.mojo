@@ -212,6 +212,142 @@ struct Number(Defaultable, Movable, Writable):
         writer.write("Number(", self.value, ")")
 
 
+# NumberV uses value-receiver handlers.  Simple unary/bool slots are
+# non-raising; binary slots that need NotImplementedError are raising.
+struct NumberV(Defaultable, Movable, Writable):
+    var value: Int
+
+    fn __init__(out self):
+        self.value = 0
+
+    fn __init__(out self, value: Int):
+        self.value = value
+
+    @staticmethod
+    fn _get_self_ptr(
+        py_self: PythonObject,
+    ) -> UnsafePointer[Self, MutAnyOrigin]:
+        try:
+            return py_self.downcast_value_ptr[Self]()
+        except e:
+            abort(String("downcast failed: ", e))
+
+    @staticmethod
+    fn new(value: PythonObject) raises -> PythonObject:
+        return PythonObject(alloc=NumberV(Int(py=value)))
+
+    @staticmethod
+    fn get_value(py_self: PythonObject) raises -> PythonObject:
+        return PythonObject(Self._get_self_ptr(py_self)[].value)
+
+    # Value-receiver handlers — unary slots return a new Python-boxed NumberV
+    fn py__neg__(self) raises -> PythonObject:
+        return PythonObject(alloc=NumberV(-self.value))
+
+    fn py__abs__(self) raises -> PythonObject:
+        return PythonObject(alloc=NumberV(abs(self.value)))
+
+    fn py__pos__(self) raises -> PythonObject:
+        return PythonObject(alloc=NumberV(self.value))
+
+    fn py__invert__(self) raises -> PythonObject:
+        return PythonObject(alloc=NumberV(~self.value))
+
+    fn py__bool__(self) -> Bool:
+        return self.value != 0
+
+    fn py__int__(self) raises -> PythonObject:
+        return PythonObject(self.value)
+
+    fn py__float__(self) raises -> PythonObject:
+        return PythonObject(Float64(self.value))
+
+    fn py__index__(self) raises -> PythonObject:
+        return PythonObject(self.value)
+
+    # Raising value receivers for binary slots (need NotImplementedError)
+    fn py__add__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value + o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__sub__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value - o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__mul__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value * o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__floordiv__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value // o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__mod__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value % o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__and__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value & o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__or__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value | o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__xor__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value ^ o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__lshift__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value << o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__rshift__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            return PythonObject(alloc=NumberV(self.value >> o[].value))
+        except:
+            raise NotImplementedError()
+
+    fn py__pow__(self, exp: PythonObject, mod: PythonObject) raises -> PythonObject:
+        try:
+            var e = exp.downcast_value_ptr[Self]()
+            var result = Int(Float64(self.value) ** Float64(e[].value))
+            return PythonObject(alloc=NumberV(result))
+        except:
+            raise NotImplementedError()
+
+    fn write_to(self, mut writer: Some[Writer]):
+        writer.write("NumberV(", self.value, ")")
+
+
 @export
 fn PyInit_mojo_module() -> PythonObject:
     try:
@@ -243,6 +379,34 @@ fn PyInit_mojo_module() -> PythonObject:
             .def_lshift[Number.py__lshift__]()
             .def_rshift[Number.py__rshift__]()
             .def_pow[Number.py__pow__]()
+        )
+        ref tbv = (
+            b.add_type[NumberV]("NumberV")
+            .def_init_defaultable[NumberV]()
+            .def_staticmethod[NumberV.new]("new")
+            .def_method[NumberV.get_value]("get_value")
+        )
+        var npbv = NumberProtocolBuilder[NumberV](tbv)
+        _ = (
+            npbv.def_neg[NumberV.py__neg__]()
+            .def_abs[NumberV.py__abs__]()
+            .def_pos[NumberV.py__pos__]()
+            .def_invert[NumberV.py__invert__]()
+            .def_bool[NumberV.py__bool__]()
+            .def_int[NumberV.py__int__]()
+            .def_float[NumberV.py__float__]()
+            .def_index[NumberV.py__index__]()
+            .def_add[NumberV.py__add__]()
+            .def_sub[NumberV.py__sub__]()
+            .def_mul[NumberV.py__mul__]()
+            .def_floordiv[NumberV.py__floordiv__]()
+            .def_mod[NumberV.py__mod__]()
+            .def_and[NumberV.py__and__]()
+            .def_or[NumberV.py__or__]()
+            .def_xor[NumberV.py__xor__]()
+            .def_lshift[NumberV.py__lshift__]()
+            .def_rshift[NumberV.py__rshift__]()
+            .def_pow[NumberV.py__pow__]()
         )
         return b.finalize()
     except e:

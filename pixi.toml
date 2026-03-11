@@ -1,6 +1,6 @@
 [workspace]
 name = "pontoneer"
-version = "0.3.3"
+version = "0.3.4"
 description = "Mojo library providing additional type protocol extensions for Python interop."
 authors = ["Marius Seritan <39998+winding-lines@users.noreply.github.com>"]
 license = "Apache-2.0 WITH LLVM-exception"

@@ -3,16 +3,10 @@
 import mojo_module
 
 
-def box(v: float) -> mojo_module.Box:
-    return mojo_module.Box.new(v)
-
-
-def test_type_protocol() -> None:
-    print("Testing type protocol (rich comparison)...")
-
-    lo = box(1.0)
-    hi = box(5.0)
-    eq = box(1.0)
+def _run_richcompare_assertions(new_fn) -> None:
+    lo = new_fn(1.0)
+    hi = new_fn(5.0)
+    eq = new_fn(1.0)
 
     # __lt__ (Py_LT)
     assert lo < hi
@@ -43,12 +37,19 @@ def test_type_protocol() -> None:
     assert not lo >= hi
 
     # Sorting relies on __lt__
-    boxes = [box(3.0), box(1.0), box(2.0)]
+    boxes = [new_fn(3.0), new_fn(1.0), new_fn(2.0)]
     boxes.sort()
     assert boxes[0].get_value() == 1.0
     assert boxes[1].get_value() == 2.0
     assert boxes[2].get_value() == 3.0
 
+
+def test_type_protocol() -> None:
+    print("Testing type protocol (rich comparison)...")
+    _run_richcompare_assertions(mojo_module.Box.new)
+    print("  ptr-receiver: ok")
+    _run_richcompare_assertions(mojo_module.BoxV.new)
+    print("  value-receiver: ok")
     print("Type protocol tests passed!")
 
 

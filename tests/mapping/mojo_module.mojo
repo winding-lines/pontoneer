@@ -61,6 +61,53 @@ struct SimpleList(Defaultable, Movable, Writable):
         writer.write("SimpleList(len=", len(self.data), ")")
 
 
+# SimpleListV uses value-receiver handlers (fn(self: Self, ...) instead of
+# fn(self_ptr: UnsafePointer[Self, MutAnyOrigin], ...)).
+# Read-only handlers use the non-raising overload; mutating ones use raising
+# ptr-receiver since they need to modify the Python-owned object in place.
+struct SimpleListV(Defaultable, Movable, Writable):
+    var data: List[Int]
+
+    fn __init__(out self):
+        self.data = []
+
+    @staticmethod
+    fn from_list(items: PythonObject) raises -> PythonObject:
+        var result = SimpleListV()
+        for item in items:
+            result.data.append(Int(py=item))
+        return PythonObject(alloc=result^)
+
+    # Non-raising value receiver
+    fn py__len__(self) -> Int:
+        return len(self.data)
+
+    # Raising value receiver
+    fn py__getitem__(self, index: PythonObject) raises -> PythonObject:
+        var i = Int(py=index)
+        if i < 0 or i >= len(self.data):
+            raise Error("index out of range")
+        return PythonObject(self.data[i])
+
+    # Mutation still uses pointer receiver so changes are visible on the Python object
+    @staticmethod
+    fn py__setitem__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        index: PythonObject,
+        value: Variant[PythonObject, Int],
+    ) raises -> None:
+        var i = Int(py=index)
+        if i < 0 or i >= len(self_ptr[].data):
+            raise Error("index out of range")
+        if value.isa[PythonObject]():
+            self_ptr[].data[i] = Int(py=value[PythonObject])
+        else:
+            _ = self_ptr[].data.pop(i)
+
+    fn write_to(self, mut writer: Some[Writer]):
+        writer.write("SimpleListV(len=", len(self.data), ")")
+
+
 @export
 fn PyInit_mojo_module() -> PythonObject:
     try:
@@ -75,6 +122,17 @@ fn PyInit_mojo_module() -> PythonObject:
             mpb.def_len[SimpleList.py__len__]()
             .def_getitem[SimpleList.py__getitem__]()
             .def_setitem[SimpleList.py__setitem__]()
+        )
+        ref tbv = (
+            b.add_type[SimpleListV]("SimpleListV")
+            .def_init_defaultable[SimpleListV]()
+            .def_staticmethod[SimpleListV.from_list]("from_list")
+        )
+        var mpbv = MappingProtocolBuilder[SimpleListV](tbv)
+        _ = (
+            mpbv.def_len[SimpleListV.py__len__]()
+            .def_getitem[SimpleListV.py__getitem__]()
+            .def_setitem[SimpleListV.py__setitem__]()
         )
         return b.finalize()
     except e:
