@@ -125,7 +125,7 @@ struct _PySlotIndex:
     comptime tp_token = Int32(83)  # Python 3.14+
 
 
-struct TypeProtocolBuilder:
+struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
     """Wraps a `PythonTypeBuilder` reference and installs CPython type protocol slots.
 
     `TypeProtocolBuilder` holds a pointer to a `PythonTypeBuilder` that is
@@ -138,12 +138,12 @@ struct TypeProtocolBuilder:
         ref tb = b.add_type[MyStruct]("MyStruct")
             .def_init_defaultable[MyStruct]()
             .def_staticmethod[MyStruct.new]("new")
-        TypeProtocolBuilder(tb).def_richcompare[MyStruct.rich_compare]()
-        MappingProtocolBuilder(tb)
+        TypeProtocolBuilder[MyStruct](tb).def_richcompare[MyStruct.rich_compare]()
+        MappingProtocolBuilder[MyStruct](tb)
             .def_len[MyStruct.py__len__]()
             .def_getitem[MyStruct.py__getitem__]()
             .def_setitem[MyStruct.py__setitem__]()
-        NumberProtocolBuilder(tb).def_neg[MyStruct.py__neg__]()
+        NumberProtocolBuilder[MyStruct](tb).def_neg[MyStruct.py__neg__]()
         ```
     """
 
@@ -160,7 +160,7 @@ struct TypeProtocolBuilder:
     # ------------------------------------------------------------------
 
     fn def_richcompare[
-        method: fn(PythonObject, PythonObject, Int) raises -> Bool
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, Int) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install rich comparison via the `tp_richcompare` slot.
 
@@ -169,10 +169,10 @@ struct TypeProtocolBuilder:
 
         Parameters:
             method: Static method with signature
-                `fn(py_self, other: PythonObject, op: Int) raises -> Bool`
+                `fn(self_ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool`
                 where `op` is one of `RichCompareOps.Py_LT` … `Py_GE`.
         """
-        _install_richcompare[method](self._ptr)
+        _install_richcompare[Self.self_type, method](self._ptr)
         return self
 
 
@@ -182,64 +182,69 @@ struct TypeProtocolBuilder:
 
 
 fn _install_unary[
-    method: fn(PythonObject) raises -> PythonObject,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject,
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `unaryfunc` slot into the builder pointed to by `ptr`."""
     comptime _unaryfunc = fn(PyObjectPtr) -> PyObjectPtr
-    var fn_ptr: _unaryfunc = _unaryfunc_wrapper[method]
+    var fn_ptr: _unaryfunc = _unaryfunc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
     )
 
 
 fn _install_binary[
-    method: fn(PythonObject, PythonObject) raises -> PythonObject,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject) raises -> PythonObject,
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `binaryfunc` slot into the builder pointed to by `ptr`."""
     comptime _binaryfunc = fn(PyObjectPtr, PyObjectPtr) -> PyObjectPtr
-    var fn_ptr: _binaryfunc = _binaryfunc_wrapper[method]
+    var fn_ptr: _binaryfunc = _binaryfunc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
     )
 
 
 fn _install_ternary[
-    method: fn(PythonObject, PythonObject, PythonObject) raises -> PythonObject,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject) raises -> PythonObject,
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `ternaryfunc` slot into the builder pointed to by `ptr`."""
     comptime _ternaryfunc = fn(
         PyObjectPtr, PyObjectPtr, PyObjectPtr
     ) -> PyObjectPtr
-    var fn_ptr: _ternaryfunc = _ternaryfunc_wrapper[method]
+    var fn_ptr: _ternaryfunc = _ternaryfunc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
     )
 
 
 fn _install_inquiry[
-    method: fn(PythonObject) raises -> Bool,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool,
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert an `inquiry` slot into the builder pointed to by `ptr`."""
     comptime _inquiry = fn(PyObjectPtr) -> c_int
-    var fn_ptr: _inquiry = _inquiry_wrapper[method]
+    var fn_ptr: _inquiry = _inquiry_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
     )
 
 
 fn _install_richcompare[
-    method: fn(PythonObject, PythonObject, Int) raises -> Bool,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int) raises -> Bool,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `richcmpfunc` slot (`tp_richcompare`) into the builder pointed to by `ptr`.
     """
     # Assign to a typed variable first so the compiler concretizes the
     # parameterized function into a plain C function pointer before rebind.
     comptime _richcmpfunc = fn(PyObjectPtr, PyObjectPtr, c_int) -> PyObjectPtr
-    var fn_ptr: _richcmpfunc = _richcompare_wrapper[method]
+    var fn_ptr: _richcmpfunc = _richcompare_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
             _PySlotIndex.tp_richcompare,
@@ -249,12 +254,13 @@ fn _install_richcompare[
 
 
 fn _install_lenfunc[
-    method: fn(PythonObject) raises -> Int,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Int,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `lenfunc` slot (`mp_length`) into the builder pointed to by `ptr`.
     """
     comptime _lenfunc = fn(PyObjectPtr) -> Py_ssize_t
-    var fn_ptr: _lenfunc = _mp_length_wrapper[method]
+    var fn_ptr: _lenfunc = _mp_length_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
             _PySlotIndex.mp_length, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)
@@ -263,12 +269,13 @@ fn _install_lenfunc[
 
 
 fn _install_mp_getitem[
-    method: fn(PythonObject, PythonObject) raises -> PythonObject,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject) raises -> PythonObject,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `binaryfunc` slot (`mp_subscript`) into the builder pointed to by `ptr`.
     """
     comptime _binaryfunc = fn(PyObjectPtr, PyObjectPtr) -> PyObjectPtr
-    var fn_ptr: _binaryfunc = _mp_subscript_wrapper[method]
+    var fn_ptr: _binaryfunc = _mp_subscript_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
             _PySlotIndex.mp_getitem, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)
@@ -277,14 +284,15 @@ fn _install_mp_getitem[
 
 
 fn _install_objobjargproc[
+    self_type: ImplicitlyDestructible,
     method: fn(
-        PythonObject, PythonObject, Variant[PythonObject, Int]
+        UnsafePointer[self_type, MutAnyOrigin], PythonObject, Variant[PythonObject, Int]
     ) raises -> None,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert an `objobjargproc` slot (`mp_ass_subscript`) into the builder pointed to by `ptr`.
     """
     comptime _objobjargproc = fn(PyObjectPtr, PyObjectPtr, PyObjectPtr) -> c_int
-    var fn_ptr: _objobjargproc = _mp_ass_subscript_wrapper[method]
+    var fn_ptr: _objobjargproc = _mp_ass_subscript_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
             _PySlotIndex.mp_setitem, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)
@@ -293,26 +301,28 @@ fn _install_objobjargproc[
 
 
 fn _install_ssizeargfunc[
-    method: fn(PythonObject, Int) raises -> PythonObject,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], Int) raises -> PythonObject,
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `ssizeargfunc` slot into the builder pointed to by `ptr`."""
     comptime _ssizeargfunc = fn(PyObjectPtr, Py_ssize_t) -> PyObjectPtr
-    var fn_ptr: _ssizeargfunc = _ssizeargfunc_wrapper[method]
+    var fn_ptr: _ssizeargfunc = _ssizeargfunc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
     )
 
 
 fn _install_ssizeobjargproc[
-    method: fn(PythonObject, Int, Variant[PythonObject, Int]) raises -> None,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]) raises -> None,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert the `ssizeobjargproc` slot (`sq_ass_item`) into the builder pointed to by `ptr`.
     """
     comptime _ssizeobjargproc = fn(
         PyObjectPtr, Py_ssize_t, PyObjectPtr
     ) -> c_int
-    var fn_ptr: _ssizeobjargproc = _ssizeobjargproc_wrapper[method]
+    var fn_ptr: _ssizeobjargproc = _ssizeobjargproc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
             _PySlotIndex.sq_ass_item,
@@ -322,12 +332,13 @@ fn _install_ssizeobjargproc[
 
 
 fn _install_objobjproc[
-    method: fn(PythonObject, PythonObject) raises -> Bool,
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject) raises -> Bool,
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert an `objobjproc` slot into the builder pointed to by `ptr`."""
     comptime _objobjproc = fn(PyObjectPtr, PyObjectPtr) -> c_int
-    var fn_ptr: _objobjproc = _objobjproc_wrapper[method]
+    var fn_ptr: _objobjproc = _objobjproc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
     )
@@ -338,11 +349,13 @@ fn _install_objobjproc[
 # ===----------------------------------------------------------------------=== #
 
 
-struct NumberProtocolBuilder:
+struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     """Installs CPython number protocol slots on a `PythonTypeBuilder`.
 
     Construct directly from a `PythonTypeBuilder`.  Each method is named after the
     corresponding Python dunder and accepts only the matching function signature.
+    Handler functions receive `UnsafePointer[T, MutAnyOrigin]` as their first
+    argument instead of a raw `PythonObject`.
 
     Binary methods (`def_add`, `def_mul`, etc.) and ternary methods (`def_pow`,
     `def_ipow`) support `NotImplementedError`: raise it from your handler to
@@ -350,7 +363,7 @@ struct NumberProtocolBuilder:
 
     Usage:
         ```mojo
-        var npb = NumberProtocolBuilder(tb)
+        var npb = NumberProtocolBuilder[MyStruct](tb)
         npb.def_neg[MyStruct.py__neg__]()
            .def_bool[MyStruct.py__bool__]()
            .def_add[MyStruct.py__add__]()
@@ -374,52 +387,52 @@ struct NumberProtocolBuilder:
     # ------------------------------------------------------------------
 
     fn def_abs[
-        method: fn(PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot."""
-        _install_unary[method, _PySlotIndex.nb_absolute](self._ptr)
+        _install_unary[Self.self_type, method, _PySlotIndex.nb_absolute](self._ptr)
         return self
 
     fn def_float[
-        method: fn(PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot."""
-        _install_unary[method, _PySlotIndex.nb_float](self._ptr)
+        _install_unary[Self.self_type, method, _PySlotIndex.nb_float](self._ptr)
         return self
 
     fn def_index[
-        method: fn(PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot."""
-        _install_unary[method, _PySlotIndex.nb_index](self._ptr)
+        _install_unary[Self.self_type, method, _PySlotIndex.nb_index](self._ptr)
         return self
 
     fn def_int[
-        method: fn(PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot."""
-        _install_unary[method, _PySlotIndex.nb_int](self._ptr)
+        _install_unary[Self.self_type, method, _PySlotIndex.nb_int](self._ptr)
         return self
 
     fn def_invert[
-        method: fn(PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot."""
-        _install_unary[method, _PySlotIndex.nb_invert](self._ptr)
+        _install_unary[Self.self_type, method, _PySlotIndex.nb_invert](self._ptr)
         return self
 
     fn def_neg[
-        method: fn(PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot."""
-        _install_unary[method, _PySlotIndex.nb_negative](self._ptr)
+        _install_unary[Self.self_type, method, _PySlotIndex.nb_negative](self._ptr)
         return self
 
     fn def_pos[
-        method: fn(PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot."""
-        _install_unary[method, _PySlotIndex.nb_positive](self._ptr)
+        _install_unary[Self.self_type, method, _PySlotIndex.nb_positive](self._ptr)
         return self
 
     # ------------------------------------------------------------------
@@ -427,10 +440,10 @@ struct NumberProtocolBuilder:
     # ------------------------------------------------------------------
 
     fn def_bool[
-        method: fn(PythonObject) raises -> Bool
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__bool__` via the `nb_bool` slot."""
-        _install_inquiry[method, _PySlotIndex.nb_bool](self._ptr)
+        _install_inquiry[Self.self_type, method, _PySlotIndex.nb_bool](self._ptr)
         return self
 
     # ------------------------------------------------------------------
@@ -439,182 +452,182 @@ struct NumberProtocolBuilder:
     # ------------------------------------------------------------------
 
     fn def_add[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `nb_add` slot."""
-        _install_binary[method, _PySlotIndex.nb_add](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_add](self._ptr)
         return self
 
     fn def_and[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__and__` via the `nb_and` slot."""
-        _install_binary[method, _PySlotIndex.nb_and](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_and](self._ptr)
         return self
 
     fn def_divmod[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot."""
-        _install_binary[method, _PySlotIndex.nb_divmod](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_divmod](self._ptr)
         return self
 
     fn def_floordiv[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot."""
-        _install_binary[method, _PySlotIndex.nb_floor_divide](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_floor_divide](self._ptr)
         return self
 
     fn def_lshift[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot."""
-        _install_binary[method, _PySlotIndex.nb_lshift](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_lshift](self._ptr)
         return self
 
     fn def_matmul[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot."""
-        _install_binary[method, _PySlotIndex.nb_matrix_multiply](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_matrix_multiply](self._ptr)
         return self
 
     fn def_mod[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot."""
-        _install_binary[method, _PySlotIndex.nb_remainder](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_remainder](self._ptr)
         return self
 
     fn def_mul[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot."""
-        _install_binary[method, _PySlotIndex.nb_multiply](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_multiply](self._ptr)
         return self
 
     fn def_or[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__or__` via the `nb_or` slot."""
-        _install_binary[method, _PySlotIndex.nb_or](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_or](self._ptr)
         return self
 
     fn def_rshift[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot."""
-        _install_binary[method, _PySlotIndex.nb_rshift](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_rshift](self._ptr)
         return self
 
     fn def_sub[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot."""
-        _install_binary[method, _PySlotIndex.nb_subtract](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_subtract](self._ptr)
         return self
 
     fn def_truediv[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot."""
-        _install_binary[method, _PySlotIndex.nb_true_divide](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_true_divide](self._ptr)
         return self
 
     fn def_xor[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__xor__` via the `nb_xor` slot."""
-        _install_binary[method, _PySlotIndex.nb_xor](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_xor](self._ptr)
         return self
 
     # In-place binary slots
 
     fn def_iadd[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_add](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_add](self._ptr)
         return self
 
     fn def_iand[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_and](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_and](self._ptr)
         return self
 
     fn def_ifloordiv[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_floor_divide](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_floor_divide](self._ptr)
         return self
 
     fn def_ilshift[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_lshift](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_lshift](self._ptr)
         return self
 
     fn def_imatmul[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_matrix_multiply](
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_matrix_multiply](
             self._ptr
         )
         return self
 
     fn def_imod[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_remainder](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_remainder](self._ptr)
         return self
 
     fn def_imul[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_multiply](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_multiply](self._ptr)
         return self
 
     fn def_ior[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_or](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_or](self._ptr)
         return self
 
     fn def_irshift[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_rshift](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_rshift](self._ptr)
         return self
 
     fn def_isub[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_subtract](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_subtract](self._ptr)
         return self
 
     fn def_itruediv[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_true_divide](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_true_divide](self._ptr)
         return self
 
     fn def_ixor[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot."""
-        _install_binary[method, _PySlotIndex.nb_inplace_xor](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_xor](self._ptr)
         return self
 
     # ------------------------------------------------------------------
@@ -625,20 +638,20 @@ struct NumberProtocolBuilder:
 
     fn def_pow[
         method: fn(
-            PythonObject, PythonObject, PythonObject
+            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__pow__` via the `nb_power` slot."""
-        _install_ternary[method, _PySlotIndex.nb_power](self._ptr)
+        _install_ternary[Self.self_type, method, _PySlotIndex.nb_power](self._ptr)
         return self
 
     fn def_ipow[
         method: fn(
-            PythonObject, PythonObject, PythonObject
+            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ipow__` via the `nb_inplace_power` slot."""
-        _install_ternary[method, _PySlotIndex.nb_inplace_power](self._ptr)
+        _install_ternary[Self.self_type, method, _PySlotIndex.nb_inplace_power](self._ptr)
         return self
 
 
@@ -647,15 +660,17 @@ struct NumberProtocolBuilder:
 # ===----------------------------------------------------------------------=== #
 
 
-struct MappingProtocolBuilder:
+struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
     """Installs CPython mapping protocol slots on a `PythonTypeBuilder`.
 
     Construct directly from a `PythonTypeBuilder`.  The three methods correspond
     to `__len__`, `__getitem__`, and `__setitem__`/`__delitem__`.
+    Handler functions receive `UnsafePointer[T, MutAnyOrigin]` as their first
+    argument instead of a raw `PythonObject`.
 
     Usage:
         ```mojo
-        var mpb = MappingProtocolBuilder(tb)
+        var mpb = MappingProtocolBuilder[MyStruct](tb)
         mpb.def_len[MyStruct.py__len__]()
            .def_getitem[MyStruct.py__getitem__]()
            .def_setitem[MyStruct.py__setitem__]()
@@ -674,22 +689,22 @@ struct MappingProtocolBuilder:
         self._ptr = ptr
 
     fn def_len[
-        method: fn(PythonObject) raises -> Int
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `mp_length` slot."""
-        _install_lenfunc[method](self._ptr)
+        _install_lenfunc[Self.self_type, method](self._ptr)
         return self
 
     fn def_getitem[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot."""
-        _install_mp_getitem[method](self._ptr)
+        _install_mp_getitem[Self.self_type, method](self._ptr)
         return self
 
     fn def_setitem[
         method: fn(
-            PythonObject, PythonObject, Variant[PythonObject, Int]
+            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, Variant[PythonObject, Int]
         ) raises -> None
     ](mut self) -> ref[self] Self:
         """Install `__setitem__`/`__delitem__` via the `mp_ass_subscript` slot.
@@ -698,7 +713,7 @@ struct MappingProtocolBuilder:
         - `Variant[PythonObject, Int](value)` for assignment.
         - `Variant[PythonObject, Int](Int(0))` for deletion (null C pointer).
         """
-        _install_objobjargproc[method](self._ptr)
+        _install_objobjargproc[Self.self_type, method](self._ptr)
         return self
 
 
@@ -707,11 +722,13 @@ struct MappingProtocolBuilder:
 # ===----------------------------------------------------------------------=== #
 
 
-struct SequenceProtocolBuilder:
+struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
     """Installs CPython sequence protocol slots on a `PythonTypeBuilder`.
 
     Construct directly from a `PythonTypeBuilder`.  Method names follow the
     corresponding Python dunders.
+    Handler functions receive `UnsafePointer[T, MutAnyOrigin]` as their first
+    argument instead of a raw `PythonObject`.
 
     `def_getitem`, `def_repeat`, and `def_irepeat` use `ssizeargfunc`
     (integer index/count), unlike the mapping protocol which uses a
@@ -719,7 +736,7 @@ struct SequenceProtocolBuilder:
 
     Usage:
         ```mojo
-        var spb = SequenceProtocolBuilder(tb)
+        var spb = SequenceProtocolBuilder[MyStruct](tb)
         spb.def_len[MyStruct.py__len__]()
            .def_getitem[MyStruct.py__getitem__]()
            .def_contains[MyStruct.py__contains__]()
@@ -738,11 +755,11 @@ struct SequenceProtocolBuilder:
         self._ptr = ptr
 
     fn def_len[
-        method: fn(PythonObject) raises -> Int
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `sq_length` slot."""
         comptime _lenfunc = fn(PyObjectPtr) -> Py_ssize_t
-        var fn_ptr: _lenfunc = _mp_length_wrapper[method]
+        var fn_ptr: _lenfunc = _mp_length_wrapper[Self.self_type, method]
         self._ptr[]._insert_slot(
             PyType_Slot(
                 _PySlotIndex.sq_length,
@@ -752,14 +769,14 @@ struct SequenceProtocolBuilder:
         return self
 
     fn def_getitem[
-        method: fn(PythonObject, Int) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `sq_item` slot (integer index)."""
-        _install_ssizeargfunc[method, _PySlotIndex.sq_item](self._ptr)
+        _install_ssizeargfunc[Self.self_type, method, _PySlotIndex.sq_item](self._ptr)
         return self
 
     fn def_setitem[
-        method: fn(PythonObject, Int, Variant[PythonObject, Int]) raises -> None
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]) raises -> None
     ](mut self) -> ref[self] Self:
         """Install `__setitem__`/`__delitem__` via the `sq_ass_item` slot.
 
@@ -767,42 +784,42 @@ struct SequenceProtocolBuilder:
         - `Variant[PythonObject, Int](value)` for assignment.
         - `Variant[PythonObject, Int](Int(0))` for deletion (null C pointer).
         """
-        _install_ssizeobjargproc[method](self._ptr)
+        _install_ssizeobjargproc[Self.self_type, method](self._ptr)
         return self
 
     fn def_contains[
-        method: fn(PythonObject, PythonObject) raises -> Bool
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__contains__` via the `sq_contains` slot."""
-        _install_objobjproc[method, _PySlotIndex.sq_contains](self._ptr)
+        _install_objobjproc[Self.self_type, method, _PySlotIndex.sq_contains](self._ptr)
         return self
 
     fn def_concat[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__add__` (concatenation) via the `sq_concat` slot."""
-        _install_binary[method, _PySlotIndex.sq_concat](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.sq_concat](self._ptr)
         return self
 
     fn def_repeat[
-        method: fn(PythonObject, Int) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` (repetition) via the `sq_repeat` slot."""
-        _install_ssizeargfunc[method, _PySlotIndex.sq_repeat](self._ptr)
+        _install_ssizeargfunc[Self.self_type, method, _PySlotIndex.sq_repeat](self._ptr)
         return self
 
     fn def_iconcat[
-        method: fn(PythonObject, PythonObject) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` (in-place concatenation) via the `sq_inplace_concat` slot.
         """
-        _install_binary[method, _PySlotIndex.sq_inplace_concat](self._ptr)
+        _install_binary[Self.self_type, method, _PySlotIndex.sq_inplace_concat](self._ptr)
         return self
 
     fn def_irepeat[
-        method: fn(PythonObject, Int) raises -> PythonObject
+        method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` (in-place repetition) via the `sq_inplace_repeat` slot.
         """
-        _install_ssizeargfunc[method, _PySlotIndex.sq_inplace_repeat](self._ptr)
+        _install_ssizeargfunc[Self.self_type, method, _PySlotIndex.sq_inplace_repeat](self._ptr)
         return self

@@ -83,20 +83,6 @@ struct DataFrame(Defaultable, Movable, Writable):
         self.pos_y = y^
         self.call_counts = {}
 
-    @staticmethod
-    fn _get_self_ptr(
-        py_self: PythonObject,
-    ) -> UnsafePointer[Self, MutAnyOrigin]:
-        try:
-            return py_self.downcast_value_ptr[Self]()
-        except e:
-            abort(
-                String(
-                    "Python method receiver did not have the expected type: ",
-                    e,
-                )
-            )
-
     # ------------------------------------------------------------------
     # Regular methods
     # ------------------------------------------------------------------
@@ -107,7 +93,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     ) raises -> PythonObject:
         """Return the number of times a named method was called (for testing).
         """
-        var self_ptr = Self._get_self_ptr(py_self)
+        var self_ptr = py_self.downcast_value_ptr[Self]()
         return self_ptr[].call_counts.get(String(py=name), 0)
 
     @staticmethod
@@ -131,15 +117,13 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__len__(py_self: PythonObject) raises -> Int:
-        var self_ptr = Self._get_self_ptr(py_self)
+    fn py__len__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Int:
         return len(self_ptr[].pos_x)
 
     @staticmethod
     fn py__getitem__(
-        py_self: PythonObject, index: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], index: PythonObject
     ) raises -> PythonObject:
-        var self_ptr = Self._get_self_ptr(py_self)
         var i = Int(py=index)
         var length = len(self_ptr[].pos_x)
         if i < 0 or i >= length:
@@ -148,11 +132,10 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     fn py__setitem__(
-        py_self: PythonObject,
+        self_ptr: UnsafePointer[Self, MutAnyOrigin],
         index: PythonObject,
         value: Variant[PythonObject, Int],
     ) raises -> None:
-        var self_ptr = Self._get_self_ptr(py_self)
         var i = Int(py=index)
         var length = len(self_ptr[].pos_x)
         if i < 0 or i >= length:
@@ -172,23 +155,22 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     fn rich_compare(
-        self_ptr: PythonObject, other: PythonObject, op: Int
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject, op: Int
     ) raises -> Bool:
         """Compare DataFrames by bounding-box area.
 
         Only LT and EQ are implemented; all other operations raise
         NotImplementedError so Python falls back to the reflected call.
         """
-        var self_df = Self._get_self_ptr(self_ptr)
         var invocation = "rich_compare[{}]".format(op)
-        self_df[].call_counts[invocation] = (
-            self_df[].call_counts.get(invocation, 0) + 1
+        self_ptr[].call_counts[invocation] = (
+            self_ptr[].call_counts.get(invocation, 0) + 1
         )
-        var other_df = Self._get_self_ptr(other)
+        var other_df = other.downcast_value_ptr[Self]()
         if op == RichCompareOps.Py_LT:
-            return self_df[]._bounding_box_area < other_df[]._bounding_box_area
+            return self_ptr[]._bounding_box_area < other_df[]._bounding_box_area
         if op == RichCompareOps.Py_EQ:
-            return self_df[]._bounding_box_area == other_df[]._bounding_box_area
+            return self_ptr[]._bounding_box_area == other_df[]._bounding_box_area
         raise NotImplementedError()
 
     # ------------------------------------------------------------------
@@ -196,8 +178,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__neg__(py_self: PythonObject) raises -> PythonObject:
-        var self_ptr = Self._get_self_ptr(py_self)
+    fn py__neg__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
         var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
         for v in self_ptr[].pos_x:
@@ -207,8 +188,7 @@ struct DataFrame(Defaultable, Movable, Writable):
         return PythonObject(alloc=DataFrame(result_x^, result_y^))
 
     @staticmethod
-    fn py__abs__(py_self: PythonObject) raises -> PythonObject:
-        var self_ptr = Self._get_self_ptr(py_self)
+    fn py__abs__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
         var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
         for v in self_ptr[].pos_x:
@@ -222,8 +202,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__bool__(py_self: PythonObject) raises -> Bool:
-        var self_ptr = Self._get_self_ptr(py_self)
+    fn py__bool__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Bool:
         return len(self_ptr[].pos_x) > 0
 
     # ------------------------------------------------------------------
@@ -232,11 +211,10 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     fn py__add__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         """Concatenate two DataFrames row-wise. Returns NotImplemented for non-DataFrames.
         """
-        var self_ptr = Self._get_self_ptr(py_self)
         try:
             var other_ptr = other.downcast_value_ptr[Self]()
             var n = len(self_ptr[].pos_x) + len(other_ptr[].pos_x)
@@ -256,11 +234,10 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     fn py__mul__(
-        py_self: PythonObject, other: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         """Scale all coordinates by a numeric scalar. Returns NotImplemented otherwise.
         """
-        var self_ptr = Self._get_self_ptr(py_self)
         try:
             var scale = Float64(py=other)
             var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
@@ -279,10 +256,9 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     fn py__pow__(
-        py_self: PythonObject, exp: PythonObject, mod: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], exp: PythonObject, mod: PythonObject
     ) raises -> PythonObject:
         """Raise all coordinates to a power. The `mod` argument is ignored."""
-        var self_ptr = Self._get_self_ptr(py_self)
         var e = Float64(py=exp)
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
         var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
@@ -308,15 +284,15 @@ fn PyInit_mojo_module() -> PythonObject:
             .def_staticmethod[DataFrame.with_columns]("with_columns")
             .def_method[DataFrame.get_call_count]("get_call_count")
         )
-        var tpb = TypeProtocolBuilder(tb)
+        var tpb = TypeProtocolBuilder[DataFrame](tb)
         _ = tpb.def_richcompare[DataFrame.rich_compare]()
-        var mpb = MappingProtocolBuilder(tb)
+        var mpb = MappingProtocolBuilder[DataFrame](tb)
         _ = (
             mpb.def_len[DataFrame.py__len__]()
             .def_getitem[DataFrame.py__getitem__]()
             .def_setitem[DataFrame.py__setitem__]()
         )
-        var npb = NumberProtocolBuilder(tb)
+        var npb = NumberProtocolBuilder[DataFrame](tb)
         _ = (
             npb.def_neg[DataFrame.py__neg__]()
             .def_abs[DataFrame.py__abs__]()

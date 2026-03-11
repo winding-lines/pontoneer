@@ -8,6 +8,8 @@
 # ===----------------------------------------------------------------------=== #
 
 from std.ffi import c_int, c_long
+from std.memory import UnsafePointer
+from std.os import abort
 from std.python import Python, PythonObject
 from std.python._cpython import PyObject, PyObjectPtr, Py_ssize_t
 from std.utils import Variant
@@ -15,20 +17,30 @@ from std.utils import Variant
 from .utils import NotImplementedError
 
 
+@always_inline
+fn _unwrap_self[T: ImplicitlyDestructible](py_self: PyObjectPtr) -> UnsafePointer[T, MutAnyOrigin]:
+    """Downcast a raw PyObjectPtr to a typed Mojo pointer, aborting on failure."""
+    try:
+        return PythonObject(from_borrowed=py_self).downcast_value_ptr[T]()
+    except e:
+        abort(String("Python method receiver did not have the expected type: ", e))
+
+
 fn _mp_length_wrapper[
-    method: fn(PythonObject) raises -> Int
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Int,
 ](py_self: PyObjectPtr) -> Py_ssize_t:
     """CPython `lenfunc` adapter for the `mp_length` slot (__len__).
 
     Parameters:
-        method: User function `fn(self: PythonObject) raises -> Int`.
+        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Int`.
 
     Returns:
         Length as `Py_ssize_t`, or -1 with an exception set on error.
     """
     ref cpython = Python().cpython()
     try:
-        var result = method(PythonObject(from_borrowed=py_self))
+        var result = method(_unwrap_self[self_type](py_self))
         return Py_ssize_t(result)
     except e:
         var error_type = cpython.get_error_global("PyExc_Exception")
@@ -40,12 +52,13 @@ fn _mp_length_wrapper[
 
 
 fn _mp_subscript_wrapper[
-    method: fn(PythonObject, PythonObject) raises -> PythonObject
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject) raises -> PythonObject,
 ](py_self: PyObjectPtr, key: PyObjectPtr) -> PyObjectPtr:
     """CPython `binaryfunc` adapter for the `mp_subscript` slot (__getitem__).
 
     Parameters:
-        method: User function `fn(self: PythonObject, key: PythonObject) raises -> PythonObject`.
+        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin], key: PythonObject) raises -> PythonObject`.
 
     Returns:
         New reference to the result, or null with an exception set on error.
@@ -53,7 +66,7 @@ fn _mp_subscript_wrapper[
     ref cpython = Python().cpython()
     try:
         var result = method(
-            PythonObject(from_borrowed=py_self),
+            _unwrap_self[self_type](py_self),
             PythonObject(from_borrowed=key),
         )
         return result.steal_data()
@@ -67,9 +80,10 @@ fn _mp_subscript_wrapper[
 
 
 fn _mp_ass_subscript_wrapper[
+    self_type: ImplicitlyDestructible,
     method: fn(
-        PythonObject, PythonObject, Variant[PythonObject, Int]
-    ) raises -> None
+        UnsafePointer[self_type, MutAnyOrigin], PythonObject, Variant[PythonObject, Int]
+    ) raises -> None,
 ](py_self: PyObjectPtr, key: PyObjectPtr, value: PyObjectPtr) -> c_int:
     """CPython `objobjargproc` adapter for the `mp_ass_subscript` slot.
 
@@ -92,7 +106,7 @@ fn _mp_ass_subscript_wrapper[
             PythonObject(from_borrowed=value)
         ) if value else PassedValue(Int(0))
         method(
-            PythonObject(from_borrowed=py_self),
+            _unwrap_self[self_type](py_self),
             PythonObject(from_borrowed=key),
             passed_value,
         )
@@ -107,19 +121,20 @@ fn _mp_ass_subscript_wrapper[
 
 
 fn _unaryfunc_wrapper[
-    method: fn(PythonObject) raises -> PythonObject
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject,
 ](py_self: PyObjectPtr) -> PyObjectPtr:
     """CPython `unaryfunc` adapter for unary nb_ slots (__neg__, __abs__, etc.).
 
     Parameters:
-        method: User function `fn(self: PythonObject) raises -> PythonObject`.
+        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject`.
 
     Returns:
         New reference to the result, or null with an exception set on error.
     """
     ref cpython = Python().cpython()
     try:
-        var result = method(PythonObject(from_borrowed=py_self))
+        var result = method(_unwrap_self[self_type](py_self))
         return result.steal_data()
     except e:
         var error_type = cpython.get_error_global("PyExc_Exception")
@@ -131,7 +146,8 @@ fn _unaryfunc_wrapper[
 
 
 fn _binaryfunc_wrapper[
-    method: fn(PythonObject, PythonObject) raises -> PythonObject
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject) raises -> PythonObject,
 ](lhs: PyObjectPtr, rhs: PyObjectPtr) -> PyObjectPtr:
     """CPython `binaryfunc` adapter for binary nb_ slots (__add__, __mul__, etc.).
 
@@ -140,7 +156,7 @@ fn _binaryfunc_wrapper[
 
     Parameters:
         method: User function
-            `fn(self: PythonObject, other: PythonObject) raises -> PythonObject`.
+            `fn(self: UnsafePointer[self_type, MutAnyOrigin], other: PythonObject) raises -> PythonObject`.
 
     Returns:
         New reference to the result, `Py_NotImplemented`, or null on error.
@@ -148,7 +164,7 @@ fn _binaryfunc_wrapper[
     ref cpython = Python().cpython()
     try:
         var result = method(
-            PythonObject(from_borrowed=lhs),
+            _unwrap_self[self_type](lhs),
             PythonObject(from_borrowed=rhs),
         )
         return result.steal_data()
@@ -167,7 +183,8 @@ fn _binaryfunc_wrapper[
 
 
 fn _ternaryfunc_wrapper[
-    method: fn(PythonObject, PythonObject, PythonObject) raises -> PythonObject
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject) raises -> PythonObject,
 ](py_self: PyObjectPtr, other: PyObjectPtr, mod: PyObjectPtr) -> PyObjectPtr:
     """CPython `ternaryfunc` adapter for nb_power / nb_inplace_power (__pow__).
 
@@ -186,7 +203,7 @@ fn _ternaryfunc_wrapper[
     ref cpython = Python().cpython()
     try:
         var result = method(
-            PythonObject(from_borrowed=py_self),
+            _unwrap_self[self_type](py_self),
             PythonObject(from_borrowed=other),
             PythonObject(from_borrowed=mod),
         )
@@ -206,19 +223,20 @@ fn _ternaryfunc_wrapper[
 
 
 fn _inquiry_wrapper[
-    method: fn(PythonObject) raises -> Bool
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool,
 ](py_self: PyObjectPtr) -> c_int:
     """CPython `inquiry` adapter for the `nb_bool` slot (__bool__).
 
     Parameters:
-        method: User function `fn(self: PythonObject) raises -> Bool`.
+        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool`.
 
     Returns:
         1 for True, 0 for False, -1 with an exception set on error.
     """
     ref cpython = Python().cpython()
     try:
-        var result = method(PythonObject(from_borrowed=py_self))
+        var result = method(_unwrap_self[self_type](py_self))
         return c_int(1) if result else c_int(0)
     except e:
         var error_type = cpython.get_error_global("PyExc_Exception")
@@ -230,19 +248,20 @@ fn _inquiry_wrapper[
 
 
 fn _ssizeargfunc_wrapper[
-    method: fn(PythonObject, Int) raises -> PythonObject
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], Int) raises -> PythonObject,
 ](py_self: PyObjectPtr, index: Py_ssize_t) -> PyObjectPtr:
     """CPython `ssizeargfunc` adapter for sq_item, sq_repeat, sq_inplace_repeat.
 
     Parameters:
-        method: User function `fn(self: PythonObject, index: Int) raises -> PythonObject`.
+        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin], index: Int) raises -> PythonObject`.
 
     Returns:
         New reference to the result, or null with an exception set on error.
     """
     ref cpython = Python().cpython()
     try:
-        var result = method(PythonObject(from_borrowed=py_self), Int(index))
+        var result = method(_unwrap_self[self_type](py_self), Int(index))
         return result.steal_data()
     except e:
         var error_type = cpython.get_error_global("PyExc_Exception")
@@ -254,7 +273,8 @@ fn _ssizeargfunc_wrapper[
 
 
 fn _ssizeobjargproc_wrapper[
-    method: fn(PythonObject, Int, Variant[PythonObject, Int]) raises -> None
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]) raises -> None,
 ](py_self: PyObjectPtr, index: Py_ssize_t, value: PyObjectPtr) -> c_int:
     """CPython `ssizeobjargproc` adapter for the `sq_ass_item` slot.
 
@@ -275,7 +295,7 @@ fn _ssizeobjargproc_wrapper[
         var passed_value = PassedValue(
             PythonObject(from_borrowed=value)
         ) if value else PassedValue(Int(0))
-        method(PythonObject(from_borrowed=py_self), Int(index), passed_value)
+        method(_unwrap_self[self_type](py_self), Int(index), passed_value)
         return c_int(0)
     except e:
         var error_type = cpython.get_error_global("PyExc_Exception")
@@ -287,12 +307,13 @@ fn _ssizeobjargproc_wrapper[
 
 
 fn _objobjproc_wrapper[
-    method: fn(PythonObject, PythonObject) raises -> Bool
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject) raises -> Bool,
 ](py_self: PyObjectPtr, other: PyObjectPtr) -> c_int:
     """CPython `objobjproc` adapter for the `sq_contains` slot (__contains__).
 
     Parameters:
-        method: User function `fn(self: PythonObject, item: PythonObject) raises -> Bool`.
+        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin], item: PythonObject) raises -> Bool`.
 
     Returns:
         1 if contained, 0 if not, -1 with an exception set on error.
@@ -300,7 +321,7 @@ fn _objobjproc_wrapper[
     ref cpython = Python().cpython()
     try:
         var result = method(
-            PythonObject(from_borrowed=py_self),
+            _unwrap_self[self_type](py_self),
             PythonObject(from_borrowed=other),
         )
         return c_int(1) if result else c_int(0)
@@ -314,7 +335,8 @@ fn _objobjproc_wrapper[
 
 
 fn _richcompare_wrapper[
-    method: fn(PythonObject, PythonObject, Int) raises -> Bool
+    self_type: ImplicitlyDestructible,
+    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int) raises -> Bool,
 ](py_self: PyObjectPtr, py_other: PyObjectPtr, op: c_int) -> PyObjectPtr:
     """CPython `richcmpfunc` adapter for the `tp_richcompare` slot.
 
@@ -333,7 +355,7 @@ fn _richcompare_wrapper[
     ref cpython = Python().cpython()
     try:
         var result = method(
-            PythonObject(from_borrowed=py_self),
+            _unwrap_self[self_type](py_self),
             PythonObject(from_borrowed=py_other),
             Int(op),
         )

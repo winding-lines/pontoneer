@@ -31,10 +31,10 @@ examples/columnar/
 |---|---|
 | `NotImplementedError` | Raise from a rich compare or binary handler to return `Py_NotImplemented` to Python |
 | `RichCompareOps` | Constants `Py_LT=0` … `Py_GE=5` for use inside rich compare handlers |
-| `TypeProtocolBuilder` | Installs `tp_richcompare` via `def_richcompare[method]()` |
-| `NumberProtocolBuilder` | Installs nb_ slots: `def_neg`, `def_add`, `def_bool`, `def_pow`, etc. |
-| `MappingProtocolBuilder` | Installs mp_ slots: `def_len`, `def_getitem`, `def_setitem` |
-| `SequenceProtocolBuilder` | Installs sq_ slots: `def_len`, `def_getitem`, `def_setitem`, `def_contains`, `def_concat`, `def_repeat`, `def_iconcat`, `def_irepeat` |
+| `TypeProtocolBuilder` | Installs `tp_richcompare` via `def_richcompare[method]()`; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
+| `NumberProtocolBuilder` | Installs nb_ slots: `def_neg`, `def_add`, `def_bool`, `def_pow`, etc.; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
+| `MappingProtocolBuilder` | Installs mp_ slots: `def_len`, `def_getitem`, `def_setitem`; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
+| `SequenceProtocolBuilder` | Installs sq_ slots: `def_len`, `def_getitem`, `def_setitem`, `def_contains`, `def_concat`, `def_repeat`, `def_iconcat`, `def_irepeat`; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
 
 ## Design decisions
 
@@ -65,12 +65,12 @@ ref tb = b.add_type[MyStruct]("MyStruct")
            .def_init_defaultable[MyStruct]()
            .def_staticmethod[MyStruct.new]("new")
 
-TypeProtocolBuilder(tb).def_richcompare[MyStruct.rich_compare]()
-MappingProtocolBuilder(tb)
+TypeProtocolBuilder[MyStruct](tb).def_richcompare[MyStruct.rich_compare]()
+MappingProtocolBuilder[MyStruct](tb)
     .def_len[MyStruct.py__len__]()
     .def_getitem[MyStruct.py__getitem__]()
     .def_setitem[MyStruct.py__setitem__]()
-NumberProtocolBuilder(tb)
+NumberProtocolBuilder[MyStruct](tb)
     .def_neg[MyStruct.py__neg__]()
     .def_add[MyStruct.py__add__]()
 ```

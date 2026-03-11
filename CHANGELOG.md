@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-03-11
+
+### Changed
+- All four protocol builders (`TypeProtocolBuilder`, `MappingProtocolBuilder`, `NumberProtocolBuilder`, `SequenceProtocolBuilder`) now take a `self_type` compile-time parameter (e.g. `MappingProtocolBuilder[DataFrame](tb)`).
+- Handler functions registered via `def_len`, `def_getitem`, `def_richcompare`, etc. now receive `UnsafePointer[T, MutAnyOrigin]` as their first argument instead of a raw `PythonObject`, eliminating the per-method `downcast_value_ptr` / `_get_self_ptr` boilerplate.
+- Added internal `_unwrap_self[T]` helper in `adapters.mojo` that performs the typed downcast and aborts with a clear message on type mismatch.
+
 ## 0.3.0
 
 Release under the modular-community channel.
