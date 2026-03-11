@@ -2,7 +2,8 @@ schema_version: 1
 
 # Bump this to match the git tag before tagging a release (e.g. v0.1.1 → "0.1.1").
 context:
-  version: "0.2.3"
+  version: "0.3.0"
+  mojo_version: ">=0.26.0.dev2026030505"
 
 package:
   name: pontoneer
@@ -32,8 +33,3 @@ about:
   license: Apache-2.0 WITH LLVM-exception
   license_file: LICENSE
   summary: Mojo library providing mapping protocol and rich comparison protocol extensions for Python interop.
-  description: |
-    Backports the mapping protocol ([], len()) and rich comparison protocol
-    extensions proposed in https://github.com/modular/modular/pull/5562,
-    allowing Mojo Python extension modules to support [], len(), and
-    comparison operators without waiting for the PR to land in the stdlib.
