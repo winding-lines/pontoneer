@@ -15,10 +15,11 @@ without waiting for the PR to land in the stdlib.
 
 ```
 pontoneer/
-├── __init__.mojo               # Public API: 4 exports (see below)
-├── utils.mojo                  # PyTypeObjectSlot, NotImplementedError, RichCompareOps
+├── __init__.mojo               # Public API: 6 exports (see below)
+├── utils.mojo                  # NotImplementedError, RichCompareOps
 ├── adapters.mojo               # Internal C-ABI adapters (_mp_length_wrapper, etc.)
-└── builders.mojo               # PontoneerTypeBuilder
+└── builders.mojo               # TypeProtocolBuilder, NumberProtocolBuilder,
+│                               #   MappingProtocolBuilder, SequenceProtocolBuilder
 examples/columnar/
 ├── mojo_module.mojo            # DataFrame example (Mojo extension module)
 └── test_module.py              # Python integration test
@@ -28,36 +29,48 @@ examples/columnar/
 
 | Symbol | Description |
 |---|---|
-| `PyTypeObjectSlot` | Tag struct with constants: `mp_length`, `mp_getitem`, `mp_setitem`, `tp_richcompare` |
-| `NotImplementedError` | Raise from a rich compare handler to return `Py_NotImplemented` to Python |
+| `NotImplementedError` | Raise from a rich compare or binary handler to return `Py_NotImplemented` to Python |
 | `RichCompareOps` | Constants `Py_LT=0` … `Py_GE=5` for use inside rich compare handlers |
-| `PontoneerTypeBuilder` | Wraps `PythonTypeBuilder`; adds `def_method` overloads for the four protocol slots |
+| `TypeProtocolBuilder` | Installs `tp_richcompare` via `def_richcompare[method]()` |
+| `NumberProtocolBuilder` | Installs nb_ slots: `def_neg`, `def_add`, `def_bool`, `def_pow`, etc. |
+| `MappingProtocolBuilder` | Installs mp_ slots: `def_len`, `def_getitem`, `def_setitem` |
+| `SequenceProtocolBuilder` | Installs sq_ slots: `def_len`, `def_getitem`, `def_setitem`, `def_contains`, `def_concat`, `def_repeat`, `def_iconcat`, `def_irepeat` |
 
 ## Design decisions
 
-- **`adapters.mojo` is internal** — the `_`-prefixed wrapper functions are
-  not re-exported from `__init__.mojo`; they are only used by `builders.mojo`.
-- **`PontoneerTypeBuilder` consumes a `PythonTypeBuilder`** via `owned`. Chain regular
-  stdlib builder methods first, then pass ownership: `PontoneerTypeBuilder(tb^)`.
-- **`_insert_slot` dependency** — `PontoneerTypeBuilder` calls
-  `PythonTypeBuilder._insert_slot`, which is convention-private (underscore) but
-  accessible in nightly Mojo. If a future compiler enforces visibility, the builder
-  will need updating.
-- **`where` clause dispatch** — `def_method` overloads are distinguished by
-  `where slot.is_mp_length()` / `.is_mp_getitem()` etc., matching the PR's approach.
+- **Four specialized builders** replace a single monolithic builder. Each takes
+  `mut inner: PythonTypeBuilder` and stores an `UnsafePointer` into it. The caller
+  must ensure the `PythonTypeBuilder` (owned by the module builder) outlives the
+  protocol builder, which is naturally satisfied within a single `PyInit_*` function.
+- **`adapters.mojo` is internal** — the `_`-prefixed wrapper functions are not
+  re-exported from `__init__.mojo`; they are only used by `builders.mojo`.
+- **`_insert_slot` dependency** — all builders call `PythonTypeBuilder._insert_slot`,
+  which is convention-private (underscore) but accessible in nightly Mojo. If a future
+  compiler enforces visibility, the builders will need updating.
+- **`NotImplementedError` dispatch** — binary and ternary nb_ wrappers, and the
+  `tp_richcompare` wrapper, check the error message string against
+  `NotImplementedError.name` to return `Py_NotImplemented` instead of setting
+  a Python exception.
 
 ## Usage pattern
 
 ```mojo
-from pontoneer import PyTypeObjectSlot, NotImplementedError, RichCompareOps, PontoneerTypeBuilder
+from pontoneer import (
+    NotImplementedError, RichCompareOps,
+    TypeProtocolBuilder, MappingProtocolBuilder,
+    NumberProtocolBuilder, SequenceProtocolBuilder,
+)
 
-var tb = b.add_type[MyStruct]("MyStruct")
+ref tb = b.add_type[MyStruct]("MyStruct")
            .def_init_defaultable[MyStruct]()
            .def_staticmethod[MyStruct.new]("new")
 
-_ = PontoneerTypeBuilder(tb^)
-        .def_method[MyStruct.py__len__,     PyTypeObjectSlot.mp_length]()
-        .def_method[MyStruct.py__getitem__,  PyTypeObjectSlot.mp_getitem]()
-        .def_method[MyStruct.py__setitem__,  PyTypeObjectSlot.mp_setitem]()
-        .def_method[MyStruct.rich_compare,   PyTypeObjectSlot.tp_richcompare]()
+TypeProtocolBuilder(tb).def_richcompare[MyStruct.rich_compare]()
+MappingProtocolBuilder(tb)
+    .def_len[MyStruct.py__len__]()
+    .def_getitem[MyStruct.py__getitem__]()
+    .def_setitem[MyStruct.py__setitem__]()
+NumberProtocolBuilder(tb)
+    .def_neg[MyStruct.py__neg__]()
+    .def_add[MyStruct.py__add__]()
 ```
