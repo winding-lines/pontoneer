@@ -155,7 +155,9 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     fn rich_compare(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject, op: Int
+        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        other: PythonObject,
+        op: Int,
     ) raises -> Bool:
         """Compare DataFrames by bounding-box area.
 
@@ -170,7 +172,9 @@ struct DataFrame(Defaultable, Movable, Writable):
         if op == RichCompareOps.Py_LT:
             return self_ptr[]._bounding_box_area < other_df[]._bounding_box_area
         if op == RichCompareOps.Py_EQ:
-            return self_ptr[]._bounding_box_area == other_df[]._bounding_box_area
+            return (
+                self_ptr[]._bounding_box_area == other_df[]._bounding_box_area
+            )
         raise NotImplementedError()
 
     # ------------------------------------------------------------------
@@ -178,7 +182,9 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__neg__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+    fn py__neg__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+    ) raises -> PythonObject:
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
         var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
         for v in self_ptr[].pos_x:
@@ -188,7 +194,9 @@ struct DataFrame(Defaultable, Movable, Writable):
         return PythonObject(alloc=DataFrame(result_x^, result_y^))
 
     @staticmethod
-    fn py__abs__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+    fn py__abs__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+    ) raises -> PythonObject:
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
         var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
         for v in self_ptr[].pos_x:
@@ -256,7 +264,9 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     fn py__pow__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], exp: PythonObject, mod: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        exp: PythonObject,
+        mod: PythonObject,
     ) raises -> PythonObject:
         """Raise all coordinates to a power. The `mod` argument is ignored."""
         var e = Float64(py=exp)

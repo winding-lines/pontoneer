@@ -47,7 +47,9 @@ struct Box(Defaultable, Movable, Writable):
 
     @staticmethod
     fn rich_compare(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject, op: Int
+        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        other: PythonObject,
+        op: Int,
     ) raises -> Bool:
         var a = self_ptr[].value
         var b = other.downcast_value_ptr[Self]()[].value

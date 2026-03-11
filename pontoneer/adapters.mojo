@@ -18,12 +18,17 @@ from .utils import NotImplementedError
 
 
 @always_inline
-fn _unwrap_self[T: ImplicitlyDestructible](py_self: PyObjectPtr) -> UnsafePointer[T, MutAnyOrigin]:
-    """Downcast a raw PyObjectPtr to a typed Mojo pointer, aborting on failure."""
+fn _unwrap_self[
+    T: ImplicitlyDestructible
+](py_self: PyObjectPtr) -> UnsafePointer[T, MutAnyOrigin]:
+    """Downcast a raw PyObjectPtr to a typed Mojo pointer, aborting on failure.
+    """
     try:
         return PythonObject(from_borrowed=py_self).downcast_value_ptr[T]()
     except e:
-        abort(String("Python method receiver did not have the expected type: ", e))
+        abort(
+            String("Python method receiver did not have the expected type: ", e)
+        )
 
 
 fn _mp_length_wrapper[
@@ -33,6 +38,7 @@ fn _mp_length_wrapper[
     """CPython `lenfunc` adapter for the `mp_length` slot (__len__).
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Int`.
 
     Returns:
@@ -53,11 +59,14 @@ fn _mp_length_wrapper[
 
 fn _mp_subscript_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject) raises -> PythonObject,
+    method: fn(
+        UnsafePointer[self_type, MutAnyOrigin], PythonObject
+    ) raises -> PythonObject,
 ](py_self: PyObjectPtr, key: PyObjectPtr) -> PyObjectPtr:
     """CPython `binaryfunc` adapter for the `mp_subscript` slot (__getitem__).
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin], key: PythonObject) raises -> PythonObject`.
 
     Returns:
@@ -82,7 +91,9 @@ fn _mp_subscript_wrapper[
 fn _mp_ass_subscript_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject, Variant[PythonObject, Int]
+        UnsafePointer[self_type, MutAnyOrigin],
+        PythonObject,
+        Variant[PythonObject, Int],
     ) raises -> None,
 ](py_self: PyObjectPtr, key: PyObjectPtr, value: PyObjectPtr) -> c_int:
     """CPython `objobjargproc` adapter for the `mp_ass_subscript` slot.
@@ -93,6 +104,7 @@ fn _mp_ass_subscript_wrapper[
     `Variant[PythonObject, Int](value_object)`.
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function with signature
             `fn(self, key, value: Variant[PythonObject, Int]) raises -> None`.
 
@@ -127,6 +139,7 @@ fn _unaryfunc_wrapper[
     """CPython `unaryfunc` adapter for unary nb_ slots (__neg__, __abs__, etc.).
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject`.
 
     Returns:
@@ -147,7 +160,9 @@ fn _unaryfunc_wrapper[
 
 fn _binaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject) raises -> PythonObject,
+    method: fn(
+        UnsafePointer[self_type, MutAnyOrigin], PythonObject
+    ) raises -> PythonObject,
 ](lhs: PyObjectPtr, rhs: PyObjectPtr) -> PyObjectPtr:
     """CPython `binaryfunc` adapter for binary nb_ slots (__add__, __mul__, etc.).
 
@@ -155,6 +170,7 @@ fn _binaryfunc_wrapper[
     `Py_NotImplemented`, signalling Python to try the reflected operation.
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function
             `fn(self: UnsafePointer[self_type, MutAnyOrigin], other: PythonObject) raises -> PythonObject`.
 
@@ -184,7 +200,9 @@ fn _binaryfunc_wrapper[
 
 fn _ternaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject) raises -> PythonObject,
+    method: fn(
+        UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject
+    ) raises -> PythonObject,
 ](py_self: PyObjectPtr, other: PyObjectPtr, mod: PyObjectPtr) -> PyObjectPtr:
     """CPython `ternaryfunc` adapter for nb_power / nb_inplace_power (__pow__).
 
@@ -192,6 +210,7 @@ fn _ternaryfunc_wrapper[
     `Py_NotImplemented`, signalling Python to try the reflected operation.
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function
             `fn(self, other, mod: PythonObject) raises -> PythonObject`
             where `mod` is typically `None` unless the three-argument form
@@ -229,6 +248,7 @@ fn _inquiry_wrapper[
     """CPython `inquiry` adapter for the `nb_bool` slot (__bool__).
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool`.
 
     Returns:
@@ -249,11 +269,14 @@ fn _inquiry_wrapper[
 
 fn _ssizeargfunc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin], Int) raises -> PythonObject,
+    method: fn(
+        UnsafePointer[self_type, MutAnyOrigin], Int
+    ) raises -> PythonObject,
 ](py_self: PyObjectPtr, index: Py_ssize_t) -> PyObjectPtr:
     """CPython `ssizeargfunc` adapter for sq_item, sq_repeat, sq_inplace_repeat.
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin], index: Int) raises -> PythonObject`.
 
     Returns:
@@ -274,7 +297,9 @@ fn _ssizeargfunc_wrapper[
 
 fn _ssizeobjargproc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]) raises -> None,
+    method: fn(
+        UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
+    ) raises -> None,
 ](py_self: PyObjectPtr, index: Py_ssize_t, value: PyObjectPtr) -> c_int:
     """CPython `ssizeobjargproc` adapter for the `sq_ass_item` slot.
 
@@ -283,6 +308,7 @@ fn _ssizeobjargproc_wrapper[
     the operation is an assignment and `method` receives the value object.
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function with signature
             `fn(self, index: Int, value: Variant[PythonObject, Int]) raises -> None`.
 
@@ -308,11 +334,14 @@ fn _ssizeobjargproc_wrapper[
 
 fn _objobjproc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject) raises -> Bool,
+    method: fn(
+        UnsafePointer[self_type, MutAnyOrigin], PythonObject
+    ) raises -> Bool,
 ](py_self: PyObjectPtr, other: PyObjectPtr) -> c_int:
     """CPython `objobjproc` adapter for the `sq_contains` slot (__contains__).
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin], item: PythonObject) raises -> Bool`.
 
     Returns:
@@ -336,7 +365,9 @@ fn _objobjproc_wrapper[
 
 fn _richcompare_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int) raises -> Bool,
+    method: fn(
+        UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int
+    ) raises -> Bool,
 ](py_self: PyObjectPtr, py_other: PyObjectPtr, op: c_int) -> PyObjectPtr:
     """CPython `richcmpfunc` adapter for the `tp_richcompare` slot.
 
@@ -345,6 +376,7 @@ fn _richcompare_wrapper[
     Any other exception sets a Python exception and returns null.
 
     Parameters:
+        self_type: The Mojo struct type whose instances back the Python object.
         method: User function
             `fn(self, other: PythonObject, op: Int) raises -> Bool`
             where `op` is one of `RichCompareOps.Py_LT` … `Py_GE`.

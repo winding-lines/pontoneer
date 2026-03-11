@@ -38,7 +38,9 @@ struct Seq(Defaultable, Movable, Writable):
         return len(self_ptr[].data)
 
     @staticmethod
-    fn py__getitem__(self_ptr: UnsafePointer[Self, MutAnyOrigin], index: Int) raises -> PythonObject:
+    fn py__getitem__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], index: Int
+    ) raises -> PythonObject:
         if index < 0 or index >= len(self_ptr[].data):
             raise Error("index out of range")
         return PythonObject(self_ptr[].data[index])
@@ -57,7 +59,9 @@ struct Seq(Defaultable, Movable, Writable):
             _ = self_ptr[].data.pop(index)
 
     @staticmethod
-    fn py__contains__(self_ptr: UnsafePointer[Self, MutAnyOrigin], item: PythonObject) raises -> Bool:
+    fn py__contains__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], item: PythonObject
+    ) raises -> Bool:
         var v = Int(py=item)
         for elem in self_ptr[].data:
             if elem == v:
@@ -77,7 +81,9 @@ struct Seq(Defaultable, Movable, Writable):
         return PythonObject(alloc=result^)
 
     @staticmethod
-    fn py__repeat__(self_ptr: UnsafePointer[Self, MutAnyOrigin], count: Int) raises -> PythonObject:
+    fn py__repeat__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin], count: Int
+    ) raises -> PythonObject:
         var result = Seq()
         for _ in range(count):
             for v in self_ptr[].data:

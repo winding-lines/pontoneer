@@ -50,19 +50,27 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__neg__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+    fn py__neg__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+    ) raises -> PythonObject:
         return PythonObject(alloc=Number(-self_ptr[].value))
 
     @staticmethod
-    fn py__abs__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+    fn py__abs__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+    ) raises -> PythonObject:
         return PythonObject(alloc=Number(abs(self_ptr[].value)))
 
     @staticmethod
-    fn py__pos__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+    fn py__pos__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+    ) raises -> PythonObject:
         return PythonObject(alloc=Number(self_ptr[].value))
 
     @staticmethod
-    fn py__invert__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+    fn py__invert__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+    ) raises -> PythonObject:
         return PythonObject(alloc=Number(~self_ptr[].value))
 
     # ------------------------------------------------------------------
@@ -78,15 +86,21 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__int__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+    fn py__int__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+    ) raises -> PythonObject:
         return PythonObject(self_ptr[].value)
 
     @staticmethod
-    fn py__float__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+    fn py__float__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+    ) raises -> PythonObject:
         return PythonObject(Float64(self_ptr[].value))
 
     @staticmethod
-    fn py__index__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> PythonObject:
+    fn py__index__(
+        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+    ) raises -> PythonObject:
         return PythonObject(self_ptr[].value)
 
     # ------------------------------------------------------------------
@@ -199,7 +213,9 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     fn py__pow__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], exp: PythonObject, mod: PythonObject
+        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        exp: PythonObject,
+        mod: PythonObject,
     ) raises -> PythonObject:
         try:
             var e = exp.downcast_value_ptr[Self]()
@@ -336,7 +352,9 @@ struct NumberV(Defaultable, Movable, Writable):
         except:
             raise NotImplementedError()
 
-    fn py__pow__(self, exp: PythonObject, mod: PythonObject) raises -> PythonObject:
+    fn py__pow__(
+        self, exp: PythonObject, mod: PythonObject
+    ) raises -> PythonObject:
         try:
             var e = exp.downcast_value_ptr[Self]()
             var result = Int(Float64(self.value) ** Float64(e[].value))
