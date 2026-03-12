@@ -1,8 +1,3 @@
----
-hide:
-  - navigation
----
-
 # pontoneer
 
 `Pontoneer` is a Mojo library that provides an extension to the Python extension capabilities
