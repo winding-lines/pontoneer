@@ -167,6 +167,8 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
     ](mut self) -> ref[self] Self:
         """Install rich comparison via the `tp_richcompare` slot.
 
+        Called by `obj < other`, `obj == other`, etc.
+
         Raise `NotImplementedError()` from `method` to return
         `Py_NotImplemented` to Python (triggering the reflected operation).
 
@@ -174,6 +176,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
             method: Static method with signature
                 `fn(self_ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool`
                 where `op` is one of `RichCompareOps.Py_LT` … `Py_GE`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_richcompare
         """
         _install_richcompare[Self.self_type, method](self._ptr)
         return self
@@ -184,6 +187,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> Bool
     ](mut self) -> ref[self] Self:
         """Install rich comparison via the `tp_richcompare` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_richcompare
         """
         _install_richcompare[
             Self.self_type, _lift_obj_int_to_bool[Self.self_type, method]
@@ -194,6 +198,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject, Int) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install rich comparison via the `tp_richcompare` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_richcompare
         """
         _install_richcompare[
             Self.self_type, _lift_val_obj_int_to_bool[Self.self_type, method]
@@ -753,7 +758,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__abs__` via the `nb_absolute` slot."""
+        """Install `__abs__` via the `nb_absolute` slot.
+
+        Called by `abs(obj)`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_absolute
+        """
         _install_unary[Self.self_type, method, _PySlotIndex.nb_absolute](
             self._ptr
         )
@@ -764,7 +773,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__float__` via the `nb_float` slot."""
+        """Install `__float__` via the `nb_float` slot.
+
+        Called by `float(obj)`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_float
+        """
         _install_unary[Self.self_type, method, _PySlotIndex.nb_float](self._ptr)
         return self
 
@@ -773,7 +786,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__index__` via the `nb_index` slot."""
+        """Install `__index__` via the `nb_index` slot.
+
+        Called by `operator.index(obj)`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_index
+        """
         _install_unary[Self.self_type, method, _PySlotIndex.nb_index](self._ptr)
         return self
 
@@ -782,7 +799,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__int__` via the `nb_int` slot."""
+        """Install `__int__` via the `nb_int` slot.
+
+        Called by `int(obj)`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_int
+        """
         _install_unary[Self.self_type, method, _PySlotIndex.nb_int](self._ptr)
         return self
 
@@ -791,7 +812,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__invert__` via the `nb_invert` slot."""
+        """Install `__invert__` via the `nb_invert` slot.
+
+        Called by `~obj`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_invert
+        """
         _install_unary[Self.self_type, method, _PySlotIndex.nb_invert](
             self._ptr
         )
@@ -802,7 +827,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__neg__` via the `nb_negative` slot."""
+        """Install `__neg__` via the `nb_negative` slot.
+
+        Called by `-obj`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_negative
+        """
         _install_unary[Self.self_type, method, _PySlotIndex.nb_negative](
             self._ptr
         )
@@ -813,7 +842,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__pos__` via the `nb_positive` slot."""
+        """Install `__pos__` via the `nb_positive` slot.
+
+        Called by `+obj`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_positive
+        """
         _install_unary[Self.self_type, method, _PySlotIndex.nb_positive](
             self._ptr
         )
@@ -825,6 +858,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_absolute
         """
         _install_unary[
             Self.self_type,
@@ -837,6 +871,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_float
         """
         _install_unary[
             Self.self_type,
@@ -849,6 +884,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_index
         """
         _install_unary[
             Self.self_type,
@@ -860,7 +896,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_int[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__int__` via the `nb_int` slot (non-raising overload)."""
+        """Install `__int__` via the `nb_int` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_int
+        """
         _install_unary[
             Self.self_type,
             _lift_to_obj[Self.self_type, method],
@@ -872,6 +910,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_invert
         """
         _install_unary[
             Self.self_type,
@@ -884,6 +923,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_negative
         """
         _install_unary[
             Self.self_type,
@@ -896,6 +936,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_positive
         """
         _install_unary[
             Self.self_type,
@@ -910,6 +951,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_absolute
         """
         _install_unary[
             Self.self_type,
@@ -922,6 +964,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_float
         """
         _install_unary[
             Self.self_type,
@@ -934,6 +977,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_index
         """
         _install_unary[
             Self.self_type,
@@ -945,7 +989,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_int[
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__int__` via the `nb_int` slot (value-receiver overload)."""
+        """Install `__int__` via the `nb_int` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_int
+        """
         _install_unary[
             Self.self_type,
             _lift_val_to_obj[Self.self_type, method],
@@ -957,6 +1003,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_invert
         """
         _install_unary[
             Self.self_type,
@@ -969,6 +1016,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_negative
         """
         _install_unary[
             Self.self_type,
@@ -981,6 +1029,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_positive
         """
         _install_unary[
             Self.self_type,
@@ -996,7 +1045,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_bool[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> Bool
     ](mut self) -> ref[self] Self:
-        """Install `__bool__` via the `nb_bool` slot."""
+        """Install `__bool__` via the `nb_bool` slot.
+
+        Called by `bool(obj)`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_bool
+        """
         _install_inquiry[Self.self_type, method, _PySlotIndex.nb_bool](
             self._ptr
         )
@@ -1005,7 +1058,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_bool[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> Bool
     ](mut self) -> ref[self] Self:
-        """Install `__bool__` via the `nb_bool` slot (non-raising overload)."""
+        """Install `__bool__` via the `nb_bool` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_bool
+        """
         _install_inquiry[
             Self.self_type,
             _lift_to_bool[Self.self_type, method],
@@ -1017,6 +1072,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__bool__` via the `nb_bool` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_bool
         """
         _install_inquiry[
             Self.self_type,
@@ -1035,7 +1091,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__add__` via the `nb_add` slot."""
+        """Install `__add__` via the `nb_add` slot.
+
+        Called by `obj + other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_add
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_add](self._ptr)
         return self
 
@@ -1044,7 +1104,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__and__` via the `nb_and` slot."""
+        """Install `__and__` via the `nb_and` slot.
+
+        Called by `obj & other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_and
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_and](self._ptr)
         return self
 
@@ -1053,7 +1117,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__divmod__` via the `nb_divmod` slot."""
+        """Install `__divmod__` via the `nb_divmod` slot.
+
+        Called by `divmod(obj, other)`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_divmod
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_divmod](
             self._ptr
         )
@@ -1064,7 +1132,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__floordiv__` via the `nb_floor_divide` slot."""
+        """Install `__floordiv__` via the `nb_floor_divide` slot.
+
+        Called by `obj // other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_floor_divide
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_floor_divide](
             self._ptr
         )
@@ -1075,7 +1147,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__lshift__` via the `nb_lshift` slot."""
+        """Install `__lshift__` via the `nb_lshift` slot.
+
+        Called by `obj << other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_lshift
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_lshift](
             self._ptr
         )
@@ -1086,7 +1162,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__matmul__` via the `nb_matrix_multiply` slot."""
+        """Install `__matmul__` via the `nb_matrix_multiply` slot.
+
+        Called by `obj @ other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_matrix_multiply
+        """
         _install_binary[
             Self.self_type, method, _PySlotIndex.nb_matrix_multiply
         ](self._ptr)
@@ -1097,7 +1177,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__mod__` via the `nb_remainder` slot."""
+        """Install `__mod__` via the `nb_remainder` slot.
+
+        Called by `obj % other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_remainder
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_remainder](
             self._ptr
         )
@@ -1108,7 +1192,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__mul__` via the `nb_multiply` slot."""
+        """Install `__mul__` via the `nb_multiply` slot.
+
+        Called by `obj * other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_multiply
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_multiply](
             self._ptr
         )
@@ -1119,7 +1207,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__or__` via the `nb_or` slot."""
+        """Install `__or__` via the `nb_or` slot.
+
+        Called by `obj | other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_or
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_or](self._ptr)
         return self
 
@@ -1128,7 +1220,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__rshift__` via the `nb_rshift` slot."""
+        """Install `__rshift__` via the `nb_rshift` slot.
+
+        Called by `obj >> other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_rshift
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_rshift](
             self._ptr
         )
@@ -1139,7 +1235,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__sub__` via the `nb_subtract` slot."""
+        """Install `__sub__` via the `nb_subtract` slot.
+
+        Called by `obj - other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_subtract
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_subtract](
             self._ptr
         )
@@ -1150,7 +1250,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__truediv__` via the `nb_true_divide` slot."""
+        """Install `__truediv__` via the `nb_true_divide` slot.
+
+        Called by `obj / other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_true_divide
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_true_divide](
             self._ptr
         )
@@ -1161,7 +1265,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__xor__` via the `nb_xor` slot."""
+        """Install `__xor__` via the `nb_xor` slot.
+
+        Called by `obj ^ other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_xor
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_xor](self._ptr)
         return self
 
@@ -1172,7 +1280,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__iadd__` via the `nb_inplace_add` slot."""
+        """Install `__iadd__` via the `nb_inplace_add` slot.
+
+        Called by `obj += other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_add
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_add](
             self._ptr
         )
@@ -1183,7 +1295,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__iand__` via the `nb_inplace_and` slot."""
+        """Install `__iand__` via the `nb_inplace_and` slot.
+
+        Called by `obj &= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_and
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_and](
             self._ptr
         )
@@ -1194,7 +1310,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot."""
+        """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot.
+
+        Called by `obj //= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_floor_divide
+        """
         _install_binary[
             Self.self_type, method, _PySlotIndex.nb_inplace_floor_divide
         ](self._ptr)
@@ -1205,7 +1325,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__ilshift__` via the `nb_inplace_lshift` slot."""
+        """Install `__ilshift__` via the `nb_inplace_lshift` slot.
+
+        Called by `obj <<= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_lshift
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_lshift](
             self._ptr
         )
@@ -1216,7 +1340,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot."""
+        """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot.
+
+        Called by `obj @= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_matrix_multiply
+        """
         _install_binary[
             Self.self_type, method, _PySlotIndex.nb_inplace_matrix_multiply
         ](self._ptr)
@@ -1227,7 +1355,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__imod__` via the `nb_inplace_remainder` slot."""
+        """Install `__imod__` via the `nb_inplace_remainder` slot.
+
+        Called by `obj %= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_remainder
+        """
         _install_binary[
             Self.self_type, method, _PySlotIndex.nb_inplace_remainder
         ](self._ptr)
@@ -1238,7 +1370,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__imul__` via the `nb_inplace_multiply` slot."""
+        """Install `__imul__` via the `nb_inplace_multiply` slot.
+
+        Called by `obj *= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_multiply
+        """
         _install_binary[
             Self.self_type, method, _PySlotIndex.nb_inplace_multiply
         ](self._ptr)
@@ -1249,7 +1385,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__ior__` via the `nb_inplace_or` slot."""
+        """Install `__ior__` via the `nb_inplace_or` slot.
+
+        Called by `obj |= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_or
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_or](
             self._ptr
         )
@@ -1260,7 +1400,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__irshift__` via the `nb_inplace_rshift` slot."""
+        """Install `__irshift__` via the `nb_inplace_rshift` slot.
+
+        Called by `obj >>= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_rshift
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_rshift](
             self._ptr
         )
@@ -1271,7 +1415,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__isub__` via the `nb_inplace_subtract` slot."""
+        """Install `__isub__` via the `nb_inplace_subtract` slot.
+
+        Called by `obj -= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_subtract
+        """
         _install_binary[
             Self.self_type, method, _PySlotIndex.nb_inplace_subtract
         ](self._ptr)
@@ -1282,7 +1430,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__itruediv__` via the `nb_inplace_true_divide` slot."""
+        """Install `__itruediv__` via the `nb_inplace_true_divide` slot.
+
+        Called by `obj /= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_true_divide
+        """
         _install_binary[
             Self.self_type, method, _PySlotIndex.nb_inplace_true_divide
         ](self._ptr)
@@ -1293,7 +1445,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__ixor__` via the `nb_inplace_xor` slot."""
+        """Install `__ixor__` via the `nb_inplace_xor` slot.
+
+        Called by `obj ^= other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_xor
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.nb_inplace_xor](
             self._ptr
         )
@@ -1306,7 +1462,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__add__` via the `nb_add` slot (non-raising overload)."""
+        """Install `__add__` via the `nb_add` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_add
+        """
         _install_binary[
             Self.self_type,
             _lift_obj_to_obj[Self.self_type, method],
@@ -1319,7 +1477,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__and__` via the `nb_and` slot (non-raising overload)."""
+        """Install `__and__` via the `nb_and` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_and
+        """
         _install_binary[
             Self.self_type,
             _lift_obj_to_obj[Self.self_type, method],
@@ -1333,6 +1493,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_divmod
         """
         _install_binary[
             Self.self_type,
@@ -1347,6 +1508,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -1361,6 +1523,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_lshift
         """
         _install_binary[
             Self.self_type,
@@ -1375,6 +1538,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -1389,6 +1553,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_remainder
         """
         _install_binary[
             Self.self_type,
@@ -1403,6 +1568,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_multiply
         """
         _install_binary[
             Self.self_type,
@@ -1416,7 +1582,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__or__` via the `nb_or` slot (non-raising overload)."""
+        """Install `__or__` via the `nb_or` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_or
+        """
         _install_binary[
             Self.self_type,
             _lift_obj_to_obj[Self.self_type, method],
@@ -1430,6 +1598,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_rshift
         """
         _install_binary[
             Self.self_type,
@@ -1444,6 +1613,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_subtract
         """
         _install_binary[
             Self.self_type,
@@ -1458,6 +1628,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -1471,7 +1642,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__xor__` via the `nb_xor` slot (non-raising overload)."""
+        """Install `__xor__` via the `nb_xor` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_xor
+        """
         _install_binary[
             Self.self_type,
             _lift_obj_to_obj[Self.self_type, method],
@@ -1485,6 +1658,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_add
         """
         _install_binary[
             Self.self_type,
@@ -1499,6 +1673,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_and
         """
         _install_binary[
             Self.self_type,
@@ -1513,6 +1688,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -1527,6 +1703,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_lshift
         """
         _install_binary[
             Self.self_type,
@@ -1541,6 +1718,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -1555,6 +1733,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_remainder
         """
         _install_binary[
             Self.self_type,
@@ -1569,6 +1748,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_multiply
         """
         _install_binary[
             Self.self_type,
@@ -1583,6 +1763,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_or
         """
         _install_binary[
             Self.self_type,
@@ -1597,6 +1778,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_rshift
         """
         _install_binary[
             Self.self_type,
@@ -1611,6 +1793,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_subtract
         """
         _install_binary[
             Self.self_type,
@@ -1625,6 +1808,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -1639,6 +1823,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_xor
         """
         _install_binary[
             Self.self_type,
@@ -1652,7 +1837,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_add[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__add__` via the `nb_add` slot (value-receiver overload)."""
+        """Install `__add__` via the `nb_add` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_add
+        """
         _install_binary[
             Self.self_type,
             _lift_val_obj_to_obj[Self.self_type, method],
@@ -1663,7 +1850,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_and[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__and__` via the `nb_and` slot (value-receiver overload)."""
+        """Install `__and__` via the `nb_and` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_and
+        """
         _install_binary[
             Self.self_type,
             _lift_val_obj_to_obj[Self.self_type, method],
@@ -1675,6 +1864,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_divmod
         """
         _install_binary[
             Self.self_type,
@@ -1687,6 +1877,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -1699,6 +1890,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_lshift
         """
         _install_binary[
             Self.self_type,
@@ -1711,6 +1903,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -1723,6 +1916,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_remainder
         """
         _install_binary[
             Self.self_type,
@@ -1735,6 +1929,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_multiply
         """
         _install_binary[
             Self.self_type,
@@ -1746,7 +1941,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_or[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__or__` via the `nb_or` slot (value-receiver overload)."""
+        """Install `__or__` via the `nb_or` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_or
+        """
         _install_binary[
             Self.self_type,
             _lift_val_obj_to_obj[Self.self_type, method],
@@ -1758,6 +1955,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_rshift
         """
         _install_binary[
             Self.self_type,
@@ -1770,6 +1968,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_subtract
         """
         _install_binary[
             Self.self_type,
@@ -1782,6 +1981,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -1793,7 +1993,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_xor[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__xor__` via the `nb_xor` slot (value-receiver overload)."""
+        """Install `__xor__` via the `nb_xor` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_xor
+        """
         _install_binary[
             Self.self_type,
             _lift_val_obj_to_obj[Self.self_type, method],
@@ -1805,6 +2007,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_add
         """
         _install_binary[
             Self.self_type,
@@ -1817,6 +2020,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_and
         """
         _install_binary[
             Self.self_type,
@@ -1829,6 +2033,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -1841,6 +2046,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_lshift
         """
         _install_binary[
             Self.self_type,
@@ -1853,6 +2059,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -1865,6 +2072,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_remainder
         """
         _install_binary[
             Self.self_type,
@@ -1877,6 +2085,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_multiply
         """
         _install_binary[
             Self.self_type,
@@ -1889,6 +2098,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_or
         """
         _install_binary[
             Self.self_type,
@@ -1901,6 +2111,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_rshift
         """
         _install_binary[
             Self.self_type,
@@ -1913,6 +2124,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_subtract
         """
         _install_binary[
             Self.self_type,
@@ -1925,6 +2137,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -1937,6 +2150,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_xor
         """
         _install_binary[
             Self.self_type,
@@ -1958,7 +2172,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             PythonObject,
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__pow__` via the `nb_power` slot."""
+        """Install `__pow__` via the `nb_power` slot.
+
+        Called by `obj ** exp`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_power
+        """
         _install_ternary[Self.self_type, method, _PySlotIndex.nb_power](
             self._ptr
         )
@@ -1971,7 +2189,11 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             PythonObject,
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__ipow__` via the `nb_inplace_power` slot."""
+        """Install `__ipow__` via the `nb_inplace_power` slot.
+
+        Called by `obj **= exp`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_power
+        """
         _install_ternary[Self.self_type, method, _PySlotIndex.nb_inplace_power](
             self._ptr
         )
@@ -1986,7 +2208,9 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
             PythonObject,
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__pow__` via the `nb_power` slot (non-raising overload)."""
+        """Install `__pow__` via the `nb_power` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_power
+        """
         _install_ternary[
             Self.self_type,
             _lift_obj_obj_to_obj[Self.self_type, method],
@@ -2002,6 +2226,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ipow__` via the `nb_inplace_power` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_power
         """
         _install_ternary[
             Self.self_type,
@@ -2016,6 +2241,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__pow__` via the `nb_power` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_power
         """
         _install_ternary[
             Self.self_type,
@@ -2030,6 +2256,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ipow__` via the `nb_inplace_power` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_power
         """
         _install_ternary[
             Self.self_type,
@@ -2045,6 +2272,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_absolute
         """
         _install_unary[
             Self.self_type,
@@ -2058,6 +2286,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_absolute
         """
         _install_unary[
             Self.self_type,
@@ -2071,6 +2300,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_absolute
         """
         _install_unary[
             Self.self_type,
@@ -2084,6 +2314,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_float
         """
         _install_unary[
             Self.self_type,
@@ -2097,6 +2328,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_float
         """
         _install_unary[
             Self.self_type,
@@ -2110,6 +2342,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_float
         """
         _install_unary[
             Self.self_type,
@@ -2123,6 +2356,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_index
         """
         _install_unary[
             Self.self_type,
@@ -2136,6 +2370,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_index
         """
         _install_unary[
             Self.self_type,
@@ -2149,6 +2384,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_index
         """
         _install_unary[
             Self.self_type,
@@ -2162,6 +2398,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_int
         """
         _install_unary[
             Self.self_type,
@@ -2175,6 +2412,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_int
         """
         _install_unary[
             Self.self_type,
@@ -2188,6 +2426,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_int
         """
         _install_unary[
             Self.self_type,
@@ -2201,6 +2440,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_invert
         """
         _install_unary[
             Self.self_type,
@@ -2214,6 +2454,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_invert
         """
         _install_unary[
             Self.self_type,
@@ -2227,6 +2468,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_invert
         """
         _install_unary[
             Self.self_type,
@@ -2240,6 +2482,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_negative
         """
         _install_unary[
             Self.self_type,
@@ -2253,6 +2496,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_negative
         """
         _install_unary[
             Self.self_type,
@@ -2266,6 +2510,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_negative
         """
         _install_unary[
             Self.self_type,
@@ -2279,6 +2524,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_positive
         """
         _install_unary[
             Self.self_type,
@@ -2292,6 +2538,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_positive
         """
         _install_unary[
             Self.self_type,
@@ -2305,6 +2552,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_positive
         """
         _install_unary[
             Self.self_type,
@@ -2320,6 +2568,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `nb_add` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_add
         """
         _install_binary[
             Self.self_type,
@@ -2335,6 +2584,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `nb_add` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_add
         """
         _install_binary[
             Self.self_type,
@@ -2348,6 +2598,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `nb_add` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_add
         """
         _install_binary[
             Self.self_type,
@@ -2363,6 +2614,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__and__` via the `nb_and` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_and
         """
         _install_binary[
             Self.self_type,
@@ -2378,6 +2630,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__and__` via the `nb_and` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_and
         """
         _install_binary[
             Self.self_type,
@@ -2391,6 +2644,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__and__` via the `nb_and` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_and
         """
         _install_binary[
             Self.self_type,
@@ -2406,6 +2660,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_divmod
         """
         _install_binary[
             Self.self_type,
@@ -2421,6 +2676,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_divmod
         """
         _install_binary[
             Self.self_type,
@@ -2434,6 +2690,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_divmod
         """
         _install_binary[
             Self.self_type,
@@ -2449,6 +2706,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -2464,6 +2722,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -2477,6 +2736,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -2492,6 +2752,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_lshift
         """
         _install_binary[
             Self.self_type,
@@ -2507,6 +2768,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_lshift
         """
         _install_binary[
             Self.self_type,
@@ -2520,6 +2782,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_lshift
         """
         _install_binary[
             Self.self_type,
@@ -2535,6 +2798,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -2550,6 +2814,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -2563,6 +2828,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -2578,6 +2844,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_remainder
         """
         _install_binary[
             Self.self_type,
@@ -2593,6 +2860,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_remainder
         """
         _install_binary[
             Self.self_type,
@@ -2606,6 +2874,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_remainder
         """
         _install_binary[
             Self.self_type,
@@ -2621,6 +2890,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_multiply
         """
         _install_binary[
             Self.self_type,
@@ -2636,6 +2906,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_multiply
         """
         _install_binary[
             Self.self_type,
@@ -2649,6 +2920,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_multiply
         """
         _install_binary[
             Self.self_type,
@@ -2664,6 +2936,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__or__` via the `nb_or` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_or
         """
         _install_binary[
             Self.self_type,
@@ -2679,6 +2952,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__or__` via the `nb_or` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_or
         """
         _install_binary[
             Self.self_type,
@@ -2692,6 +2966,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__or__` via the `nb_or` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_or
         """
         _install_binary[
             Self.self_type,
@@ -2707,6 +2982,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_rshift
         """
         _install_binary[
             Self.self_type,
@@ -2722,6 +2998,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_rshift
         """
         _install_binary[
             Self.self_type,
@@ -2735,6 +3012,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_rshift
         """
         _install_binary[
             Self.self_type,
@@ -2750,6 +3028,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_subtract
         """
         _install_binary[
             Self.self_type,
@@ -2765,6 +3044,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_subtract
         """
         _install_binary[
             Self.self_type,
@@ -2778,6 +3058,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_subtract
         """
         _install_binary[
             Self.self_type,
@@ -2793,6 +3074,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -2808,6 +3090,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -2821,6 +3104,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -2836,6 +3120,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__xor__` via the `nb_xor` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_xor
         """
         _install_binary[
             Self.self_type,
@@ -2851,6 +3136,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__xor__` via the `nb_xor` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_xor
         """
         _install_binary[
             Self.self_type,
@@ -2864,6 +3150,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__xor__` via the `nb_xor` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_xor
         """
         _install_binary[
             Self.self_type,
@@ -2879,6 +3166,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_add
         """
         _install_binary[
             Self.self_type,
@@ -2894,6 +3182,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_add
         """
         _install_binary[
             Self.self_type,
@@ -2907,6 +3196,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_add
         """
         _install_binary[
             Self.self_type,
@@ -2922,6 +3212,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_and
         """
         _install_binary[
             Self.self_type,
@@ -2937,6 +3228,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_and
         """
         _install_binary[
             Self.self_type,
@@ -2950,6 +3242,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_and
         """
         _install_binary[
             Self.self_type,
@@ -2965,6 +3258,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -2980,6 +3274,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -2993,6 +3288,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_floor_divide
         """
         _install_binary[
             Self.self_type,
@@ -3008,6 +3304,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_lshift
         """
         _install_binary[
             Self.self_type,
@@ -3023,6 +3320,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_lshift
         """
         _install_binary[
             Self.self_type,
@@ -3036,6 +3334,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_lshift
         """
         _install_binary[
             Self.self_type,
@@ -3051,6 +3350,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -3066,6 +3366,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -3079,6 +3380,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_matrix_multiply
         """
         _install_binary[
             Self.self_type,
@@ -3094,6 +3396,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_remainder
         """
         _install_binary[
             Self.self_type,
@@ -3109,6 +3412,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_remainder
         """
         _install_binary[
             Self.self_type,
@@ -3122,6 +3426,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_remainder
         """
         _install_binary[
             Self.self_type,
@@ -3137,6 +3442,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_multiply
         """
         _install_binary[
             Self.self_type,
@@ -3152,6 +3458,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_multiply
         """
         _install_binary[
             Self.self_type,
@@ -3165,6 +3472,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_multiply
         """
         _install_binary[
             Self.self_type,
@@ -3180,6 +3488,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_or
         """
         _install_binary[
             Self.self_type,
@@ -3195,6 +3504,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_or
         """
         _install_binary[
             Self.self_type,
@@ -3208,6 +3518,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_or
         """
         _install_binary[
             Self.self_type,
@@ -3223,6 +3534,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_rshift
         """
         _install_binary[
             Self.self_type,
@@ -3238,6 +3550,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_rshift
         """
         _install_binary[
             Self.self_type,
@@ -3251,6 +3564,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_rshift
         """
         _install_binary[
             Self.self_type,
@@ -3266,6 +3580,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_subtract
         """
         _install_binary[
             Self.self_type,
@@ -3281,6 +3596,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_subtract
         """
         _install_binary[
             Self.self_type,
@@ -3294,6 +3610,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_subtract
         """
         _install_binary[
             Self.self_type,
@@ -3309,6 +3626,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -3324,6 +3642,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -3337,6 +3656,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_true_divide
         """
         _install_binary[
             Self.self_type,
@@ -3352,6 +3672,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_xor
         """
         _install_binary[
             Self.self_type,
@@ -3367,6 +3688,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_xor
         """
         _install_binary[
             Self.self_type,
@@ -3380,6 +3702,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_xor
         """
         _install_binary[
             Self.self_type,
@@ -3397,6 +3720,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__pow__` via the `nb_power` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_power
         """
         _install_ternary[
             Self.self_type,
@@ -3414,6 +3738,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__pow__` via the `nb_power` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_power
         """
         _install_ternary[
             Self.self_type,
@@ -3427,6 +3752,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__pow__` via the `nb_power` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_power
         """
         _install_ternary[
             Self.self_type,
@@ -3444,6 +3770,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ipow__` via the `nb_inplace_power` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_power
         """
         _install_ternary[
             Self.self_type,
@@ -3461,6 +3788,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ipow__` via the `nb_inplace_power` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_power
         """
         _install_ternary[
             Self.self_type,
@@ -3474,6 +3802,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ipow__` via the `nb_inplace_power` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_power
         """
         _install_ternary[
             Self.self_type,
@@ -3519,7 +3848,11 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_len[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> Int
     ](mut self) -> ref[self] Self:
-        """Install `__len__` via the `mp_length` slot."""
+        """Install `__len__` via the `mp_length` slot.
+
+        Called by `len(obj)`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_length
+        """
         _install_lenfunc[Self.self_type, method](self._ptr)
         return self
 
@@ -3528,7 +3861,11 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__getitem__` via the `mp_subscript` slot."""
+        """Install `__getitem__` via the `mp_subscript` slot.
+
+        Called by `obj[key]`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_subscript
+        """
         _install_mp_getitem[Self.self_type, method](self._ptr)
         return self
 
@@ -3541,9 +3878,12 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
     ](mut self) -> ref[self] Self:
         """Install `__setitem__`/`__delitem__` via the `mp_ass_subscript` slot.
 
+        Called by `obj[key] = value` or `del obj[key]`.
+
         The third argument to `method` is a `Variant`:
         - `Variant[PythonObject, Int](value)` for assignment.
         - `Variant[PythonObject, Int](Int(0))` for deletion (null C pointer).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_ass_subscript
         """
         _install_objobjargproc[Self.self_type, method](self._ptr)
         return self
@@ -3553,7 +3893,9 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_len[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> Int
     ](mut self) -> ref[self] Self:
-        """Install `__len__` via the `mp_length` slot (non-raising overload)."""
+        """Install `__len__` via the `mp_length` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_length
+        """
         _install_lenfunc[Self.self_type, _lift_to_int[Self.self_type, method]](
             self._ptr
         )
@@ -3565,6 +3907,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_subscript
         """
         _install_mp_getitem[
             Self.self_type, _lift_obj_to_obj[Self.self_type, method]
@@ -3579,6 +3922,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> None
     ](mut self) -> ref[self] Self:
         """Install `__setitem__`/`__delitem__` via the `mp_ass_subscript` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_ass_subscript
         """
         _install_objobjargproc[
             Self.self_type, _lift_obj_var_to_none[Self.self_type, method]
@@ -3591,6 +3935,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `mp_length` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_length
         """
         _install_lenfunc[
             Self.self_type, _lift_val_to_int[Self.self_type, method]
@@ -3601,6 +3946,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_subscript
         """
         _install_mp_getitem[
             Self.self_type, _lift_val_obj_to_obj[Self.self_type, method]
@@ -3613,6 +3959,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> None
     ](mut self) -> ref[self] Self:
         """Install `__setitem__`/`__delitem__` via the `mp_ass_subscript` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_ass_subscript
         """
         _install_objobjargproc[
             Self.self_type, _lift_val_obj_var_to_none[Self.self_type, method]
@@ -3628,6 +3975,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_subscript
         """
         _install_mp_getitem[
             Self.self_type, _conv_ptr_r_binary[Self.self_type, R, method]
@@ -3641,6 +3989,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_subscript
         """
         _install_mp_getitem[
             Self.self_type, _conv_ptr_nr_binary[Self.self_type, R, method]
@@ -3652,6 +4001,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_subscript
         """
         _install_mp_getitem[
             Self.self_type, _conv_val_r_binary[Self.self_type, R, method]
@@ -3699,7 +4049,11 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_len[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> Int
     ](mut self) -> ref[self] Self:
-        """Install `__len__` via the `sq_length` slot."""
+        """Install `__len__` via the `sq_length` slot.
+
+        Called by `len(obj)`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_length
+        """
         comptime _lenfunc = fn(PyObjectPtr) -> Py_ssize_t
         var fn_ptr: _lenfunc = _mp_length_wrapper[Self.self_type, method]
         self._ptr[]._insert_slot(
@@ -3715,7 +4069,11 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__getitem__` via the `sq_item` slot (integer index)."""
+        """Install `__getitem__` via the `sq_item` slot (integer index).
+
+        Called by `obj[index]`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_item
+        """
         _install_ssizeargfunc[Self.self_type, method, _PySlotIndex.sq_item](
             self._ptr
         )
@@ -3730,9 +4088,12 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
     ](mut self) -> ref[self] Self:
         """Install `__setitem__`/`__delitem__` via the `sq_ass_item` slot.
 
+        Called by `obj[index] = value` or `del obj[index]`.
+
         The third argument to `method` is a `Variant`:
         - `Variant[PythonObject, Int](value)` for assignment.
         - `Variant[PythonObject, Int](Int(0))` for deletion (null C pointer).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_ass_item
         """
         _install_ssizeobjargproc[Self.self_type, method](self._ptr)
         return self
@@ -3742,7 +4103,11 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> Bool
     ](mut self) -> ref[self] Self:
-        """Install `__contains__` via the `sq_contains` slot."""
+        """Install `__contains__` via the `sq_contains` slot.
+
+        Called by `item in obj`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_contains
+        """
         _install_objobjproc[Self.self_type, method, _PySlotIndex.sq_contains](
             self._ptr
         )
@@ -3753,7 +4118,11 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__add__` (concatenation) via the `sq_concat` slot."""
+        """Install `__add__` (concatenation) via the `sq_concat` slot.
+
+        Called by `obj + other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_concat
+        """
         _install_binary[Self.self_type, method, _PySlotIndex.sq_concat](
             self._ptr
         )
@@ -3764,7 +4133,11 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__mul__` (repetition) via the `sq_repeat` slot."""
+        """Install `__mul__` (repetition) via the `sq_repeat` slot.
+
+        Called by `obj * count`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_repeat
+        """
         _install_ssizeargfunc[Self.self_type, method, _PySlotIndex.sq_repeat](
             self._ptr
         )
@@ -3776,6 +4149,9 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` (in-place concatenation) via the `sq_inplace_concat` slot.
+
+        Called by `obj += other`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_concat
         """
         _install_binary[Self.self_type, method, _PySlotIndex.sq_inplace_concat](
             self._ptr
@@ -3788,6 +4164,9 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` (in-place repetition) via the `sq_inplace_repeat` slot.
+
+        Called by `obj *= count`.
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_repeat
         """
         _install_ssizeargfunc[
             Self.self_type, method, _PySlotIndex.sq_inplace_repeat
@@ -3799,7 +4178,9 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
     fn def_len[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> Int
     ](mut self) -> ref[self] Self:
-        """Install `__len__` via the `sq_length` slot (non-raising overload)."""
+        """Install `__len__` via the `sq_length` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_length
+        """
         comptime _lenfunc = fn(PyObjectPtr) -> Py_ssize_t
         var fn_ptr: _lenfunc = _mp_length_wrapper[
             Self.self_type, _lift_to_int[Self.self_type, method]
@@ -3818,6 +4199,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `sq_item` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_item
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -3834,6 +4216,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> None
     ](mut self) -> ref[self] Self:
         """Install `__setitem__`/`__delitem__` via the `sq_ass_item` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_ass_item
         """
         _install_ssizeobjargproc[
             Self.self_type, _lift_int_var_to_none[Self.self_type, method]
@@ -3846,6 +4229,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__contains__` via the `sq_contains` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_contains
         """
         _install_objobjproc[
             Self.self_type,
@@ -3860,6 +4244,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__add__` (concatenation) via the `sq_concat` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_concat
         """
         _install_binary[
             Self.self_type,
@@ -3874,6 +4259,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` (repetition) via the `sq_repeat` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -3888,6 +4274,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` (in-place concatenation) via the `sq_inplace_concat` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_concat
         """
         _install_binary[
             Self.self_type,
@@ -3902,6 +4289,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` (in-place repetition) via the `sq_inplace_repeat` slot (non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -3916,6 +4304,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type) raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `sq_length` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_length
         """
         comptime _lenfunc = fn(PyObjectPtr) -> Py_ssize_t
         var fn_ptr: _lenfunc = _mp_length_wrapper[
@@ -3933,6 +4322,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `sq_item` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_item
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -3947,6 +4337,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> None
     ](mut self) -> ref[self] Self:
         """Install `__setitem__`/`__delitem__` via the `sq_ass_item` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_ass_item
         """
         _install_ssizeobjargproc[
             Self.self_type, _lift_val_int_var_to_none[Self.self_type, method]
@@ -3957,6 +4348,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__contains__` via the `sq_contains` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_contains
         """
         _install_objobjproc[
             Self.self_type,
@@ -3969,6 +4361,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__add__` (concatenation) via the `sq_concat` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_concat
         """
         _install_binary[
             Self.self_type,
@@ -3981,6 +4374,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` (repetition) via the `sq_repeat` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -3993,6 +4387,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` (in-place concatenation) via the `sq_inplace_concat` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_concat
         """
         _install_binary[
             Self.self_type,
@@ -4005,6 +4400,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` (in-place repetition) via the `sq_inplace_repeat` slot (value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -4022,6 +4418,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `sq_item` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_item
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -4035,6 +4432,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `sq_item` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_item
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -4048,6 +4446,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, Int) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `sq_item` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_item
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -4063,6 +4462,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `sq_concat` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_concat
         """
         _install_binary[
             Self.self_type,
@@ -4078,6 +4478,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `sq_concat` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_concat
         """
         _install_binary[
             Self.self_type,
@@ -4091,6 +4492,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `sq_concat` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_concat
         """
         _install_binary[
             Self.self_type,
@@ -4106,6 +4508,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `sq_repeat` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -4119,6 +4522,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `sq_repeat` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -4132,6 +4536,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, Int) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `sq_repeat` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -4147,6 +4552,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `sq_inplace_concat` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_concat
         """
         _install_binary[
             Self.self_type,
@@ -4162,6 +4568,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `sq_inplace_concat` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_concat
         """
         _install_binary[
             Self.self_type,
@@ -4175,6 +4582,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `sq_inplace_concat` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_concat
         """
         _install_binary[
             Self.self_type,
@@ -4190,6 +4598,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `sq_inplace_repeat` slot (ConvertibleToPython return overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -4203,6 +4612,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `sq_inplace_repeat` slot (ConvertibleToPython return, non-raising overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
@@ -4216,6 +4626,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         method: fn(Self.self_type, Int) raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `sq_inplace_repeat` slot (ConvertibleToPython return, value-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_inplace_repeat
         """
         _install_ssizeargfunc[
             Self.self_type,
