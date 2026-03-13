@@ -108,10 +108,13 @@ Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], key: PythonObject) 
 
 Installs `mp_ass_subscript` (`obj[key] = val` / `del obj[key]`).
 
-Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], key: PythonObject, value: Variant[PythonObject, Int]) raises`
-
 `value` is `Variant[PythonObject, Int](Int(0))` for `del obj[key]` and
 `Variant[PythonObject, Int](val)` for `obj[key] = val`.
+
+| Overload | Handler signature |
+|----------|-------------------|
+| Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], key: PythonObject, value: Variant[PythonObject, Int]) raises` |
+| Mut / raising | `fn(mut self: T, key: PythonObject, value: Variant[PythonObject, Int]) raises` |
 
 ---
 
@@ -129,7 +132,7 @@ All methods return `Self` for chaining.
 |--------|------|-----------------|
 | `def_len[method]()` | `sq_length` | `len(obj)` |
 | `def_getitem[method]()` | `sq_item` | `obj[i]` |
-| `def_setitem[method]()` | `sq_ass_item` | `obj[i] = val` / `del obj[i]` |
+| `def_setitem[method]()` | `sq_ass_item` | `obj[i] = val` / `del obj[i]` — pointer or `mut`-receiver overloads |
 | `def_contains[method]()` | `sq_contains` | `x in obj` |
 | `def_concat[method]()` | `sq_concat` | `obj + other` |
 | `def_repeat[method]()` | `sq_repeat` | `obj * n` |
@@ -201,4 +204,6 @@ All methods return `Self` for chaining.
 | `def_ixor[method]()` | `nb_inplace_xor` | `obj ^= other` |
 | `def_ipow[method]()` | `nb_inplace_power` | `obj **= exp` |
 
-Each builder method has three overloads (pointer+raising, pointer+non-raising, value+raising) to match different handler styles.
+Non-in-place methods (`def_add`, `def_sub`, etc.) have three overloads: pointer+raising, pointer+non-raising, and value+raising.
+
+In-place methods (`def_iadd`, `def_isub`, etc.) have two overloads: pointer+raising and mut+raising. Value-receiver overloads are intentionally absent — a copy-based receiver cannot persist mutations.

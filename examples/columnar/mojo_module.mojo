@@ -116,38 +116,33 @@ struct DataFrame(Defaultable, Movable, Writable):
     # Mapping protocol
     # ------------------------------------------------------------------
 
-    @staticmethod
-    fn py__len__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Int:
-        return len(self_ptr[].pos_x)
+    fn py__len__(self) raises -> Int:
+        return len(self.pos_x)
 
-    @staticmethod
-    fn py__getitem__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], index: PythonObject
-    ) raises -> PythonObject:
+    fn py__getitem__(self, index: PythonObject) raises -> PythonObject:
         var i = Int(py=index)
-        var length = len(self_ptr[].pos_x)
+        var length = len(self.pos_x)
         if i < 0 or i >= length:
             raise Error("index out of range")
-        return Python().tuple(self_ptr[].pos_x[i], self_ptr[].pos_y[i])
+        return Python().tuple(self.pos_x[i], self.pos_y[i])
 
-    @staticmethod
     fn py__setitem__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        mut self,
         index: PythonObject,
         value: Variant[PythonObject, Int],
     ) raises -> None:
         var i = Int(py=index)
-        var length = len(self_ptr[].pos_x)
+        var length = len(self.pos_x)
         if i < 0 or i >= length:
             raise Error("index out of range")
         if value.isa[PythonObject]():
             # Assignment: value is a (x, y) tuple.
-            self_ptr[].pos_x[i] = Float64(py=value[PythonObject][0])
-            self_ptr[].pos_y[i] = Float64(py=value[PythonObject][1])
+            self.pos_x[i] = Float64(py=value[PythonObject][0])
+            self.pos_y[i] = Float64(py=value[PythonObject][1])
         else:
             # Deletion (value is null / Int(0)).
-            _ = self_ptr[].pos_x.pop(i)
-            _ = self_ptr[].pos_y.pop(i)
+            _ = self.pos_x.pop(i)
+            _ = self.pos_y.pop(i)
 
     # ------------------------------------------------------------------
     # Rich comparison protocol

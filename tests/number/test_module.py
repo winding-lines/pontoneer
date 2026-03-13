@@ -80,12 +80,31 @@ def _run_number_assertions(new_fn, val_fn) -> None:
     assert val_fn(n(3) ** n(3)) == 27
 
 
+def _run_inplace_assertions(new_fn, val_fn) -> None:
+    n = new_fn(10)
+    m = new_fn(3)
+
+    n += m
+    assert val_fn(n) == 13
+
+    n -= m
+    assert val_fn(n) == 10
+
+    n *= m
+    assert val_fn(n) == 30
+
+    n **= new_fn(2)
+    assert val_fn(n) == 900
+
+
 def test_number_protocol() -> None:
     print("Testing number protocol...")
     _run_number_assertions(mojo_module.Number.new, lambda x: x.get_value())
     print("  ptr-receiver: ok")
     _run_number_assertions(mojo_module.NumberV.new, lambda x: x.get_value())
     print("  value-receiver: ok")
+    _run_inplace_assertions(mojo_module.NumberM.new, lambda x: x.get_value())
+    print("  mut-receiver in-place: ok")
     print("Number protocol tests passed!")
 
 

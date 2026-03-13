@@ -549,6 +549,17 @@ fn _lift_val_obj_var_to_none[
     method(ptr[], key, val)
 
 
+fn _lift_mut_obj_var_to_none[
+    T: ImplicitlyDestructible,
+    method: fn(mut T, PythonObject, Variant[PythonObject, Int]) raises -> None,
+](
+    ptr: UnsafePointer[T, MutAnyOrigin],
+    key: PythonObject,
+    val: Variant[PythonObject, Int],
+) raises -> None:
+    method(ptr[], key, val)
+
+
 fn _lift_val_int_to_obj[
     T: ImplicitlyDestructible,
     method: fn(T, Int) raises -> PythonObject,
@@ -559,6 +570,17 @@ fn _lift_val_int_to_obj[
 fn _lift_val_int_var_to_none[
     T: ImplicitlyDestructible,
     method: fn(T, Int, Variant[PythonObject, Int]) raises -> None,
+](
+    ptr: UnsafePointer[T, MutAnyOrigin],
+    index: Int,
+    val: Variant[PythonObject, Int],
+) raises -> None:
+    method(ptr[], index, val)
+
+
+fn _lift_mut_int_var_to_none[
+    T: ImplicitlyDestructible,
+    method: fn(mut T, Int, Variant[PythonObject, Int]) raises -> None,
 ](
     ptr: UnsafePointer[T, MutAnyOrigin],
     index: Int,
@@ -579,6 +601,22 @@ fn _lift_val_obj_int_to_bool[
 fn _lift_val_obj_obj_to_obj[
     T: ImplicitlyDestructible,
     method: fn(T, PythonObject, PythonObject) raises -> PythonObject,
+](
+    ptr: UnsafePointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
+) raises -> PythonObject:
+    return method(ptr[], a, b)
+
+
+fn _lift_mut_obj_to_obj[
+    T: ImplicitlyDestructible,
+    method: fn(mut T, PythonObject) raises -> PythonObject,
+](ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject:
+    return method(ptr[], other)
+
+
+fn _lift_mut_obj_obj_to_obj[
+    T: ImplicitlyDestructible,
+    method: fn(mut T, PythonObject, PythonObject) raises -> PythonObject,
 ](
     ptr: UnsafePointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
 ) raises -> PythonObject:
@@ -2003,162 +2041,6 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iadd[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__iadd__` via the `nb_inplace_add` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_add
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_add,
-        ](self._ptr)
-        return self
-
-    fn def_iand[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__iand__` via the `nb_inplace_and` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_and
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_and,
-        ](self._ptr)
-        return self
-
-    fn def_ifloordiv[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_floor_divide
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_floor_divide,
-        ](self._ptr)
-        return self
-
-    fn def_ilshift[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__ilshift__` via the `nb_inplace_lshift` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_lshift
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_lshift,
-        ](self._ptr)
-        return self
-
-    fn def_imatmul[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_matrix_multiply
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_matrix_multiply,
-        ](self._ptr)
-        return self
-
-    fn def_imod[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__imod__` via the `nb_inplace_remainder` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_remainder
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_remainder,
-        ](self._ptr)
-        return self
-
-    fn def_imul[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__imul__` via the `nb_inplace_multiply` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_multiply
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_multiply,
-        ](self._ptr)
-        return self
-
-    fn def_ior[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__ior__` via the `nb_inplace_or` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_or
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_or,
-        ](self._ptr)
-        return self
-
-    fn def_irshift[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__irshift__` via the `nb_inplace_rshift` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_rshift
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_rshift,
-        ](self._ptr)
-        return self
-
-    fn def_isub[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__isub__` via the `nb_inplace_subtract` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_subtract
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_subtract,
-        ](self._ptr)
-        return self
-
-    fn def_itruediv[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__itruediv__` via the `nb_inplace_true_divide` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_true_divide
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_true_divide,
-        ](self._ptr)
-        return self
-
-    fn def_ixor[
-        method: fn(Self.self_type, PythonObject) raises -> PythonObject
-    ](mut self) -> ref[self] Self:
-        """Install `__ixor__` via the `nb_inplace_xor` slot (value-receiver overload).
-        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_xor
-        """
-        _install_binary[
-            Self.self_type,
-            _lift_val_obj_to_obj[Self.self_type, method],
-            _PySlotIndex.nb_inplace_xor,
-        ](self._ptr)
-        return self
-
     # ------------------------------------------------------------------
     # Ternary slots — C type: ternaryfunc  fn(PyObject *, PyObject *, PyObject *) -> PyObject *
     # `mod` is None unless pow(base, exp, mod) was called.
@@ -2250,17 +2132,175 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
+    # Mut-receiver overloads
+
+    fn def_iadd[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__iadd__` via the `nb_inplace_add` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_add
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_add,
+        ](self._ptr)
+        return self
+
+    fn def_iand[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__iand__` via the `nb_inplace_and` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_and
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_and,
+        ](self._ptr)
+        return self
+
+    fn def_ifloordiv[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_floor_divide
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_floor_divide,
+        ](self._ptr)
+        return self
+
+    fn def_ilshift[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__ilshift__` via the `nb_inplace_lshift` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_lshift
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_lshift,
+        ](self._ptr)
+        return self
+
+    fn def_imatmul[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_matrix_multiply
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_matrix_multiply,
+        ](self._ptr)
+        return self
+
+    fn def_imod[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__imod__` via the `nb_inplace_remainder` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_remainder
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_remainder,
+        ](self._ptr)
+        return self
+
+    fn def_imul[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__imul__` via the `nb_inplace_multiply` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_multiply
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_multiply,
+        ](self._ptr)
+        return self
+
+    fn def_ior[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__ior__` via the `nb_inplace_or` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_or
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_or,
+        ](self._ptr)
+        return self
+
+    fn def_irshift[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__irshift__` via the `nb_inplace_rshift` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_rshift
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_rshift,
+        ](self._ptr)
+        return self
+
+    fn def_isub[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__isub__` via the `nb_inplace_subtract` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_subtract
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_subtract,
+        ](self._ptr)
+        return self
+
+    fn def_itruediv[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__itruediv__` via the `nb_inplace_true_divide` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_true_divide
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_true_divide,
+        ](self._ptr)
+        return self
+
+    fn def_ixor[
+        method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
+    ](mut self) -> ref[self] Self:
+        """Install `__ixor__` via the `nb_inplace_xor` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_xor
+        """
+        _install_binary[
+            Self.self_type,
+            _lift_mut_obj_to_obj[Self.self_type, method],
+            _PySlotIndex.nb_inplace_xor,
+        ](self._ptr)
+        return self
+
     fn def_ipow[
         method: fn(
-            Self.self_type, PythonObject, PythonObject
+            mut Self.self_type, PythonObject, PythonObject
         ) raises -> PythonObject
     ](mut self) -> ref[self] Self:
-        """Install `__ipow__` via the `nb_inplace_power` slot (value-receiver overload).
+        """Install `__ipow__` via the `nb_inplace_power` slot (mut-receiver overload).
         See: https://docs.python.org/3/c-api/typeobj.html#c.PyNumberMethods.nb_inplace_power
         """
         _install_ternary[
             Self.self_type,
-            _lift_val_obj_obj_to_obj[Self.self_type, method],
+            _lift_mut_obj_obj_to_obj[Self.self_type, method],
             _PySlotIndex.nb_inplace_power,
         ](self._ptr)
         return self
@@ -3955,14 +3995,14 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     fn def_setitem[
         method: fn(
-            Self.self_type, PythonObject, Variant[PythonObject, Int]
+            mut Self.self_type, PythonObject, Variant[PythonObject, Int]
         ) raises -> None
     ](mut self) -> ref[self] Self:
-        """Install `__setitem__`/`__delitem__` via the `mp_ass_subscript` slot (value-receiver overload).
+        """Install `__setitem__`/`__delitem__` via the `mp_ass_subscript` slot (mut-receiver overload).
         See: https://docs.python.org/3/c-api/typeobj.html#c.PyMappingMethods.mp_ass_subscript
         """
         _install_objobjargproc[
-            Self.self_type, _lift_val_obj_var_to_none[Self.self_type, method]
+            Self.self_type, _lift_mut_obj_var_to_none[Self.self_type, method]
         ](self._ptr)
         return self
 
@@ -4341,6 +4381,19 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         """
         _install_ssizeobjargproc[
             Self.self_type, _lift_val_int_var_to_none[Self.self_type, method]
+        ](self._ptr)
+        return self
+
+    fn def_setitem[
+        method: fn(
+            mut Self.self_type, Int, Variant[PythonObject, Int]
+        ) raises -> None
+    ](mut self) -> ref[self] Self:
+        """Install `__setitem__`/`__delitem__` via the `sq_ass_item` slot (mut-receiver overload).
+        See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_ass_item
+        """
+        _install_ssizeobjargproc[
+            Self.self_type, _lift_mut_int_var_to_none[Self.self_type, method]
         ](self._ptr)
         return self
 

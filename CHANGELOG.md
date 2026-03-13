@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-03-13
+
+### Added
+- `MappingProtocolBuilder.def_setitem` now accepts a `mut`-receiver handler (`fn(mut self, key: PythonObject, value: Variant[PythonObject, Int]) raises -> None`), allowing mutations to persist without a raw `UnsafePointer`.
+- `SequenceProtocolBuilder.def_setitem` likewise accepts a `mut`-receiver handler (`fn(mut self, index: Int, value: Variant[PythonObject, Int]) raises -> None`).
+- `NumberProtocolBuilder` in-place operators (`def_iadd`, `def_isub`, `def_imul`, `def_ifloordiv`, `def_imod`, `def_imul`, `def_ior`, `def_iand`, `def_ixor`, `def_ilshift`, `def_irshift`, `def_itruediv`, `def_imatmul`, `def_ipow`) now accept `mut`-receiver handlers.
+
+### Removed
+- Value-receiver overloads for all in-place (`def_i*`) methods in `NumberProtocolBuilder` — a copy-based receiver cannot persist mutations, making those overloads incorrect for in-place semantics.
+
+### Changed
+- `examples/columnar` mapping protocol handlers (`py__len__`, `py__getitem__`, `py__setitem__`) converted from `@staticmethod` + `UnsafePointer` to regular `self` / `mut self` methods.
+
 ## [0.3.5] - 2026-03-11
 
 ### Added

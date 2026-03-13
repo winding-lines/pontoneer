@@ -36,6 +36,12 @@ examples/columnar/
 | `MappingProtocolBuilder` | Installs mp_ slots: `def_len`, `def_getitem`, `def_setitem`; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
 | `SequenceProtocolBuilder` | Installs sq_ slots: `def_len`, `def_getitem`, `def_setitem`, `def_contains`, `def_concat`, `def_repeat`, `def_iconcat`, `def_irepeat`; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
 
+## Documentation
+
+When making public API changes, update both:
+- `docs/api.md` — reference documentation for all builder methods and overloads
+- `docs/index.md` — Quick Start example and Handler Signatures table
+
 ## Design decisions
 
 - **Four specialized builders** replace a single monolithic builder. Each takes

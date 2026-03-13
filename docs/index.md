@@ -61,6 +61,55 @@ from pontoneer import (
 )
 
 
+struct MyStruct(Defaultable, Movable):
+    var data: List[Float64]
+
+    fn __init__(out self):
+        self.data = []
+
+    fn py__len__(self) raises -> Int:
+        return len(self.data)
+
+    fn py__getitem__(self, key: PythonObject) raises -> PythonObject:
+        return PythonObject(self.data[Int(py=key)])
+
+    fn py__setitem__(
+        mut self, key: PythonObject, value: Variant[PythonObject, Int]
+    ) raises -> None:
+        if value.isa[PythonObject]():
+            self.data[Int(py=key)] = Float64(py=value[PythonObject])
+        else:
+            _ = self.data.pop(Int(py=key))
+
+    fn rich_compare(
+        self, other: PythonObject, op: Int
+    ) raises -> Bool:
+        var other_ptr = other.downcast_value_ptr[Self]()
+        if op == RichCompareOps.Py_EQ:
+            return len(self.data) == len(other_ptr[].data)
+        raise NotImplementedError()
+
+    fn py__neg__(self) raises -> PythonObject:
+        var result = List[Float64](capacity=len(self.data))
+        for v in self.data:
+            result.append(-v)
+        var out = MyStruct()
+        out.data = result^
+        return PythonObject(alloc=out^)
+
+    fn py__add__(self, other: PythonObject) raises -> PythonObject:
+        try:
+            var other_ptr = other.downcast_value_ptr[Self]()
+            var result = MyStruct()
+            for v in self.data:
+                result.data.append(v)
+            for v in other_ptr[].data:
+                result.data.append(v)
+            return PythonObject(alloc=result^)
+        except:
+            raise NotImplementedError()
+
+
 @export
 fn PyInit_mymodule() -> PythonObject:
     try:
@@ -90,12 +139,16 @@ fn PyInit_mymodule() -> PythonObject:
 
 ## Handler signatures
 
-| Slot | Required signature |
-|------|--------------------|
-| `mp_length` | `fn(py_self: PythonObject) raises -> Int` |
-| `mp_getitem` | `fn(py_self: PythonObject, key: PythonObject) raises -> PythonObject` |
-| `mp_setitem` | `fn(py_self: PythonObject, key: PythonObject, value: Variant[PythonObject, Int]) raises -> None` |
-| `tp_richcompare` | `fn(py_self: PythonObject, other: PythonObject, op: Int) raises -> Bool` |
+Handlers can be written as regular methods on `self` (value-receiver) or as
+`@staticmethod` functions taking `UnsafePointer[T, MutAnyOrigin]`.
+The value-receiver style is shown below.
+
+| Slot | Value-receiver signature |
+|------|--------------------------|
+| `mp_length` | `fn py__len__(self) raises -> Int` |
+| `mp_getitem` | `fn py__getitem__(self, key: PythonObject) raises -> PythonObject` |
+| `mp_setitem` | `fn py__setitem__(mut self, key: PythonObject, value: Variant[PythonObject, Int]) raises -> None` |
+| `tp_richcompare` | `fn rich_compare(self, other: PythonObject, op: Int) raises -> Bool` |
 
 For `mp_setitem`, `value` is `Variant[PythonObject, Int](Int(0))` when Python
 calls `del obj[key]`, and `Variant[PythonObject, Int](val)` for `obj[key] = val`.

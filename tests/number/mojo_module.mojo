@@ -366,6 +366,71 @@ struct NumberV(Defaultable, Movable, Writable):
         writer.write("NumberV(", self.value, ")")
 
 
+# NumberM uses mut-receiver handlers for in-place operators.
+struct NumberM(Defaultable, Movable, Writable):
+    var value: Int
+
+    fn __init__(out self):
+        self.value = 0
+
+    fn __init__(out self, value: Int):
+        self.value = value
+
+    @staticmethod
+    fn _get_self_ptr(
+        py_self: PythonObject,
+    ) -> UnsafePointer[Self, MutAnyOrigin]:
+        try:
+            return py_self.downcast_value_ptr[Self]()
+        except e:
+            abort(String("downcast failed: ", e))
+
+    @staticmethod
+    fn new(value: PythonObject) raises -> PythonObject:
+        return PythonObject(alloc=NumberM(Int(py=value)))
+
+    @staticmethod
+    fn get_value(py_self: PythonObject) raises -> PythonObject:
+        return PythonObject(Self._get_self_ptr(py_self)[].value)
+
+    fn py__iadd__(mut self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            self.value += o[].value
+            return PythonObject(alloc=NumberM(self.value))
+        except:
+            raise NotImplementedError()
+
+    fn py__isub__(mut self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            self.value -= o[].value
+            return PythonObject(alloc=NumberM(self.value))
+        except:
+            raise NotImplementedError()
+
+    fn py__imul__(mut self, other: PythonObject) raises -> PythonObject:
+        try:
+            var o = other.downcast_value_ptr[Self]()
+            self.value *= o[].value
+            return PythonObject(alloc=NumberM(self.value))
+        except:
+            raise NotImplementedError()
+
+    fn py__ipow__(
+        mut self, exp: PythonObject, mod: PythonObject
+    ) raises -> PythonObject:
+        try:
+            var e = exp.downcast_value_ptr[Self]()
+            self.value = Int(Float64(self.value) ** Float64(e[].value))
+            return PythonObject(alloc=NumberM(self.value))
+        except:
+            raise NotImplementedError()
+
+    fn write_to(self, mut writer: Some[Writer]):
+        writer.write("NumberM(", self.value, ")")
+
+
 @export
 fn PyInit_mojo_module() -> PythonObject:
     try:
@@ -425,6 +490,19 @@ fn PyInit_mojo_module() -> PythonObject:
             .def_lshift[NumberV.py__lshift__]()
             .def_rshift[NumberV.py__rshift__]()
             .def_pow[NumberV.py__pow__]()
+        )
+        ref tbm = (
+            b.add_type[NumberM]("NumberM")
+            .def_init_defaultable[NumberM]()
+            .def_staticmethod[NumberM.new]("new")
+            .def_method[NumberM.get_value]("get_value")
+        )
+        var npbm = NumberProtocolBuilder[NumberM](tbm)
+        _ = (
+            npbm.def_iadd[NumberM.py__iadd__]()
+            .def_isub[NumberM.py__isub__]()
+            .def_imul[NumberM.py__imul__]()
+            .def_ipow[NumberM.py__ipow__]()
         )
         return b.finalize()
     except e:
