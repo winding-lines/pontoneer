@@ -42,6 +42,10 @@ When making public API changes, update both:
 - `docs/api.md` — reference documentation for all builder methods and overloads
 - `docs/index.md` — Quick Start example and Handler Signatures table
 
+When bumping the version, keep the minimum version constraint in sync across:
+- `README.md` — installation snippet
+- `docs/index.md` — installation snippet
+
 ## Design decisions
 
 - **Four specialized builders** replace a single monolithic builder. Each takes
