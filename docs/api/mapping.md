@@ -8,7 +8,7 @@ Installs CPython mapping protocol slots on a `PythonTypeBuilder`.
 
 Construct directly from a `PythonTypeBuilder`. All methods return `Self` for chaining.
 
-## def_len[method]()
+## def_len()
 
 Installs `mp_length` — called by `len(obj)`.
 
@@ -20,7 +20,7 @@ See: [PyMappingMethods.mp_length](https://docs.python.org/3/c-api/typeobj.html#c
 | Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin]) -> Int` |
 | Value / raising | `fn(self: T) raises -> Int` |
 
-## def_getitem[method]()
+## def_getitem()
 
 Installs `mp_subscript` — called by `obj[key]`.
 
@@ -32,7 +32,7 @@ See: [PyMappingMethods.mp_subscript](https://docs.python.org/3/c-api/typeobj.htm
 | Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin], key: PythonObject) -> PythonObject` |
 | Value / raising | `fn(self: T, key: PythonObject) raises -> PythonObject` |
 
-## def_setitem[method]()
+## def_setitem()
 
 Installs `mp_ass_subscript` — called by `obj[key] = val` or `del obj[key]`.
 

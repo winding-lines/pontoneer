@@ -17,7 +17,7 @@ persist mutations.
 
 ## Unary operators
 
-### def_neg[method]()
+### def_neg()
 
 Installs `nb_negative` — called by `-obj`.
 
@@ -25,7 +25,7 @@ See: [PyNumberMethods.nb_negative](https://docs.python.org/3/c-api/typeobj.html#
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject`
 
-### def_pos[method]()
+### def_pos()
 
 Installs `nb_positive` — called by `+obj`.
 
@@ -33,7 +33,7 @@ See: [PyNumberMethods.nb_positive](https://docs.python.org/3/c-api/typeobj.html#
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject`
 
-### def_abs[method]()
+### def_abs()
 
 Installs `nb_absolute` — called by `abs(obj)`.
 
@@ -41,7 +41,7 @@ See: [PyNumberMethods.nb_absolute](https://docs.python.org/3/c-api/typeobj.html#
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject`
 
-### def_invert[method]()
+### def_invert()
 
 Installs `nb_invert` — called by `~obj`.
 
@@ -49,7 +49,7 @@ See: [PyNumberMethods.nb_invert](https://docs.python.org/3/c-api/typeobj.html#c.
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject`
 
-### def_bool[method]()
+### def_bool()
 
 Installs `nb_bool` — called by `bool(obj)`.
 
@@ -57,7 +57,7 @@ See: [PyNumberMethods.nb_bool](https://docs.python.org/3/c-api/typeobj.html#c.Py
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin]) raises -> Bool`
 
-### def_int[method]()
+### def_int()
 
 Installs `nb_int` — called by `int(obj)`.
 
@@ -65,7 +65,7 @@ See: [PyNumberMethods.nb_int](https://docs.python.org/3/c-api/typeobj.html#c.PyN
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject`
 
-### def_float[method]()
+### def_float()
 
 Installs `nb_float` — called by `float(obj)`.
 
@@ -73,7 +73,7 @@ See: [PyNumberMethods.nb_float](https://docs.python.org/3/c-api/typeobj.html#c.P
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject`
 
-### def_index[method]()
+### def_index()
 
 Installs `nb_index` — called by `operator.index(obj)` and when `obj` is used as a list index.
 
@@ -85,7 +85,7 @@ Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObj
 
 ## Binary operators
 
-### def_add[method]()
+### def_add()
 
 Installs `nb_add` — called by `obj + other`.
 
@@ -93,7 +93,7 @@ See: [PyNumberMethods.nb_add](https://docs.python.org/3/c-api/typeobj.html#c.PyN
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_sub[method]()
+### def_sub()
 
 Installs `nb_subtract` — called by `obj - other`.
 
@@ -101,7 +101,7 @@ See: [PyNumberMethods.nb_subtract](https://docs.python.org/3/c-api/typeobj.html#
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_mul[method]()
+### def_mul()
 
 Installs `nb_multiply` — called by `obj * other`.
 
@@ -109,7 +109,7 @@ See: [PyNumberMethods.nb_multiply](https://docs.python.org/3/c-api/typeobj.html#
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_truediv[method]()
+### def_truediv()
 
 Installs `nb_true_divide` — called by `obj / other`.
 
@@ -117,7 +117,7 @@ See: [PyNumberMethods.nb_true_divide](https://docs.python.org/3/c-api/typeobj.ht
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_floordiv[method]()
+### def_floordiv()
 
 Installs `nb_floor_divide` — called by `obj // other`.
 
@@ -125,7 +125,7 @@ See: [PyNumberMethods.nb_floor_divide](https://docs.python.org/3/c-api/typeobj.h
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_mod[method]()
+### def_mod()
 
 Installs `nb_remainder` — called by `obj % other`.
 
@@ -133,7 +133,7 @@ See: [PyNumberMethods.nb_remainder](https://docs.python.org/3/c-api/typeobj.html
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_lshift[method]()
+### def_lshift()
 
 Installs `nb_lshift` — called by `obj << other`.
 
@@ -141,7 +141,7 @@ See: [PyNumberMethods.nb_lshift](https://docs.python.org/3/c-api/typeobj.html#c.
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_rshift[method]()
+### def_rshift()
 
 Installs `nb_rshift` — called by `obj >> other`.
 
@@ -149,7 +149,7 @@ See: [PyNumberMethods.nb_rshift](https://docs.python.org/3/c-api/typeobj.html#c.
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_and[method]()
+### def_and()
 
 Installs `nb_and` — called by `obj & other`.
 
@@ -157,7 +157,7 @@ See: [PyNumberMethods.nb_and](https://docs.python.org/3/c-api/typeobj.html#c.PyN
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_or[method]()
+### def_or()
 
 Installs `nb_or` — called by `obj | other`.
 
@@ -165,7 +165,7 @@ See: [PyNumberMethods.nb_or](https://docs.python.org/3/c-api/typeobj.html#c.PyNu
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_xor[method]()
+### def_xor()
 
 Installs `nb_xor` — called by `obj ^ other`.
 
@@ -173,7 +173,7 @@ See: [PyNumberMethods.nb_xor](https://docs.python.org/3/c-api/typeobj.html#c.PyN
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_divmod[method]()
+### def_divmod()
 
 Installs `nb_divmod` — called by `divmod(obj, other)`.
 
@@ -181,7 +181,7 @@ See: [PyNumberMethods.nb_divmod](https://docs.python.org/3/c-api/typeobj.html#c.
 
 Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject`
 
-### def_matmul[method]()
+### def_matmul()
 
 Installs `nb_matrix_multiply` — called by `obj @ other`.
 
@@ -193,7 +193,7 @@ Handler signature: `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject
 
 ## Ternary operators
 
-### def_pow[method]()
+### def_pow()
 
 Installs `nb_power` — called by `obj ** exp` or `pow(obj, exp, mod)`.
 
@@ -214,7 +214,7 @@ See: [PyNumberMethods.nb_power](https://docs.python.org/3/c-api/typeobj.html#c.P
 
 Each in-place method has two overloads: pointer+raising and mut+raising.
 
-### def_iadd[method]()
+### def_iadd()
 
 Installs `nb_inplace_add` — called by `obj += other`.
 
@@ -225,7 +225,7 @@ See: [PyNumberMethods.nb_inplace_add](https://docs.python.org/3/c-api/typeobj.ht
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_isub[method]()
+### def_isub()
 
 Installs `nb_inplace_subtract` — called by `obj -= other`.
 
@@ -236,7 +236,7 @@ See: [PyNumberMethods.nb_inplace_subtract](https://docs.python.org/3/c-api/typeo
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_imul[method]()
+### def_imul()
 
 Installs `nb_inplace_multiply` — called by `obj *= other`.
 
@@ -247,7 +247,7 @@ See: [PyNumberMethods.nb_inplace_multiply](https://docs.python.org/3/c-api/typeo
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_itruediv[method]()
+### def_itruediv()
 
 Installs `nb_inplace_true_divide` — called by `obj /= other`.
 
@@ -258,7 +258,7 @@ See: [PyNumberMethods.nb_inplace_true_divide](https://docs.python.org/3/c-api/ty
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_ifloordiv[method]()
+### def_ifloordiv()
 
 Installs `nb_inplace_floor_divide` — called by `obj //= other`.
 
@@ -269,7 +269,7 @@ See: [PyNumberMethods.nb_inplace_floor_divide](https://docs.python.org/3/c-api/t
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_imod[method]()
+### def_imod()
 
 Installs `nb_inplace_remainder` — called by `obj %= other`.
 
@@ -280,7 +280,7 @@ See: [PyNumberMethods.nb_inplace_remainder](https://docs.python.org/3/c-api/type
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_ilshift[method]()
+### def_ilshift()
 
 Installs `nb_inplace_lshift` — called by `obj <<= other`.
 
@@ -291,7 +291,7 @@ See: [PyNumberMethods.nb_inplace_lshift](https://docs.python.org/3/c-api/typeobj
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_irshift[method]()
+### def_irshift()
 
 Installs `nb_inplace_rshift` — called by `obj >>= other`.
 
@@ -302,7 +302,7 @@ See: [PyNumberMethods.nb_inplace_rshift](https://docs.python.org/3/c-api/typeobj
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_iand[method]()
+### def_iand()
 
 Installs `nb_inplace_and` — called by `obj &= other`.
 
@@ -313,7 +313,7 @@ See: [PyNumberMethods.nb_inplace_and](https://docs.python.org/3/c-api/typeobj.ht
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_ior[method]()
+### def_ior()
 
 Installs `nb_inplace_or` — called by `obj |= other`.
 
@@ -324,7 +324,7 @@ See: [PyNumberMethods.nb_inplace_or](https://docs.python.org/3/c-api/typeobj.htm
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_ixor[method]()
+### def_ixor()
 
 Installs `nb_inplace_xor` — called by `obj ^= other`.
 
@@ -335,7 +335,7 @@ See: [PyNumberMethods.nb_inplace_xor](https://docs.python.org/3/c-api/typeobj.ht
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject` |
 | Mut / raising | `fn(mut self: T, other: PythonObject) raises -> PythonObject` |
 
-### def_imatmul[method]()
+### def_imatmul()
 
 Installs `nb_inplace_matrix_multiply` — called by `obj @= other`.
 
@@ -350,7 +350,7 @@ See: [PyNumberMethods.nb_inplace_matrix_multiply](https://docs.python.org/3/c-ap
 
 ## In-place ternary operators
 
-### def_ipow[method]()
+### def_ipow()
 
 Installs `nb_inplace_power` — called by `obj **= exp`.
 

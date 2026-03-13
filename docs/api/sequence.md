@@ -12,7 +12,7 @@ Each `def_*` method has three overloads unless noted: pointer+raising,
 pointer+non-raising, and value+raising. `def_setitem` additionally has a
 mut+raising overload (value-receiver omitted — mutations on a copy don't persist).
 
-## def_len[method]()
+## def_len()
 
 Installs `sq_length` — called by `len(obj)`.
 
@@ -24,7 +24,7 @@ See: [PySequenceMethods.sq_length](https://docs.python.org/3/c-api/typeobj.html#
 | Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin]) -> Int` |
 | Value / raising | `fn(self: T) raises -> Int` |
 
-## def_getitem[method]()
+## def_getitem()
 
 Installs `sq_item` — called by `obj[i]` (integer index).
 
@@ -36,7 +36,7 @@ See: [PySequenceMethods.sq_item](https://docs.python.org/3/c-api/typeobj.html#c.
 | Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin], index: Int) -> PythonObject` |
 | Value / raising | `fn(self: T, index: Int) raises -> PythonObject` |
 
-## def_setitem[method]()
+## def_setitem()
 
 Installs `sq_ass_item` — called by `obj[i] = val` or `del obj[i]`.
 
@@ -50,7 +50,7 @@ See: [PySequenceMethods.sq_ass_item](https://docs.python.org/3/c-api/typeobj.htm
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], index: Int, value: Variant[PythonObject, Int]) raises -> None` |
 | Mut / raising | `fn(mut self: T, index: Int, value: Variant[PythonObject, Int]) raises -> None` |
 
-## def_contains[method]()
+## def_contains()
 
 Installs `sq_contains` — called by `item in obj`.
 
@@ -62,7 +62,7 @@ See: [PySequenceMethods.sq_contains](https://docs.python.org/3/c-api/typeobj.htm
 | Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin], item: PythonObject) -> Bool` |
 | Value / raising | `fn(self: T, item: PythonObject) raises -> Bool` |
 
-## def_concat[method]()
+## def_concat()
 
 Installs `sq_concat` — called by `obj + other`.
 
@@ -74,7 +74,7 @@ See: [PySequenceMethods.sq_concat](https://docs.python.org/3/c-api/typeobj.html#
 | Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) -> PythonObject` |
 | Value / raising | `fn(self: T, other: PythonObject) raises -> PythonObject` |
 
-## def_repeat[method]()
+## def_repeat()
 
 Installs `sq_repeat` — called by `obj * n`.
 
@@ -86,7 +86,7 @@ See: [PySequenceMethods.sq_repeat](https://docs.python.org/3/c-api/typeobj.html#
 | Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin], count: Int) -> PythonObject` |
 | Value / raising | `fn(self: T, count: Int) raises -> PythonObject` |
 
-## def_iconcat[method]()
+## def_iconcat()
 
 Installs `sq_inplace_concat` — called by `obj += other`.
 
@@ -98,7 +98,7 @@ See: [PySequenceMethods.sq_inplace_concat](https://docs.python.org/3/c-api/typeo
 | Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject) -> PythonObject` |
 | Value / raising | `fn(self: T, other: PythonObject) raises -> PythonObject` |
 
-## def_irepeat[method]()
+## def_irepeat()
 
 Installs `sq_inplace_repeat` — called by `obj *= n`.
 
