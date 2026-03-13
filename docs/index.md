@@ -1,6 +1,6 @@
 # pontoneer
 
-`Pontoneer` is a Mojo library that provides an extension to the Python extension capabilities
+`Pontoneer` is a Mojo library that enhances the Python extension capabilities
 provided by the standard library. `Pontoneer` adds support for:
 
 - **mapping protocol** — `obj[key]`, `len(obj)`, `obj[key] = val`
