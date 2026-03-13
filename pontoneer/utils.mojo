@@ -37,7 +37,7 @@ struct NotImplementedError(TrivialRegisterPassable, Writable):
     Example:
         ```mojo
         @staticmethod
-        fn rich_compare(
+        def rich_compare(
             self_ptr: PythonObject, other: PythonObject, op: Int
         ) raises -> Bool:
             if op == RichCompareOps.Py_EQ:
@@ -49,5 +49,5 @@ struct NotImplementedError(TrivialRegisterPassable, Writable):
     comptime name: String = "NotImplementedError"
     """Well-known name used by `_richcompare_wrapper` for dispatch."""
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write(Self.name)

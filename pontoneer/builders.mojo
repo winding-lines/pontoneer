@@ -152,7 +152,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
     # The pointed-to builder must outlive this TypeProtocolBuilder.
     var _ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
 
-    fn __init__(out self, mut inner: PythonTypeBuilder):
+    def __init__(out self, mut inner: PythonTypeBuilder):
         var ptr = UnsafePointer(to=inner)
         self._ptr = ptr
 
@@ -160,7 +160,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
     # Type Protocol — tp_richcompare (__lt__, __eq__, etc.)
     # ------------------------------------------------------------------
 
-    fn def_richcompare[
+    def def_richcompare[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, Int
         ) raises -> Bool
@@ -182,7 +182,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_richcompare[Self.self_type, method](self._ptr)
         return self
 
-    fn def_richcompare[
+    def def_richcompare[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, Int
         ) -> Bool
@@ -196,7 +196,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_richcompare[
+    def def_richcompare[
         method: fn(Self.self_type, PythonObject, Int) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install rich comparison via the `tp_richcompare` slot (value-receiver overload).
@@ -214,7 +214,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
 # ===----------------------------------------------------------------------=== #
 
 
-fn _install_unary[
+def _install_unary[
     self_type: ImplicitlyDestructible,
     method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject,
     slot: Int32,
@@ -227,7 +227,7 @@ fn _install_unary[
     )
 
 
-fn _install_binary[
+def _install_binary[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
@@ -242,7 +242,7 @@ fn _install_binary[
     )
 
 
-fn _install_ternary[
+def _install_ternary[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject
@@ -259,7 +259,7 @@ fn _install_ternary[
     )
 
 
-fn _install_inquiry[
+def _install_inquiry[
     self_type: ImplicitlyDestructible,
     method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool,
     slot: Int32,
@@ -272,7 +272,7 @@ fn _install_inquiry[
     )
 
 
-fn _install_richcompare[
+def _install_richcompare[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int
@@ -292,7 +292,7 @@ fn _install_richcompare[
     )
 
 
-fn _install_lenfunc[
+def _install_lenfunc[
     self_type: ImplicitlyDestructible,
     method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Int,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
@@ -307,7 +307,7 @@ fn _install_lenfunc[
     )
 
 
-fn _install_mp_getitem[
+def _install_mp_getitem[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
@@ -324,7 +324,7 @@ fn _install_mp_getitem[
     )
 
 
-fn _install_objobjargproc[
+def _install_objobjargproc[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin],
@@ -343,7 +343,7 @@ fn _install_objobjargproc[
     )
 
 
-fn _install_ssizeargfunc[
+def _install_ssizeargfunc[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], Int
@@ -358,7 +358,7 @@ fn _install_ssizeargfunc[
     )
 
 
-fn _install_ssizeobjargproc[
+def _install_ssizeobjargproc[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
@@ -378,7 +378,7 @@ fn _install_ssizeobjargproc[
     )
 
 
-fn _install_objobjproc[
+def _install_objobjproc[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
@@ -401,28 +401,28 @@ fn _install_objobjproc[
 # ===----------------------------------------------------------------------=== #
 
 
-fn _lift_to_int[
+def _lift_to_int[
     T: ImplicitlyDestructible,
     method: fn(UnsafePointer[T, MutAnyOrigin]) -> Int,
 ](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Int:
     return method(ptr)
 
 
-fn _lift_to_obj[
+def _lift_to_obj[
     T: ImplicitlyDestructible,
     method: fn(UnsafePointer[T, MutAnyOrigin]) -> PythonObject,
 ](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject:
     return method(ptr)
 
 
-fn _lift_to_bool[
+def _lift_to_bool[
     T: ImplicitlyDestructible,
     method: fn(UnsafePointer[T, MutAnyOrigin]) -> Bool,
 ](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Bool:
     return method(ptr)
 
 
-fn _lift_obj_to_obj[
+def _lift_obj_to_obj[
     T: ImplicitlyDestructible,
     method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject) -> PythonObject,
 ](
@@ -431,14 +431,14 @@ fn _lift_obj_to_obj[
     return method(ptr, other)
 
 
-fn _lift_obj_to_bool[
+def _lift_obj_to_bool[
     T: ImplicitlyDestructible,
     method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject) -> Bool,
 ](ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> Bool:
     return method(ptr, other)
 
 
-fn _lift_obj_var_to_none[
+def _lift_obj_var_to_none[
     T: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[T, MutAnyOrigin], PythonObject, Variant[PythonObject, Int]
@@ -451,14 +451,14 @@ fn _lift_obj_var_to_none[
     method(ptr, key, val)
 
 
-fn _lift_int_to_obj[
+def _lift_int_to_obj[
     T: ImplicitlyDestructible,
     method: fn(UnsafePointer[T, MutAnyOrigin], Int) -> PythonObject,
 ](ptr: UnsafePointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
     return method(ptr, index)
 
 
-fn _lift_int_var_to_none[
+def _lift_int_var_to_none[
     T: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[T, MutAnyOrigin], Int, Variant[PythonObject, Int]
@@ -471,7 +471,7 @@ fn _lift_int_var_to_none[
     method(ptr, index, val)
 
 
-fn _lift_obj_int_to_bool[
+def _lift_obj_int_to_bool[
     T: ImplicitlyDestructible,
     method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject, Int) -> Bool,
 ](
@@ -480,7 +480,7 @@ fn _lift_obj_int_to_bool[
     return method(ptr, other, op)
 
 
-fn _lift_obj_obj_to_obj[
+def _lift_obj_obj_to_obj[
     T: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[T, MutAnyOrigin], PythonObject, PythonObject
@@ -504,28 +504,28 @@ fn _lift_obj_obj_to_obj[
 # ===----------------------------------------------------------------------=== #
 
 
-fn _lift_val_to_int[
+def _lift_val_to_int[
     T: ImplicitlyDestructible,
     method: fn(T) raises -> Int,
 ](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Int:
     return method(ptr[])
 
 
-fn _lift_val_to_obj[
+def _lift_val_to_obj[
     T: ImplicitlyDestructible,
     method: fn(T) raises -> PythonObject,
 ](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject:
     return method(ptr[])
 
 
-fn _lift_val_to_bool[
+def _lift_val_to_bool[
     T: ImplicitlyDestructible,
     method: fn(T) raises -> Bool,
 ](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Bool:
     return method(ptr[])
 
 
-fn _lift_val_obj_to_obj[
+def _lift_val_obj_to_obj[
     T: ImplicitlyDestructible,
     method: fn(T, PythonObject) raises -> PythonObject,
 ](
@@ -534,14 +534,14 @@ fn _lift_val_obj_to_obj[
     return method(ptr[], other)
 
 
-fn _lift_val_obj_to_bool[
+def _lift_val_obj_to_bool[
     T: ImplicitlyDestructible,
     method: fn(T, PythonObject) raises -> Bool,
 ](ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> Bool:
     return method(ptr[], other)
 
 
-fn _lift_val_obj_var_to_none[
+def _lift_val_obj_var_to_none[
     T: ImplicitlyDestructible,
     method: fn(T, PythonObject, Variant[PythonObject, Int]) raises -> None,
 ](
@@ -552,7 +552,7 @@ fn _lift_val_obj_var_to_none[
     method(ptr[], key, val)
 
 
-fn _lift_mut_obj_var_to_none[
+def _lift_mut_obj_var_to_none[
     T: ImplicitlyDestructible,
     method: fn(mut T, PythonObject, Variant[PythonObject, Int]) raises -> None,
 ](
@@ -563,14 +563,14 @@ fn _lift_mut_obj_var_to_none[
     method(ptr[], key, val)
 
 
-fn _lift_val_int_to_obj[
+def _lift_val_int_to_obj[
     T: ImplicitlyDestructible,
     method: fn(T, Int) raises -> PythonObject,
 ](ptr: UnsafePointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
     return method(ptr[], index)
 
 
-fn _lift_val_int_var_to_none[
+def _lift_val_int_var_to_none[
     T: ImplicitlyDestructible,
     method: fn(T, Int, Variant[PythonObject, Int]) raises -> None,
 ](
@@ -581,7 +581,7 @@ fn _lift_val_int_var_to_none[
     method(ptr[], index, val)
 
 
-fn _lift_mut_int_var_to_none[
+def _lift_mut_int_var_to_none[
     T: ImplicitlyDestructible,
     method: fn(mut T, Int, Variant[PythonObject, Int]) raises -> None,
 ](
@@ -592,7 +592,7 @@ fn _lift_mut_int_var_to_none[
     method(ptr[], index, val)
 
 
-fn _lift_val_obj_int_to_bool[
+def _lift_val_obj_int_to_bool[
     T: ImplicitlyDestructible,
     method: fn(T, PythonObject, Int) raises -> Bool,
 ](
@@ -601,7 +601,7 @@ fn _lift_val_obj_int_to_bool[
     return method(ptr[], other, op)
 
 
-fn _lift_val_obj_obj_to_obj[
+def _lift_val_obj_obj_to_obj[
     T: ImplicitlyDestructible,
     method: fn(T, PythonObject, PythonObject) raises -> PythonObject,
 ](
@@ -610,7 +610,7 @@ fn _lift_val_obj_obj_to_obj[
     return method(ptr[], a, b)
 
 
-fn _lift_mut_obj_to_obj[
+def _lift_mut_obj_to_obj[
     T: ImplicitlyDestructible,
     method: fn(mut T, PythonObject) raises -> PythonObject,
 ](
@@ -619,7 +619,7 @@ fn _lift_mut_obj_to_obj[
     return method(ptr[], other)
 
 
-fn _lift_mut_obj_obj_to_obj[
+def _lift_mut_obj_obj_to_obj[
     T: ImplicitlyDestructible,
     method: fn(mut T, PythonObject, PythonObject) raises -> PythonObject,
 ](
@@ -644,7 +644,7 @@ fn _lift_mut_obj_obj_to_obj[
 comptime _CPython = ConvertibleToPython & ImplicitlyCopyable
 
 
-fn _conv_ptr_r_unary[
+def _conv_ptr_r_unary[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(UnsafePointer[T, MutAnyOrigin]) raises -> R,
@@ -652,7 +652,7 @@ fn _conv_ptr_r_unary[
     return method(ptr).to_python_object()
 
 
-fn _conv_ptr_nr_unary[
+def _conv_ptr_nr_unary[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(UnsafePointer[T, MutAnyOrigin]) -> R,
@@ -660,7 +660,7 @@ fn _conv_ptr_nr_unary[
     return method(ptr).to_python_object()
 
 
-fn _conv_val_r_unary[
+def _conv_val_r_unary[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(T) raises -> R,
@@ -668,7 +668,7 @@ fn _conv_val_r_unary[
     return method(ptr[]).to_python_object()
 
 
-fn _conv_ptr_r_binary[
+def _conv_ptr_r_binary[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject) raises -> R,
@@ -678,7 +678,7 @@ fn _conv_ptr_r_binary[
     return method(ptr, other).to_python_object()
 
 
-fn _conv_ptr_nr_binary[
+def _conv_ptr_nr_binary[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject) -> R,
@@ -688,7 +688,7 @@ fn _conv_ptr_nr_binary[
     return method(ptr, other).to_python_object()
 
 
-fn _conv_val_r_binary[
+def _conv_val_r_binary[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(T, PythonObject) raises -> R,
@@ -698,7 +698,7 @@ fn _conv_val_r_binary[
     return method(ptr[], other).to_python_object()
 
 
-fn _conv_ptr_r_int_arg[
+def _conv_ptr_r_int_arg[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(UnsafePointer[T, MutAnyOrigin], Int) raises -> R,
@@ -706,7 +706,7 @@ fn _conv_ptr_r_int_arg[
     return method(ptr, index).to_python_object()
 
 
-fn _conv_ptr_nr_int_arg[
+def _conv_ptr_nr_int_arg[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(UnsafePointer[T, MutAnyOrigin], Int) -> R,
@@ -714,7 +714,7 @@ fn _conv_ptr_nr_int_arg[
     return method(ptr, index).to_python_object()
 
 
-fn _conv_val_r_int_arg[
+def _conv_val_r_int_arg[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(T, Int) raises -> R,
@@ -722,7 +722,7 @@ fn _conv_val_r_int_arg[
     return method(ptr[], index).to_python_object()
 
 
-fn _conv_ptr_r_ternary[
+def _conv_ptr_r_ternary[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(
@@ -734,7 +734,7 @@ fn _conv_ptr_r_ternary[
     return method(ptr, a, b).to_python_object()
 
 
-fn _conv_ptr_nr_ternary[
+def _conv_ptr_nr_ternary[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(UnsafePointer[T, MutAnyOrigin], PythonObject, PythonObject) -> R,
@@ -744,7 +744,7 @@ fn _conv_ptr_nr_ternary[
     return method(ptr, a, b).to_python_object()
 
 
-fn _conv_val_r_ternary[
+def _conv_val_r_ternary[
     T: ImplicitlyDestructible,
     R: _CPython,
     method: fn(T, PythonObject, PythonObject) raises -> R,
@@ -783,10 +783,10 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     var _ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
 
-    fn __init__(out self, mut inner: PythonTypeBuilder):
+    def __init__(out self, mut inner: PythonTypeBuilder):
         self._ptr = UnsafePointer(to=inner)
 
-    fn __init__(
+    def __init__(
         out self,
         ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin],
     ):
@@ -796,7 +796,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     # Unary slots — C type: unaryfunc  fn(PyObject *) -> PyObject *
     # ------------------------------------------------------------------
 
-    fn def_abs[
+    def def_abs[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
@@ -811,7 +811,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_float[
+    def def_float[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
@@ -824,7 +824,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_unary[Self.self_type, method, _PySlotIndex.nb_float](self._ptr)
         return self
 
-    fn def_index[
+    def def_index[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
@@ -837,7 +837,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_unary[Self.self_type, method, _PySlotIndex.nb_index](self._ptr)
         return self
 
-    fn def_int[
+    def def_int[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
@@ -850,7 +850,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_unary[Self.self_type, method, _PySlotIndex.nb_int](self._ptr)
         return self
 
-    fn def_invert[
+    def def_invert[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
@@ -865,7 +865,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_neg[
+    def def_neg[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
@@ -880,7 +880,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_pos[
+    def def_pos[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin]
         ) raises -> PythonObject
@@ -897,7 +897,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Non-raising unary overloads
 
-    fn def_abs[
+    def def_abs[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (non-raising overload).
@@ -911,7 +911,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_float[
+    def def_float[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (non-raising overload).
@@ -925,7 +925,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_index[
+    def def_index[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (non-raising overload).
@@ -939,7 +939,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_int[
+    def def_int[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot (non-raising overload).
@@ -953,7 +953,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_invert[
+    def def_invert[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (non-raising overload).
@@ -967,7 +967,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_neg[
+    def def_neg[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (non-raising overload).
@@ -981,7 +981,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_pos[
+    def def_pos[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (non-raising overload).
@@ -997,7 +997,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Value-receiver unary overloads
 
-    fn def_abs[
+    def def_abs[
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (value-receiver overload).
@@ -1011,7 +1011,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_float[
+    def def_float[
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (value-receiver overload).
@@ -1026,7 +1026,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_index[
+    def def_index[
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (value-receiver overload).
@@ -1040,7 +1040,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_int[
+    def def_int[
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot (value-receiver overload).
@@ -1054,7 +1054,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_invert[
+    def def_invert[
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (value-receiver overload).
@@ -1068,7 +1068,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_neg[
+    def def_neg[
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (value-receiver overload).
@@ -1082,7 +1082,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_pos[
+    def def_pos[
         method: fn(Self.self_type) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (value-receiver overload).
@@ -1100,7 +1100,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     # Bool slot — C type: inquiry  int(*)(PyObject *)
     # ------------------------------------------------------------------
 
-    fn def_bool[
+    def def_bool[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__bool__` via the `nb_bool` slot.
@@ -1113,7 +1113,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_bool[
+    def def_bool[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__bool__` via the `nb_bool` slot (non-raising overload).
@@ -1127,7 +1127,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_bool[
+    def def_bool[
         method: fn(Self.self_type) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__bool__` via the `nb_bool` slot (value-receiver overload).
@@ -1146,7 +1146,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     # Raise NotImplementedError() to return Py_NotImplemented.
     # ------------------------------------------------------------------
 
-    fn def_add[
+    def def_add[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1159,7 +1159,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_binary[Self.self_type, method, _PySlotIndex.nb_add](self._ptr)
         return self
 
-    fn def_and[
+    def def_and[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1172,7 +1172,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_binary[Self.self_type, method, _PySlotIndex.nb_and](self._ptr)
         return self
 
-    fn def_divmod[
+    def def_divmod[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1187,7 +1187,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_floordiv[
+    def def_floordiv[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1202,7 +1202,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_lshift[
+    def def_lshift[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1217,7 +1217,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_matmul[
+    def def_matmul[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1232,7 +1232,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mod[
+    def def_mod[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1247,7 +1247,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_mul[
+    def def_mul[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1262,7 +1262,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_or[
+    def def_or[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1275,7 +1275,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_binary[Self.self_type, method, _PySlotIndex.nb_or](self._ptr)
         return self
 
-    fn def_rshift[
+    def def_rshift[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1290,7 +1290,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_sub[
+    def def_sub[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1305,7 +1305,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_truediv[
+    def def_truediv[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1320,7 +1320,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_xor[
+    def def_xor[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1335,7 +1335,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # In-place binary slots
 
-    fn def_iadd[
+    def def_iadd[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1350,7 +1350,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_iand[
+    def def_iand[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1365,7 +1365,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_ifloordiv[
+    def def_ifloordiv[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1380,7 +1380,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ilshift[
+    def def_ilshift[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1395,7 +1395,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_imatmul[
+    def def_imatmul[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1410,7 +1410,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imod[
+    def def_imod[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1425,7 +1425,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imul[
+    def def_imul[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1440,7 +1440,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ior[
+    def def_ior[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1455,7 +1455,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_irshift[
+    def def_irshift[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1470,7 +1470,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_isub[
+    def def_isub[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1485,7 +1485,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_itruediv[
+    def def_itruediv[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1500,7 +1500,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ixor[
+    def def_ixor[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -1517,7 +1517,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Non-raising binary overloads
 
-    fn def_add[
+    def def_add[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1533,7 +1533,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_and[
+    def def_and[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1549,7 +1549,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_divmod[
+    def def_divmod[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1565,7 +1565,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_floordiv[
+    def def_floordiv[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1581,7 +1581,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_lshift[
+    def def_lshift[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1597,7 +1597,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_matmul[
+    def def_matmul[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1613,7 +1613,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mod[
+    def def_mod[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1629,7 +1629,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mul[
+    def def_mul[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1645,7 +1645,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_or[
+    def def_or[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1661,7 +1661,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_rshift[
+    def def_rshift[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1677,7 +1677,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_sub[
+    def def_sub[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1693,7 +1693,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_truediv[
+    def def_truediv[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1709,7 +1709,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_xor[
+    def def_xor[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1725,7 +1725,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iadd[
+    def def_iadd[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1741,7 +1741,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iand[
+    def def_iand[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1757,7 +1757,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ifloordiv[
+    def def_ifloordiv[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1773,7 +1773,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ilshift[
+    def def_ilshift[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1789,7 +1789,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imatmul[
+    def def_imatmul[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1805,7 +1805,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imod[
+    def def_imod[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1821,7 +1821,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imul[
+    def def_imul[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1837,7 +1837,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ior[
+    def def_ior[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1853,7 +1853,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irshift[
+    def def_irshift[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1869,7 +1869,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_isub[
+    def def_isub[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1885,7 +1885,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_itruediv[
+    def def_itruediv[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1901,7 +1901,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ixor[
+    def def_ixor[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -1919,7 +1919,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Value-receiver binary overloads
 
-    fn def_add[
+    def def_add[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `nb_add` slot (value-receiver overload).
@@ -1933,7 +1933,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_and[
+    def def_and[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__and__` via the `nb_and` slot (value-receiver overload).
@@ -1947,7 +1947,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_divmod[
+    def def_divmod[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot (value-receiver overload).
@@ -1961,7 +1961,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_floordiv[
+    def def_floordiv[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot (value-receiver overload).
@@ -1975,7 +1975,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_lshift[
+    def def_lshift[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot (value-receiver overload).
@@ -1989,7 +1989,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_matmul[
+    def def_matmul[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot (value-receiver overload).
@@ -2003,7 +2003,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mod[
+    def def_mod[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot (value-receiver overload).
@@ -2017,7 +2017,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mul[
+    def def_mul[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot (value-receiver overload).
@@ -2031,7 +2031,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_or[
+    def def_or[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__or__` via the `nb_or` slot (value-receiver overload).
@@ -2045,7 +2045,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_rshift[
+    def def_rshift[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot (value-receiver overload).
@@ -2059,7 +2059,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_sub[
+    def def_sub[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot (value-receiver overload).
@@ -2073,7 +2073,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_truediv[
+    def def_truediv[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot (value-receiver overload).
@@ -2087,7 +2087,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_xor[
+    def def_xor[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__xor__` via the `nb_xor` slot (value-receiver overload).
@@ -2107,7 +2107,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     # Raise NotImplementedError() to return Py_NotImplemented.
     # ------------------------------------------------------------------
 
-    fn def_pow[
+    def def_pow[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
             PythonObject,
@@ -2124,7 +2124,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_ipow[
+    def def_ipow[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
             PythonObject,
@@ -2143,7 +2143,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Non-raising ternary overloads
 
-    fn def_pow[
+    def def_pow[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
             PythonObject,
@@ -2161,7 +2161,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ipow[
+    def def_ipow[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
             PythonObject,
@@ -2179,7 +2179,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_pow[
+    def def_pow[
         method: fn(
             Self.self_type, PythonObject, PythonObject
         ) raises -> PythonObject
@@ -2197,7 +2197,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Mut-receiver overloads
 
-    fn def_iadd[
+    def def_iadd[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot (mut-receiver overload).
@@ -2211,7 +2211,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iand[
+    def def_iand[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot (mut-receiver overload).
@@ -2225,7 +2225,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ifloordiv[
+    def def_ifloordiv[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (mut-receiver overload).
@@ -2239,7 +2239,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ilshift[
+    def def_ilshift[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot (mut-receiver overload).
@@ -2253,7 +2253,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imatmul[
+    def def_imatmul[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (mut-receiver overload).
@@ -2267,7 +2267,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imod[
+    def def_imod[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot (mut-receiver overload).
@@ -2281,7 +2281,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imul[
+    def def_imul[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot (mut-receiver overload).
@@ -2295,7 +2295,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ior[
+    def def_ior[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot (mut-receiver overload).
@@ -2309,7 +2309,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irshift[
+    def def_irshift[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot (mut-receiver overload).
@@ -2323,7 +2323,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_isub[
+    def def_isub[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot (mut-receiver overload).
@@ -2337,7 +2337,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_itruediv[
+    def def_itruediv[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot (mut-receiver overload).
@@ -2351,7 +2351,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ixor[
+    def def_ixor[
         method: fn(mut Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot (mut-receiver overload).
@@ -2365,7 +2365,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ipow[
+    def def_ipow[
         method: fn(
             mut Self.self_type, PythonObject, PythonObject
         ) raises -> PythonObject
@@ -2383,7 +2383,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # ConvertibleToPython return overloads
 
-    fn def_abs[
+    def def_abs[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2398,7 +2398,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_abs[
+    def def_abs[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
@@ -2413,7 +2413,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_abs[
+    def def_abs[
         R: _CPython,
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2428,7 +2428,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_float[
+    def def_float[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2443,7 +2443,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_float[
+    def def_float[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
@@ -2458,7 +2458,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_float[
+    def def_float[
         R: _CPython,
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2473,7 +2473,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_index[
+    def def_index[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2488,7 +2488,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_index[
+    def def_index[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
@@ -2503,7 +2503,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_index[
+    def def_index[
         R: _CPython,
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2518,7 +2518,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_int[
+    def def_int[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2533,7 +2533,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_int[
+    def def_int[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
@@ -2548,7 +2548,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_int[
+    def def_int[
         R: _CPython,
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2563,7 +2563,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_invert[
+    def def_invert[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2578,7 +2578,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_invert[
+    def def_invert[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
@@ -2593,7 +2593,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_invert[
+    def def_invert[
         R: _CPython,
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2608,7 +2608,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_neg[
+    def def_neg[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2623,7 +2623,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_neg[
+    def def_neg[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
@@ -2638,7 +2638,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_neg[
+    def def_neg[
         R: _CPython,
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2653,7 +2653,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_pos[
+    def def_pos[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2668,7 +2668,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_pos[
+    def def_pos[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> R,
     ](mut self) -> ref[self] Self:
@@ -2683,7 +2683,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_pos[
+    def def_pos[
         R: _CPython,
         method: fn(Self.self_type) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2698,7 +2698,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_add[
+    def def_add[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2715,7 +2715,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_add[
+    def def_add[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2732,7 +2732,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_add[
+    def def_add[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2747,7 +2747,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_and[
+    def def_and[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2764,7 +2764,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_and[
+    def def_and[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2781,7 +2781,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_and[
+    def def_and[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2796,7 +2796,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_divmod[
+    def def_divmod[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2813,7 +2813,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_divmod[
+    def def_divmod[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2830,7 +2830,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_divmod[
+    def def_divmod[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2845,7 +2845,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_floordiv[
+    def def_floordiv[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2862,7 +2862,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_floordiv[
+    def def_floordiv[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2879,7 +2879,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_floordiv[
+    def def_floordiv[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2894,7 +2894,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_lshift[
+    def def_lshift[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2911,7 +2911,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_lshift[
+    def def_lshift[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2928,7 +2928,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_lshift[
+    def def_lshift[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2943,7 +2943,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_matmul[
+    def def_matmul[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2960,7 +2960,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_matmul[
+    def def_matmul[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -2977,7 +2977,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_matmul[
+    def def_matmul[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -2992,7 +2992,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mod[
+    def def_mod[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3009,7 +3009,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mod[
+    def def_mod[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3026,7 +3026,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mod[
+    def def_mod[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3041,7 +3041,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mul[
+    def def_mul[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3058,7 +3058,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mul[
+    def def_mul[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3075,7 +3075,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_mul[
+    def def_mul[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3090,7 +3090,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_or[
+    def def_or[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3107,7 +3107,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_or[
+    def def_or[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3124,7 +3124,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_or[
+    def def_or[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3139,7 +3139,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_rshift[
+    def def_rshift[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3156,7 +3156,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_rshift[
+    def def_rshift[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3173,7 +3173,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_rshift[
+    def def_rshift[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3188,7 +3188,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_sub[
+    def def_sub[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3205,7 +3205,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_sub[
+    def def_sub[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3222,7 +3222,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_sub[
+    def def_sub[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3237,7 +3237,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_truediv[
+    def def_truediv[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3254,7 +3254,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_truediv[
+    def def_truediv[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3271,7 +3271,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_truediv[
+    def def_truediv[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3286,7 +3286,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_xor[
+    def def_xor[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3303,7 +3303,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_xor[
+    def def_xor[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3320,7 +3320,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_xor[
+    def def_xor[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3335,7 +3335,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iadd[
+    def def_iadd[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3352,7 +3352,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iadd[
+    def def_iadd[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3369,7 +3369,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iadd[
+    def def_iadd[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3384,7 +3384,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iand[
+    def def_iand[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3401,7 +3401,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iand[
+    def def_iand[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3418,7 +3418,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iand[
+    def def_iand[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3433,7 +3433,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ifloordiv[
+    def def_ifloordiv[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3450,7 +3450,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ifloordiv[
+    def def_ifloordiv[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3467,7 +3467,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ifloordiv[
+    def def_ifloordiv[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3482,7 +3482,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ilshift[
+    def def_ilshift[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3499,7 +3499,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ilshift[
+    def def_ilshift[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3516,7 +3516,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ilshift[
+    def def_ilshift[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3531,7 +3531,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imatmul[
+    def def_imatmul[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3548,7 +3548,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imatmul[
+    def def_imatmul[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3565,7 +3565,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imatmul[
+    def def_imatmul[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3580,7 +3580,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imod[
+    def def_imod[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3597,7 +3597,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imod[
+    def def_imod[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3614,7 +3614,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imod[
+    def def_imod[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3629,7 +3629,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imul[
+    def def_imul[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3646,7 +3646,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imul[
+    def def_imul[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3663,7 +3663,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_imul[
+    def def_imul[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3678,7 +3678,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ior[
+    def def_ior[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3695,7 +3695,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ior[
+    def def_ior[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3712,7 +3712,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ior[
+    def def_ior[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3727,7 +3727,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irshift[
+    def def_irshift[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3744,7 +3744,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irshift[
+    def def_irshift[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3761,7 +3761,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irshift[
+    def def_irshift[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3776,7 +3776,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_isub[
+    def def_isub[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3793,7 +3793,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_isub[
+    def def_isub[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3810,7 +3810,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_isub[
+    def def_isub[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3825,7 +3825,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_itruediv[
+    def def_itruediv[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3842,7 +3842,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_itruediv[
+    def def_itruediv[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3859,7 +3859,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_itruediv[
+    def def_itruediv[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3874,7 +3874,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ixor[
+    def def_ixor[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3891,7 +3891,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ixor[
+    def def_ixor[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -3908,7 +3908,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ixor[
+    def def_ixor[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3923,7 +3923,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_pow[
+    def def_pow[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
@@ -3942,7 +3942,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_pow[
+    def def_pow[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
@@ -3961,7 +3961,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_pow[
+    def def_pow[
         R: _CPython,
         method: fn(Self.self_type, PythonObject, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -3976,7 +3976,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ipow[
+    def def_ipow[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
@@ -3995,7 +3995,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ipow[
+    def def_ipow[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
@@ -4014,7 +4014,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_ipow[
+    def def_ipow[
         R: _CPython,
         method: fn(Self.self_type, PythonObject, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -4054,16 +4054,16 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     var _ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
 
-    fn __init__(out self, mut inner: PythonTypeBuilder):
+    def __init__(out self, mut inner: PythonTypeBuilder):
         self._ptr = UnsafePointer(to=inner)
 
-    fn __init__(
+    def __init__(
         out self,
         ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin],
     ):
         self._ptr = ptr
 
-    fn def_len[
+    def def_len[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `mp_length` slot.
@@ -4074,7 +4074,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_lenfunc[Self.self_type, method](self._ptr)
         return self
 
-    fn def_getitem[
+    def def_getitem[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -4087,7 +4087,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_mp_getitem[Self.self_type, method](self._ptr)
         return self
 
-    fn def_setitem[
+    def def_setitem[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
             PythonObject,
@@ -4108,7 +4108,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Non-raising overloads
 
-    fn def_len[
+    def def_len[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `mp_length` slot (non-raising overload).
@@ -4120,7 +4120,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_getitem[
+    def def_getitem[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -4134,7 +4134,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_setitem[
+    def def_setitem[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
             PythonObject,
@@ -4152,7 +4152,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Value-receiver overloads
 
-    fn def_len[
+    def def_len[
         method: fn(Self.self_type) raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `mp_length` slot (value-receiver overload).
@@ -4164,7 +4164,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_getitem[
+    def def_getitem[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot (value-receiver overload).
@@ -4176,7 +4176,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_setitem[
+    def def_setitem[
         method: fn(
             mut Self.self_type, PythonObject, Variant[PythonObject, Int]
         ) raises -> None
@@ -4192,7 +4192,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # ConvertibleToPython return overloads
 
-    fn def_getitem[
+    def def_getitem[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -4207,7 +4207,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_getitem[
+    def def_getitem[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -4222,7 +4222,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_getitem[
+    def def_getitem[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -4264,16 +4264,16 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     var _ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
 
-    fn __init__(out self, mut inner: PythonTypeBuilder):
+    def __init__(out self, mut inner: PythonTypeBuilder):
         self._ptr = UnsafePointer(to=inner)
 
-    fn __init__(
+    def __init__(
         out self,
         ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin],
     ):
         self._ptr = ptr
 
-    fn def_len[
+    def def_len[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `sq_length` slot.
@@ -4291,7 +4291,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_getitem[
+    def def_getitem[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
         ) raises -> PythonObject
@@ -4306,7 +4306,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_setitem[
+    def def_setitem[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
             Int,
@@ -4325,7 +4325,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         _install_ssizeobjargproc[Self.self_type, method](self._ptr)
         return self
 
-    fn def_contains[
+    def def_contains[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> Bool
@@ -4340,7 +4340,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_concat[
+    def def_concat[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -4355,7 +4355,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_repeat[
+    def def_repeat[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
         ) raises -> PythonObject
@@ -4370,7 +4370,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_iconcat[
+    def def_iconcat[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) raises -> PythonObject
@@ -4385,7 +4385,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_irepeat[
+    def def_irepeat[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
         ) raises -> PythonObject
@@ -4402,7 +4402,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Non-raising overloads
 
-    fn def_len[
+    def def_len[
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin]) -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `sq_length` slot (non-raising overload).
@@ -4421,7 +4421,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_getitem[
+    def def_getitem[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
         ) -> PythonObject
@@ -4437,7 +4437,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_setitem[
+    def def_setitem[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin],
             Int,
@@ -4453,7 +4453,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_contains[
+    def def_contains[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> Bool
@@ -4469,7 +4469,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_concat[
+    def def_concat[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -4485,7 +4485,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_repeat[
+    def def_repeat[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
         ) -> PythonObject
@@ -4501,7 +4501,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iconcat[
+    def def_iconcat[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
         ) -> PythonObject
@@ -4517,7 +4517,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irepeat[
+    def def_irepeat[
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
         ) -> PythonObject
@@ -4535,7 +4535,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Value-receiver overloads
 
-    fn def_len[
+    def def_len[
         method: fn(Self.self_type) raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `sq_length` slot (value-receiver overload).
@@ -4554,7 +4554,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         )
         return self
 
-    fn def_getitem[
+    def def_getitem[
         method: fn(Self.self_type, Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `sq_item` slot (value-receiver overload).
@@ -4568,7 +4568,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_setitem[
+    def def_setitem[
         method: fn(
             Self.self_type, Int, Variant[PythonObject, Int]
         ) raises -> None
@@ -4582,7 +4582,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_setitem[
+    def def_setitem[
         method: fn(
             mut Self.self_type, Int, Variant[PythonObject, Int]
         ) raises -> None
@@ -4596,7 +4596,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_contains[
+    def def_contains[
         method: fn(Self.self_type, PythonObject) raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__contains__` via the `sq_contains` slot (value-receiver overload).
@@ -4610,7 +4610,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_concat[
+    def def_concat[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__add__` (concatenation) via the `sq_concat` slot (value-receiver overload).
@@ -4624,7 +4624,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_repeat[
+    def def_repeat[
         method: fn(Self.self_type, Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` (repetition) via the `sq_repeat` slot (value-receiver overload).
@@ -4638,7 +4638,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iconcat[
+    def def_iconcat[
         method: fn(Self.self_type, PythonObject) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` (in-place concatenation) via the `sq_inplace_concat` slot (value-receiver overload).
@@ -4652,7 +4652,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irepeat[
+    def def_irepeat[
         method: fn(Self.self_type, Int) raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` (in-place repetition) via the `sq_inplace_repeat` slot (value-receiver overload).
@@ -4668,7 +4668,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # ConvertibleToPython return overloads
 
-    fn def_getitem[
+    def def_getitem[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
@@ -4685,7 +4685,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_getitem[
+    def def_getitem[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) -> R,
     ](mut self) -> ref[self] Self:
@@ -4700,7 +4700,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_getitem[
+    def def_getitem[
         R: _CPython,
         method: fn(Self.self_type, Int) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -4715,7 +4715,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_concat[
+    def def_concat[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -4732,7 +4732,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_concat[
+    def def_concat[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -4749,7 +4749,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_concat[
+    def def_concat[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -4764,7 +4764,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_repeat[
+    def def_repeat[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
@@ -4781,7 +4781,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_repeat[
+    def def_repeat[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) -> R,
     ](mut self) -> ref[self] Self:
@@ -4796,7 +4796,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_repeat[
+    def def_repeat[
         R: _CPython,
         method: fn(Self.self_type, Int) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -4811,7 +4811,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iconcat[
+    def def_iconcat[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -4828,7 +4828,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iconcat[
+    def def_iconcat[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
@@ -4845,7 +4845,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_iconcat[
+    def def_iconcat[
         R: _CPython,
         method: fn(Self.self_type, PythonObject) raises -> R,
     ](mut self) -> ref[self] Self:
@@ -4860,7 +4860,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irepeat[
+    def def_irepeat[
         R: _CPython,
         method: fn(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int
@@ -4877,7 +4877,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irepeat[
+    def def_irepeat[
         R: _CPython,
         method: fn(UnsafePointer[Self.self_type, MutAnyOrigin], Int) -> R,
     ](mut self) -> ref[self] Self:
@@ -4892,7 +4892,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         ](self._ptr)
         return self
 
-    fn def_irepeat[
+    def def_irepeat[
         R: _CPython,
         method: fn(Self.self_type, Int) raises -> R,
     ](mut self) -> ref[self] Self:

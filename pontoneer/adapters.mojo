@@ -18,7 +18,7 @@ from .utils import NotImplementedError
 
 
 @always_inline
-fn _unwrap_self[
+def _unwrap_self[
     T: ImplicitlyDestructible
 ](py_self: PyObjectPtr) -> UnsafePointer[T, MutAnyOrigin]:
     """Downcast a raw PyObjectPtr to a typed Mojo pointer, aborting on failure.
@@ -31,7 +31,7 @@ fn _unwrap_self[
         )
 
 
-fn _mp_length_wrapper[
+def _mp_length_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Int,
 ](py_self: PyObjectPtr) -> Py_ssize_t:
@@ -57,7 +57,7 @@ fn _mp_length_wrapper[
         return Py_ssize_t(-1)
 
 
-fn _mp_subscript_wrapper[
+def _mp_subscript_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
@@ -88,7 +88,7 @@ fn _mp_subscript_wrapper[
         return PyObjectPtr()
 
 
-fn _mp_ass_subscript_wrapper[
+def _mp_ass_subscript_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin],
@@ -132,7 +132,7 @@ fn _mp_ass_subscript_wrapper[
         return c_int(-1)
 
 
-fn _unaryfunc_wrapper[
+def _unaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject,
 ](py_self: PyObjectPtr) -> PyObjectPtr:
@@ -158,7 +158,7 @@ fn _unaryfunc_wrapper[
         return PyObjectPtr()
 
 
-fn _binaryfunc_wrapper[
+def _binaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
@@ -198,7 +198,7 @@ fn _binaryfunc_wrapper[
         return PyObjectPtr()
 
 
-fn _ternaryfunc_wrapper[
+def _ternaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject
@@ -241,7 +241,7 @@ fn _ternaryfunc_wrapper[
         return PyObjectPtr()
 
 
-fn _inquiry_wrapper[
+def _inquiry_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool,
 ](py_self: PyObjectPtr) -> c_int:
@@ -267,7 +267,7 @@ fn _inquiry_wrapper[
         return c_int(-1)
 
 
-fn _ssizeargfunc_wrapper[
+def _ssizeargfunc_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], Int
@@ -295,7 +295,7 @@ fn _ssizeargfunc_wrapper[
         return PyObjectPtr()
 
 
-fn _ssizeobjargproc_wrapper[
+def _ssizeobjargproc_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
@@ -332,7 +332,7 @@ fn _ssizeobjargproc_wrapper[
         return c_int(-1)
 
 
-fn _objobjproc_wrapper[
+def _objobjproc_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
@@ -363,7 +363,7 @@ fn _objobjproc_wrapper[
         return c_int(-1)
 
 
-fn _richcompare_wrapper[
+def _richcompare_wrapper[
     self_type: ImplicitlyDestructible,
     method: fn(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int

@@ -33,7 +33,7 @@ from pontoneer import (
 comptime Coord1DColumn = List[Float64]
 
 
-fn _extent(pos: Coord1DColumn) -> Tuple[Float64, Float64]:
+def _extent(pos: Coord1DColumn) -> Tuple[Float64, Float64]:
     """Return the (min, max) of a column."""
     v_min = Float64.MAX
     v_max = Float64.MIN
@@ -43,7 +43,7 @@ fn _extent(pos: Coord1DColumn) -> Tuple[Float64, Float64]:
     return (v_min, v_max)
 
 
-fn _compute_bounding_box_area(
+def _compute_bounding_box_area(
     pos_x: Coord1DColumn,
     pos_y: Coord1DColumn,
 ) -> Float64:
@@ -67,13 +67,13 @@ struct DataFrame(Defaultable, Movable, Writable):
     var call_counts: Dict[String, Int]
     var _bounding_box_area: Float64
 
-    fn __init__(out self):
+    def __init__(out self):
         self.pos_x = []
         self.pos_y = []
         self._bounding_box_area = 0
         self.call_counts = {}
 
-    fn __init__(
+    def __init__(
         out self,
         var x: Coord1DColumn,
         var y: Coord1DColumn,
@@ -88,7 +88,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn get_call_count(
+    def get_call_count(
         py_self: PythonObject, name: PythonObject
     ) raises -> PythonObject:
         """Return the number of times a named method was called (for testing).
@@ -97,7 +97,7 @@ struct DataFrame(Defaultable, Movable, Writable):
         return self_ptr[].call_counts.get(String(py=name), 0)
 
     @staticmethod
-    fn with_columns(
+    def with_columns(
         pos_x: PythonObject, pos_y: PythonObject
     ) raises -> PythonObject:
         var len_x = Int(pos_x.__len__())
@@ -116,17 +116,17 @@ struct DataFrame(Defaultable, Movable, Writable):
     # Mapping protocol
     # ------------------------------------------------------------------
 
-    fn py__len__(self) raises -> Int:
+    def py__len__(self) raises -> Int:
         return len(self.pos_x)
 
-    fn py__getitem__(self, index: PythonObject) raises -> PythonObject:
+    def py__getitem__(self, index: PythonObject) raises -> PythonObject:
         var i = Int(py=index)
         var length = len(self.pos_x)
         if i < 0 or i >= length:
             raise Error("index out of range")
         return Python().tuple(self.pos_x[i], self.pos_y[i])
 
-    fn py__setitem__(
+    def py__setitem__(
         mut self,
         index: PythonObject,
         value: Variant[PythonObject, Int],
@@ -149,7 +149,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn rich_compare(
+    def rich_compare(
         self_ptr: UnsafePointer[Self, MutAnyOrigin],
         other: PythonObject,
         op: Int,
@@ -177,7 +177,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__neg__(
+    def py__neg__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
@@ -189,7 +189,7 @@ struct DataFrame(Defaultable, Movable, Writable):
         return PythonObject(alloc=DataFrame(result_x^, result_y^))
 
     @staticmethod
-    fn py__abs__(
+    def py__abs__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
@@ -205,7 +205,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__bool__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Bool:
+    def py__bool__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Bool:
         return len(self_ptr[].pos_x) > 0
 
     # ------------------------------------------------------------------
@@ -213,7 +213,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__add__(
+    def py__add__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         """Concatenate two DataFrames row-wise. Returns NotImplemented for non-DataFrames.
@@ -236,7 +236,7 @@ struct DataFrame(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__mul__(
+    def py__mul__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         """Scale all coordinates by a numeric scalar. Returns NotImplemented otherwise.
@@ -258,7 +258,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__pow__(
+    def py__pow__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin],
         exp: PythonObject,
         mod: PythonObject,
@@ -273,12 +273,12 @@ struct DataFrame(Defaultable, Movable, Writable):
             result_y.append(v**e)
         return PythonObject(alloc=DataFrame(result_x^, result_y^))
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("DataFrame( length=", len(self.pos_x), ")")
 
 
 @export
-fn PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() -> PythonObject:
     """Entry point: create the Python extension module."""
     try:
         var b = PythonModuleBuilder("mojo_module")
