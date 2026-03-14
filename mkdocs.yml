@@ -40,6 +40,7 @@ nav:
   - Home: index.md
   - API Reference:
     - Overview: api.md
+    - BufferProtocolBuilder: api/buffer.md
     - MappingProtocolBuilder: api/mapping.md
     - NumberProtocolBuilder: api/number.md
     - SequenceProtocolBuilder: api/sequence.md

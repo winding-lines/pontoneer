@@ -25,7 +25,9 @@ build-test-sequence = { cmd = "mojo build --emit shared-lib -I . tests/sequence/
 test-sequence = { cmd = "python3 tests/sequence/test_module.py", depends-on = ["build-test-sequence"] }
 build-test-type-protocol = { cmd = "mojo build --emit shared-lib -I . tests/type_protocol/mojo_module.mojo -o tests/type_protocol/mojo_module.so", depends-on = ["build"] }
 test-type-protocol = { cmd = "python3 tests/type_protocol/test_module.py", depends-on = ["build-test-type-protocol"] }
-test-all = { depends-on = ["test-example", "test-mapping", "test-number", "test-sequence", "test-type-protocol"] }
+build-test-buffer = { cmd = "mojo build --emit shared-lib -I . tests/buffer/mojo_module.mojo -o tests/buffer/mojo_module.so", depends-on = ["build"] }
+test-buffer = { cmd = "python3 tests/buffer/test_module.py", depends-on = ["build-test-buffer"] }
+test-all = { depends-on = ["test-example", "test-mapping", "test-number", "test-sequence", "test-type-protocol", "test-buffer"] }
 
 [feature.package.dependencies]
 rattler-build = "*"

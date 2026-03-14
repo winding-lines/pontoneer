@@ -5,3 +5,4 @@ from .builders import (
     MappingProtocolBuilder,
     SequenceProtocolBuilder,
 )
+from .buffer import BufferProtocolBuilder, BufferInfo

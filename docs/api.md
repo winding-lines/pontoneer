@@ -10,6 +10,8 @@ from pontoneer import (
     NumberProtocolBuilder,
     MappingProtocolBuilder,
     SequenceProtocolBuilder,
+    BufferProtocolBuilder,
+    BufferInfo,
 )
 ```
 
@@ -79,6 +81,12 @@ Installs `tp_richcompare`. Three overloads are available:
 | Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool` |
 | Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int) -> Bool` |
 | Value / raising | `fn(self: T, other: PythonObject, op: Int) raises -> Bool` |
+
+---
+
+## `BufferProtocolBuilder[T]`
+
+See the dedicated [BufferProtocolBuilder reference](api/buffer.md) for per-method documentation.
 
 ---
 
