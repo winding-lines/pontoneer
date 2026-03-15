@@ -21,6 +21,7 @@ from std.memory import UnsafePointer
 from std.utils import Variant
 from std.python import Python, PythonObject
 from std.python.bindings import PythonModuleBuilder
+from std.ffi import _Global
 
 from pontoneer import (
     NotImplementedError,
@@ -54,6 +55,28 @@ def _compute_bounding_box_area(
     return (ext_x[1] - ext_x[0]) * (ext_y[1] - ext_y[0])
 
 
+def _init_call_count() -> Dict[String, Int]:
+    return {}
+
+
+# Track call counts for testing reasons.
+comptime _global_call_count = _Global["call_count", _init_call_count]
+
+
+def _get_global_call_count(
+    out result: UnsafePointer[Dict[String, Int], MutExternalOrigin]
+):
+    """Gets the global calls count.
+
+    Returns:
+        A pointer to the global calls count dictionary.
+    """
+    try:
+        result = _global_call_count.get_or_create_ptr()
+    except:
+        abort("Failed to initialize global calls count")
+
+
 struct DataFrame(Defaultable, Movable, Writable):
     """A simple columnar data structure storing 2-D points.
 
@@ -64,14 +87,12 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     var pos_x: Coord1DColumn
     var pos_y: Coord1DColumn
-    var call_counts: Dict[String, Int]
     var _bounding_box_area: Float64
 
     def __init__(out self):
         self.pos_x = []
         self.pos_y = []
         self._bounding_box_area = 0
-        self.call_counts = {}
 
     def __init__(
         out self,
@@ -81,7 +102,6 @@ struct DataFrame(Defaultable, Movable, Writable):
         self._bounding_box_area = _compute_bounding_box_area(x, y)
         self.pos_x = x^
         self.pos_y = y^
-        self.call_counts = {}
 
     # ------------------------------------------------------------------
     # Regular methods
@@ -94,7 +114,8 @@ struct DataFrame(Defaultable, Movable, Writable):
         """Return the number of times a named method was called (for testing).
         """
         var self_ptr = py_self.downcast_value_ptr[Self]()
-        return self_ptr[].call_counts.get(String(py=name), 0)
+        var key = "{}{}".format(Int(self_ptr), String(py=name))
+        return _get_global_call_count()[].get(key, 0)
 
     @staticmethod
     def with_columns(
@@ -148,9 +169,8 @@ struct DataFrame(Defaultable, Movable, Writable):
     # Rich comparison protocol
     # ------------------------------------------------------------------
 
-    @staticmethod
     def rich_compare(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        self,
         other: PythonObject,
         op: Int,
     ) raises -> Bool:
@@ -159,17 +179,16 @@ struct DataFrame(Defaultable, Movable, Writable):
         Only LT and EQ are implemented; all other operations raise
         NotImplementedError so Python falls back to the reflected call.
         """
-        var invocation = "rich_compare[{}]".format(op)
-        self_ptr[].call_counts[invocation] = (
-            self_ptr[].call_counts.get(invocation, 0) + 1
+        var invocation = "{}rich_compare[{}]".format(
+            Int(UnsafePointer(to=self)), op
         )
+        var call_count = _get_global_call_count()
+        call_count[][invocation] = call_count[].get(invocation, 0) + 1
         var other_df = other.downcast_value_ptr[Self]()
         if op == RichCompareOps.Py_LT:
-            return self_ptr[]._bounding_box_area < other_df[]._bounding_box_area
+            return self._bounding_box_area < other_df[]._bounding_box_area
         if op == RichCompareOps.Py_EQ:
-            return (
-                self_ptr[]._bounding_box_area == other_df[]._bounding_box_area
-            )
+            return self._bounding_box_area == other_df[]._bounding_box_area
         raise NotImplementedError()
 
     # ------------------------------------------------------------------

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-03-15
+
+### Changed
+- `rich_compare` handlers in the columnar example and type-protocol test converted from `@staticmethod` + `UnsafePointer[Self, MutAnyOrigin]` to plain value-receiver methods (`def rich_compare(self, ...)`), demonstrating the existing value-receiver overload of `TypeProtocolBuilder.def_richcompare`.
+- Call-count tracking in the columnar example moved from a `Dict[String, Int]` field on `DataFrame` to a process-global `_Global` dict, keeping the struct layout lean and avoiding copies on every method call.
+
 ## [0.5.0] - 2026-03-14
 
 ### Added
