@@ -1,9 +1,12 @@
 # pontoneer
 
+[![CodeQL](https://github.com/winding-lines/pontoneer/workflows/CodeQL/badge.svg)](https://github.com/winding-lines/pontoneer/actions/workflows/codeql.yml)
+
 Mojo library providing mapping, sequence, number protocol and rich comparison
 extensions for Python extension modules.
 
 **Full documentation:** https://pontoneer.dev
+
 
 ## Installation
 
@@ -22,4 +25,4 @@ pontoneer = ">=0.6.0"
 
 ## License
 
-Apache License v2.0 with LLVM Exceptions — see [LICENSE](LICENSE).
+Apache License v2.0 with LLVM Exceptilons — see [LICENSE](LICENSE).
