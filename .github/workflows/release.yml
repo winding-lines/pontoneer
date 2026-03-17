@@ -27,24 +27,23 @@ jobs:
         cache: true
     - name: Build mojopkg
       run: pixi run build
-    - name: Compute mojo version
-      id: mojo_version
-      run: |
-        MOJO_VERSION=$(grep -oP 'mojo-\K[0-9][^-]+(?=-release\.conda)' pixi.lock | head -1)
-        echo "mojo_version=${MOJO_VERSION}" >> "$GITHUB_OUTPUT"
     - name: Compute version
       id: version
       run: |
         LAST_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "v0.0.0")
         BASE_VERSION="${LAST_TAG#v}"
-        MOJO_DATE=$(echo "${{ steps.mojo_version.outputs.mojo_version }}" | grep -oP '\d{8}' | head -1)
         SHORT_SHA=$(git rev-parse --short=6 HEAD)
         if [ "$(git rev-list -n1 "${LAST_TAG}")" = "$(git rev-parse HEAD)" ]; then
-          VERSION="${BASE_VERSION}-${MOJO_DATE}"
+          VERSION="${BASE_VERSION}"
         else
-          VERSION="${BASE_VERSION}-${MOJO_DATE}-${SHORT_SHA}"
+          VERSION="${BASE_VERSION}-${SHORT_SHA}"
         fi
         echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+    - name: Compute mojo version
+      id: mojo_version
+      run: |
+        MOJO_VERSION=$(grep -oP 'mojo-\K[0-9][^-]+(?=-release\.conda)' pixi.lock | head -1)
+        echo "mojo_version=${MOJO_VERSION}" >> "$GITHUB_OUTPUT"
     - name: Build conda package
       run: |
         VERSION="${{ steps.version.outputs.version }}"
