@@ -19,11 +19,11 @@ struct FloatBuffer(Defaultable, Movable, Writable):
 
     var data: List[Float64]
 
-    fn __init__(out self):
+    def __init__(out self):
         self.data = []
 
     @staticmethod
-    fn from_count(n: PythonObject) raises -> PythonObject:
+    def from_count(n: PythonObject) raises -> PythonObject:
         """Create a FloatBuffer with `n` elements: [0.0, 1.0, ..., n-1.0]."""
         var result = FloatBuffer()
         var count = Int(py=n)
@@ -32,7 +32,7 @@ struct FloatBuffer(Defaultable, Movable, Writable):
         return PythonObject(alloc=result^)
 
     @staticmethod
-    fn get_buffer(
+    def get_buffer(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], flags: Int32
     ) raises -> BufferInfo:
         """Return a BufferInfo describing the internal Float64 array."""
@@ -45,12 +45,12 @@ struct FloatBuffer(Defaultable, Movable, Writable):
             readonly=True,
         )
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("FloatBuffer(len=", len(self.data), ")")
 
 
 @export
-fn PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (

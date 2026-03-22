@@ -22,14 +22,14 @@ from pontoneer import NotImplementedError, RichCompareOps, TypeProtocolBuilder
 struct Box(Defaultable, Movable, Writable):
     var value: Float64
 
-    fn __init__(out self):
+    def __init__(out self):
         self.value = 0.0
 
-    fn __init__(out self, value: Float64):
+    def __init__(out self, value: Float64):
         self.value = value
 
     @staticmethod
-    fn _get_self_ptr(
+    def _get_self_ptr(
         py_self: PythonObject,
     ) -> UnsafePointer[Self, MutAnyOrigin]:
         try:
@@ -38,15 +38,15 @@ struct Box(Defaultable, Movable, Writable):
             abort(String("downcast failed: ", e))
 
     @staticmethod
-    fn new(value: PythonObject) raises -> PythonObject:
+    def new(value: PythonObject) raises -> PythonObject:
         return PythonObject(alloc=Box(Float64(py=value)))
 
     @staticmethod
-    fn get_value(py_self: PythonObject) raises -> PythonObject:
+    def get_value(py_self: PythonObject) raises -> PythonObject:
         return PythonObject(Self._get_self_ptr(py_self)[].value)
 
     @staticmethod
-    fn rich_compare(
+    def rich_compare(
         self,
         other: PythonObject,
         op: Int,
@@ -67,7 +67,7 @@ struct Box(Defaultable, Movable, Writable):
             return a >= b
         raise NotImplementedError()
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("Box(", self.value, ")")
 
 
@@ -75,14 +75,14 @@ struct Box(Defaultable, Movable, Writable):
 struct BoxV(Defaultable, Movable, Writable):
     var value: Float64
 
-    fn __init__(out self):
+    def __init__(out self):
         self.value = 0.0
 
-    fn __init__(out self, value: Float64):
+    def __init__(out self, value: Float64):
         self.value = value
 
     @staticmethod
-    fn _get_self_ptr(
+    def _get_self_ptr(
         py_self: PythonObject,
     ) -> UnsafePointer[Self, MutAnyOrigin]:
         try:
@@ -91,15 +91,15 @@ struct BoxV(Defaultable, Movable, Writable):
             abort(String("downcast failed: ", e))
 
     @staticmethod
-    fn new(value: PythonObject) raises -> PythonObject:
+    def new(value: PythonObject) raises -> PythonObject:
         return PythonObject(alloc=BoxV(Float64(py=value)))
 
     @staticmethod
-    fn get_value(py_self: PythonObject) raises -> PythonObject:
+    def get_value(py_self: PythonObject) raises -> PythonObject:
         return PythonObject(Self._get_self_ptr(py_self)[].value)
 
     # Raising value-receiver rich_compare
-    fn rich_compare(self, other: PythonObject, op: Int) raises -> Bool:
+    def rich_compare(self, other: PythonObject, op: Int) raises -> Bool:
         var a = self.value
         var b = other.downcast_value_ptr[Self]()[].value
         if op == RichCompareOps.Py_LT:
@@ -116,12 +116,12 @@ struct BoxV(Defaultable, Movable, Writable):
             return a >= b
         raise NotImplementedError()
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("BoxV(", self.value, ")")
 
 
 @export
-fn PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (

@@ -23,22 +23,22 @@ from pontoneer import SequenceProtocolBuilder
 struct Seq(Defaultable, Movable, Writable):
     var data: List[Int]
 
-    fn __init__(out self):
+    def __init__(out self):
         self.data = []
 
     @staticmethod
-    fn from_list(items: PythonObject) raises -> PythonObject:
+    def from_list(items: PythonObject) raises -> PythonObject:
         var result = Seq()
         for item in items:
             result.data.append(Int(py=item))
         return PythonObject(alloc=result^)
 
     @staticmethod
-    fn py__len__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Int:
+    def py__len__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Int:
         return len(self_ptr[].data)
 
     @staticmethod
-    fn py__getitem__(
+    def py__getitem__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], index: Int
     ) raises -> PythonObject:
         if index < 0 or index >= len(self_ptr[].data):
@@ -46,7 +46,7 @@ struct Seq(Defaultable, Movable, Writable):
         return PythonObject(self_ptr[].data[index])
 
     @staticmethod
-    fn py__setitem__(
+    def py__setitem__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin],
         index: Int,
         value: Variant[PythonObject, Int],
@@ -59,7 +59,7 @@ struct Seq(Defaultable, Movable, Writable):
             _ = self_ptr[].data.pop(index)
 
     @staticmethod
-    fn py__contains__(
+    def py__contains__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], item: PythonObject
     ) raises -> Bool:
         var v = Int(py=item)
@@ -69,7 +69,7 @@ struct Seq(Defaultable, Movable, Writable):
         return False
 
     @staticmethod
-    fn py__concat__(
+    def py__concat__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         var other_ptr = other.downcast_value_ptr[Self]()
@@ -81,7 +81,7 @@ struct Seq(Defaultable, Movable, Writable):
         return PythonObject(alloc=result^)
 
     @staticmethod
-    fn py__repeat__(
+    def py__repeat__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], count: Int
     ) raises -> PythonObject:
         var result = Seq()
@@ -90,7 +90,7 @@ struct Seq(Defaultable, Movable, Writable):
                 result.data.append(v)
         return PythonObject(alloc=result^)
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("Seq(len=", len(self.data), ")")
 
 
@@ -99,29 +99,29 @@ struct Seq(Defaultable, Movable, Writable):
 struct SeqV(Defaultable, Movable, Writable):
     var data: List[Int]
 
-    fn __init__(out self):
+    def __init__(out self):
         self.data = []
 
     @staticmethod
-    fn from_list(items: PythonObject) raises -> PythonObject:
+    def from_list(items: PythonObject) raises -> PythonObject:
         var result = SeqV()
         for item in items:
             result.data.append(Int(py=item))
         return PythonObject(alloc=result^)
 
     # Non-raising value receiver
-    fn py__len__(self) -> Int:
+    def py__len__(self) -> Int:
         return len(self.data)
 
     # Raising value receiver
-    fn py__getitem__(self, index: Int) raises -> PythonObject:
+    def py__getitem__(self, index: Int) raises -> PythonObject:
         if index < 0 or index >= len(self.data):
             raise Error("index out of range")
         return PythonObject(self.data[index])
 
     # Mutation uses pointer receiver
     @staticmethod
-    fn py__setitem__(
+    def py__setitem__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin],
         index: Int,
         value: Variant[PythonObject, Int],
@@ -134,7 +134,7 @@ struct SeqV(Defaultable, Movable, Writable):
             _ = self_ptr[].data.pop(index)
 
     # Non-raising value receiver for contains
-    fn py__contains__(self, item: PythonObject) raises -> Bool:
+    def py__contains__(self, item: PythonObject) raises -> Bool:
         var v = Int(py=item)
         for elem in self.data:
             if elem == v:
@@ -142,7 +142,7 @@ struct SeqV(Defaultable, Movable, Writable):
         return False
 
     # Raising value receiver for concat
-    fn py__concat__(self, other: PythonObject) raises -> PythonObject:
+    def py__concat__(self, other: PythonObject) raises -> PythonObject:
         var other_ptr = other.downcast_value_ptr[Self]()
         var result = SeqV()
         for v in self.data:
@@ -152,19 +152,19 @@ struct SeqV(Defaultable, Movable, Writable):
         return PythonObject(alloc=result^)
 
     # Non-raising value receiver for repeat
-    fn py__repeat__(self, count: Int) raises -> PythonObject:
+    def py__repeat__(self, count: Int) raises -> PythonObject:
         var result = SeqV()
         for _ in range(count):
             for v in self.data:
                 result.data.append(v)
         return PythonObject(alloc=result^)
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("SeqV(len=", len(self.data), ")")
 
 
 @export
-fn PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (

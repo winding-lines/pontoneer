@@ -20,22 +20,22 @@ from pontoneer import MappingProtocolBuilder
 struct SimpleList(Defaultable, Movable, Writable):
     var data: List[Int]
 
-    fn __init__(out self):
+    def __init__(out self):
         self.data = []
 
     @staticmethod
-    fn from_list(items: PythonObject) raises -> PythonObject:
+    def from_list(items: PythonObject) raises -> PythonObject:
         var result = SimpleList()
         for item in items:
             result.data.append(Int(py=item))
         return PythonObject(alloc=result^)
 
     @staticmethod
-    fn py__len__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Int:
+    def py__len__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Int:
         return len(self_ptr[].data)
 
     @staticmethod
-    fn py__getitem__(
+    def py__getitem__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], index: PythonObject
     ) raises -> PythonObject:
         var i = Int(py=index)
@@ -44,7 +44,7 @@ struct SimpleList(Defaultable, Movable, Writable):
         return PythonObject(self_ptr[].data[i])
 
     @staticmethod
-    fn py__setitem__(
+    def py__setitem__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin],
         index: PythonObject,
         value: Variant[PythonObject, Int],
@@ -57,33 +57,33 @@ struct SimpleList(Defaultable, Movable, Writable):
         else:
             _ = self_ptr[].data.pop(i)
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("SimpleList(len=", len(self.data), ")")
 
 
-# SimpleListV uses value-receiver handlers (fn(self: Self, ...) instead of
-# fn(self_ptr: UnsafePointer[Self, MutAnyOrigin], ...)).
+# SimpleListV uses value-receiver handlers (def(self: Self, ...) instead of
+# def(self_ptr: UnsafePointer[Self, MutAnyOrigin], ...)).
 # Read-only handlers use the non-raising overload; mutating ones use raising
 # ptr-receiver since they need to modify the Python-owned object in place.
 struct SimpleListV(Defaultable, Movable, Writable):
     var data: List[Int]
 
-    fn __init__(out self):
+    def __init__(out self):
         self.data = []
 
     @staticmethod
-    fn from_list(items: PythonObject) raises -> PythonObject:
+    def from_list(items: PythonObject) raises -> PythonObject:
         var result = SimpleListV()
         for item in items:
             result.data.append(Int(py=item))
         return PythonObject(alloc=result^)
 
     # Non-raising value receiver
-    fn py__len__(self) -> Int:
+    def py__len__(self) -> Int:
         return len(self.data)
 
     # Raising value receiver
-    fn py__getitem__(self, index: PythonObject) raises -> PythonObject:
+    def py__getitem__(self, index: PythonObject) raises -> PythonObject:
         var i = Int(py=index)
         if i < 0 or i >= len(self.data):
             raise Error("index out of range")
@@ -91,7 +91,7 @@ struct SimpleListV(Defaultable, Movable, Writable):
 
     # Mutation still uses pointer receiver so changes are visible on the Python object
     @staticmethod
-    fn py__setitem__(
+    def py__setitem__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin],
         index: PythonObject,
         value: Variant[PythonObject, Int],
@@ -104,12 +104,12 @@ struct SimpleListV(Defaultable, Movable, Writable):
         else:
             _ = self_ptr[].data.pop(i)
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("SimpleListV(len=", len(self.data), ")")
 
 
 @export
-fn PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (

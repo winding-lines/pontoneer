@@ -39,7 +39,7 @@ struct BufferInfo:
     Example:
         ```mojo
         @staticmethod
-        fn get_buffer(
+        def get_buffer(
             self_ptr: UnsafePointer[Self, MutAnyOrigin], flags: Int32
         ) raises -> BufferInfo:
             var data_ptr = self_ptr[].data.unsafe_ptr()
@@ -64,7 +64,7 @@ struct BufferInfo:
     var readonly: Bool
     """Whether the buffer is read-only."""
 
-    fn __init__(
+    def __init__(
         out self,
         buf: UnsafePointer[UInt8, MutAnyOrigin],
         nitems: Int,
@@ -116,7 +116,7 @@ struct _PyBuffer:
 
 def _bf_getbuffer_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin], Int32
     ) raises -> BufferInfo,
 ](
@@ -134,7 +134,7 @@ def _bf_getbuffer_wrapper[
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
         method: User function
-            `fn(self_ptr: UnsafePointer[T, MutAnyOrigin], flags: Int32) raises -> BufferInfo`.
+            `def(self_ptr: UnsafePointer[T, MutAnyOrigin], flags: Int32) raises -> BufferInfo`.
 
     Returns:
         0 on success, -1 with an exception set on error.
@@ -216,7 +216,7 @@ def _bf_getbuffer_wrapper[
         return c_int(-1)
 
 
-fn _bf_releasebuffer_impl(
+def _bf_releasebuffer_impl(
     raw_self: PyObjectPtr, view: UnsafePointer[_PyBuffer, MutAnyOrigin]
 ) -> None:
     """Default `releasebufferproc` that frees the shape/strides/format block.
@@ -237,12 +237,12 @@ fn _bf_releasebuffer_impl(
 
 def _install_bf_getbuffer[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin], Int32
     ) raises -> BufferInfo,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert the `bf_getbuffer` slot into the builder pointed to by `ptr`."""
-    comptime _getbufferproc = fn(
+    comptime _getbufferproc = def(
         PyObjectPtr, UnsafePointer[_PyBuffer, MutAnyOrigin], c_int
     ) -> c_int
     var fn_ptr: _getbufferproc = _bf_getbuffer_wrapper[self_type, method]
@@ -256,7 +256,7 @@ def _install_bf_releasebuffer(
 ):
     """Insert the default `bf_releasebuffer` slot into the builder pointed to by `ptr`.
     """
-    comptime _releasebufferproc = fn(
+    comptime _releasebufferproc = def(
         PyObjectPtr, UnsafePointer[_PyBuffer, MutAnyOrigin]
     ) -> None
     var fn_ptr: _releasebufferproc = _bf_releasebuffer_impl
@@ -308,7 +308,7 @@ struct BufferProtocolBuilder[self_type: ImplicitlyDestructible]:
         self._ptr = ptr
 
     def def_getbuffer[
-        method: fn(
+        method: def(
             UnsafePointer[Self.self_type, MutAnyOrigin], Int32
         ) raises -> BufferInfo
     ](mut self) -> ref[self] Self:
@@ -323,7 +323,7 @@ struct BufferProtocolBuilder[self_type: ImplicitlyDestructible]:
 
         Parameters:
             method: Static method with signature
-                `fn(self_ptr: UnsafePointer[T, MutAnyOrigin], flags: Int32) raises -> BufferInfo`.
+                `def(self_ptr: UnsafePointer[T, MutAnyOrigin], flags: Int32) raises -> BufferInfo`.
 
         See: https://docs.python.org/3/c-api/typeobj.html#c.PyBufferProcs.bf_getbuffer
         """

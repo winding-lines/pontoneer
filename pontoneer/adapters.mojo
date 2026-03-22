@@ -33,13 +33,13 @@ def _unwrap_self[
 
 def _mp_length_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Int,
+    method: def(UnsafePointer[self_type, MutAnyOrigin]) raises -> Int,
 ](py_self: PyObjectPtr) -> Py_ssize_t:
     """CPython `lenfunc` adapter for the `mp_length` slot (__len__).
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Int`.
+        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Int`.
 
     Returns:
         Length as `Py_ssize_t`, or -1 with an exception set on error.
@@ -59,7 +59,7 @@ def _mp_length_wrapper[
 
 def _mp_subscript_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
     ) raises -> PythonObject,
 ](py_self: PyObjectPtr, key: PyObjectPtr) -> PyObjectPtr:
@@ -67,7 +67,7 @@ def _mp_subscript_wrapper[
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin], key: PythonObject) raises -> PythonObject`.
+        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin], key: PythonObject) raises -> PythonObject`.
 
     Returns:
         New reference to the result, or null with an exception set on error.
@@ -90,7 +90,7 @@ def _mp_subscript_wrapper[
 
 def _mp_ass_subscript_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin],
         PythonObject,
         Variant[PythonObject, Int],
@@ -106,7 +106,7 @@ def _mp_ass_subscript_wrapper[
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
         method: User function with signature
-            `fn(self, key, value: Variant[PythonObject, Int]) raises -> None`.
+            `def(self, key, value: Variant[PythonObject, Int]) raises -> None`.
 
     Returns:
         0 on success, -1 with an exception set on error.
@@ -134,13 +134,13 @@ def _mp_ass_subscript_wrapper[
 
 def _unaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject,
+    method: def(UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject,
 ](py_self: PyObjectPtr) -> PyObjectPtr:
     """CPython `unaryfunc` adapter for unary nb_ slots (__neg__, __abs__, etc.).
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject`.
+        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject`.
 
     Returns:
         New reference to the result, or null with an exception set on error.
@@ -160,7 +160,7 @@ def _unaryfunc_wrapper[
 
 def _binaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
     ) raises -> PythonObject,
 ](lhs: PyObjectPtr, rhs: PyObjectPtr) -> PyObjectPtr:
@@ -172,7 +172,7 @@ def _binaryfunc_wrapper[
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
         method: User function
-            `fn(self: UnsafePointer[self_type, MutAnyOrigin], other: PythonObject) raises -> PythonObject`.
+            `def(self: UnsafePointer[self_type, MutAnyOrigin], other: PythonObject) raises -> PythonObject`.
 
     Returns:
         New reference to the result, `Py_NotImplemented`, or null on error.
@@ -200,7 +200,7 @@ def _binaryfunc_wrapper[
 
 def _ternaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject
     ) raises -> PythonObject,
 ](py_self: PyObjectPtr, other: PyObjectPtr, mod: PyObjectPtr) -> PyObjectPtr:
@@ -212,7 +212,7 @@ def _ternaryfunc_wrapper[
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
         method: User function
-            `fn(self, other, mod: PythonObject) raises -> PythonObject`
+            `def(self, other, mod: PythonObject) raises -> PythonObject`
             where `mod` is typically `None` unless the three-argument form
             `pow(base, exp, mod)` is used.
 
@@ -243,13 +243,13 @@ def _ternaryfunc_wrapper[
 
 def _inquiry_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool,
+    method: def(UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool,
 ](py_self: PyObjectPtr) -> c_int:
     """CPython `inquiry` adapter for the `nb_bool` slot (__bool__).
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool`.
+        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool`.
 
     Returns:
         1 for True, 0 for False, -1 with an exception set on error.
@@ -269,7 +269,7 @@ def _inquiry_wrapper[
 
 def _ssizeargfunc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin], Int
     ) raises -> PythonObject,
 ](py_self: PyObjectPtr, index: Py_ssize_t) -> PyObjectPtr:
@@ -277,7 +277,7 @@ def _ssizeargfunc_wrapper[
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin], index: Int) raises -> PythonObject`.
+        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin], index: Int) raises -> PythonObject`.
 
     Returns:
         New reference to the result, or null with an exception set on error.
@@ -297,7 +297,7 @@ def _ssizeargfunc_wrapper[
 
 def _ssizeobjargproc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
     ) raises -> None,
 ](py_self: PyObjectPtr, index: Py_ssize_t, value: PyObjectPtr) -> c_int:
@@ -310,7 +310,7 @@ def _ssizeobjargproc_wrapper[
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
         method: User function with signature
-            `fn(self, index: Int, value: Variant[PythonObject, Int]) raises -> None`.
+            `def(self, index: Int, value: Variant[PythonObject, Int]) raises -> None`.
 
     Returns:
         0 on success, -1 with an exception set on error.
@@ -334,7 +334,7 @@ def _ssizeobjargproc_wrapper[
 
 def _objobjproc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
     ) raises -> Bool,
 ](py_self: PyObjectPtr, other: PyObjectPtr) -> c_int:
@@ -342,7 +342,7 @@ def _objobjproc_wrapper[
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `fn(self: UnsafePointer[self_type, MutAnyOrigin], item: PythonObject) raises -> Bool`.
+        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin], item: PythonObject) raises -> Bool`.
 
     Returns:
         1 if contained, 0 if not, -1 with an exception set on error.
@@ -365,7 +365,7 @@ def _objobjproc_wrapper[
 
 def _richcompare_wrapper[
     self_type: ImplicitlyDestructible,
-    method: fn(
+    method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int
     ) raises -> Bool,
 ](py_self: PyObjectPtr, py_other: PyObjectPtr, op: c_int) -> PyObjectPtr:
@@ -378,7 +378,7 @@ def _richcompare_wrapper[
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
         method: User function
-            `fn(self, other: PythonObject, op: Int) raises -> Bool`
+            `def(self, other: PythonObject, op: Int) raises -> Bool`
             where `op` is one of `RichCompareOps.Py_LT` … `Py_GE`.
 
     Returns:

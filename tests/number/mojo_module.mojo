@@ -22,14 +22,14 @@ from pontoneer import NotImplementedError, NumberProtocolBuilder
 struct Number(Defaultable, Movable, Writable):
     var value: Int
 
-    fn __init__(out self):
+    def __init__(out self):
         self.value = 0
 
-    fn __init__(out self, value: Int):
+    def __init__(out self, value: Int):
         self.value = value
 
     @staticmethod
-    fn _get_self_ptr(
+    def _get_self_ptr(
         py_self: PythonObject,
     ) -> UnsafePointer[Self, MutAnyOrigin]:
         try:
@@ -38,11 +38,11 @@ struct Number(Defaultable, Movable, Writable):
             abort(String("downcast failed: ", e))
 
     @staticmethod
-    fn new(value: PythonObject) raises -> PythonObject:
+    def new(value: PythonObject) raises -> PythonObject:
         return PythonObject(alloc=Number(Int(py=value)))
 
     @staticmethod
-    fn get_value(py_self: PythonObject) raises -> PythonObject:
+    def get_value(py_self: PythonObject) raises -> PythonObject:
         return PythonObject(Self._get_self_ptr(py_self)[].value)
 
     # ------------------------------------------------------------------
@@ -50,25 +50,25 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__neg__(
+    def py__neg__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(alloc=Number(-self_ptr[].value))
 
     @staticmethod
-    fn py__abs__(
+    def py__abs__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(alloc=Number(abs(self_ptr[].value)))
 
     @staticmethod
-    fn py__pos__(
+    def py__pos__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(alloc=Number(self_ptr[].value))
 
     @staticmethod
-    fn py__invert__(
+    def py__invert__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(alloc=Number(~self_ptr[].value))
@@ -78,7 +78,7 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__bool__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Bool:
+    def py__bool__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Bool:
         return self_ptr[].value != 0
 
     # ------------------------------------------------------------------
@@ -86,19 +86,19 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__int__(
+    def py__int__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(self_ptr[].value)
 
     @staticmethod
-    fn py__float__(
+    def py__float__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(Float64(self_ptr[].value))
 
     @staticmethod
-    fn py__index__(
+    def py__index__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(self_ptr[].value)
@@ -108,7 +108,7 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__add__(
+    def py__add__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -118,7 +118,7 @@ struct Number(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__sub__(
+    def py__sub__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -128,7 +128,7 @@ struct Number(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__mul__(
+    def py__mul__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -138,7 +138,7 @@ struct Number(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__floordiv__(
+    def py__floordiv__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -148,7 +148,7 @@ struct Number(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__mod__(
+    def py__mod__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -158,7 +158,7 @@ struct Number(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__and__(
+    def py__and__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -168,7 +168,7 @@ struct Number(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__or__(
+    def py__or__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -178,7 +178,7 @@ struct Number(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__xor__(
+    def py__xor__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -188,7 +188,7 @@ struct Number(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__lshift__(
+    def py__lshift__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -198,7 +198,7 @@ struct Number(Defaultable, Movable, Writable):
             raise NotImplementedError()
 
     @staticmethod
-    fn py__rshift__(
+    def py__rshift__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
@@ -212,7 +212,7 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    fn py__pow__(
+    def py__pow__(
         self_ptr: UnsafePointer[Self, MutAnyOrigin],
         exp: PythonObject,
         mod: PythonObject,
@@ -224,7 +224,7 @@ struct Number(Defaultable, Movable, Writable):
         except:
             raise NotImplementedError()
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("Number(", self.value, ")")
 
 
@@ -233,14 +233,14 @@ struct Number(Defaultable, Movable, Writable):
 struct NumberV(Defaultable, Movable, Writable):
     var value: Int
 
-    fn __init__(out self):
+    def __init__(out self):
         self.value = 0
 
-    fn __init__(out self, value: Int):
+    def __init__(out self, value: Int):
         self.value = value
 
     @staticmethod
-    fn _get_self_ptr(
+    def _get_self_ptr(
         py_self: PythonObject,
     ) -> UnsafePointer[Self, MutAnyOrigin]:
         try:
@@ -249,110 +249,110 @@ struct NumberV(Defaultable, Movable, Writable):
             abort(String("downcast failed: ", e))
 
     @staticmethod
-    fn new(value: PythonObject) raises -> PythonObject:
+    def new(value: PythonObject) raises -> PythonObject:
         return PythonObject(alloc=NumberV(Int(py=value)))
 
     @staticmethod
-    fn get_value(py_self: PythonObject) raises -> PythonObject:
+    def get_value(py_self: PythonObject) raises -> PythonObject:
         return PythonObject(Self._get_self_ptr(py_self)[].value)
 
     # Value-receiver handlers — unary slots return a new Python-boxed NumberV
-    fn py__neg__(self) raises -> PythonObject:
+    def py__neg__(self) raises -> PythonObject:
         return PythonObject(alloc=NumberV(-self.value))
 
-    fn py__abs__(self) raises -> PythonObject:
+    def py__abs__(self) raises -> PythonObject:
         return PythonObject(alloc=NumberV(abs(self.value)))
 
-    fn py__pos__(self) raises -> PythonObject:
+    def py__pos__(self) raises -> PythonObject:
         return PythonObject(alloc=NumberV(self.value))
 
-    fn py__invert__(self) raises -> PythonObject:
+    def py__invert__(self) raises -> PythonObject:
         return PythonObject(alloc=NumberV(~self.value))
 
-    fn py__bool__(self) -> Bool:
+    def py__bool__(self) -> Bool:
         return self.value != 0
 
-    fn py__int__(self) raises -> PythonObject:
+    def py__int__(self) raises -> PythonObject:
         return PythonObject(self.value)
 
-    fn py__float__(self) raises -> PythonObject:
+    def py__float__(self) raises -> PythonObject:
         return PythonObject(Float64(self.value))
 
-    fn py__index__(self) raises -> PythonObject:
+    def py__index__(self) raises -> PythonObject:
         return PythonObject(self.value)
 
     # Raising value receivers for binary slots (need NotImplementedError)
-    fn py__add__(self, other: PythonObject) raises -> PythonObject:
+    def py__add__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value + o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__sub__(self, other: PythonObject) raises -> PythonObject:
+    def py__sub__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value - o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__mul__(self, other: PythonObject) raises -> PythonObject:
+    def py__mul__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value * o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__floordiv__(self, other: PythonObject) raises -> PythonObject:
+    def py__floordiv__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value // o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__mod__(self, other: PythonObject) raises -> PythonObject:
+    def py__mod__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value % o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__and__(self, other: PythonObject) raises -> PythonObject:
+    def py__and__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value & o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__or__(self, other: PythonObject) raises -> PythonObject:
+    def py__or__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value | o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__xor__(self, other: PythonObject) raises -> PythonObject:
+    def py__xor__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value ^ o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__lshift__(self, other: PythonObject) raises -> PythonObject:
+    def py__lshift__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value << o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__rshift__(self, other: PythonObject) raises -> PythonObject:
+    def py__rshift__(self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             return PythonObject(alloc=NumberV(self.value >> o[].value))
         except:
             raise NotImplementedError()
 
-    fn py__pow__(
+    def py__pow__(
         self, exp: PythonObject, mod: PythonObject
     ) raises -> PythonObject:
         try:
@@ -362,7 +362,7 @@ struct NumberV(Defaultable, Movable, Writable):
         except:
             raise NotImplementedError()
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("NumberV(", self.value, ")")
 
 
@@ -370,14 +370,14 @@ struct NumberV(Defaultable, Movable, Writable):
 struct NumberM(Defaultable, Movable, Writable):
     var value: Int
 
-    fn __init__(out self):
+    def __init__(out self):
         self.value = 0
 
-    fn __init__(out self, value: Int):
+    def __init__(out self, value: Int):
         self.value = value
 
     @staticmethod
-    fn _get_self_ptr(
+    def _get_self_ptr(
         py_self: PythonObject,
     ) -> UnsafePointer[Self, MutAnyOrigin]:
         try:
@@ -386,14 +386,14 @@ struct NumberM(Defaultable, Movable, Writable):
             abort(String("downcast failed: ", e))
 
     @staticmethod
-    fn new(value: PythonObject) raises -> PythonObject:
+    def new(value: PythonObject) raises -> PythonObject:
         return PythonObject(alloc=NumberM(Int(py=value)))
 
     @staticmethod
-    fn get_value(py_self: PythonObject) raises -> PythonObject:
+    def get_value(py_self: PythonObject) raises -> PythonObject:
         return PythonObject(Self._get_self_ptr(py_self)[].value)
 
-    fn py__iadd__(mut self, other: PythonObject) raises -> PythonObject:
+    def py__iadd__(mut self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             self.value += o[].value
@@ -401,7 +401,7 @@ struct NumberM(Defaultable, Movable, Writable):
         except:
             raise NotImplementedError()
 
-    fn py__isub__(mut self, other: PythonObject) raises -> PythonObject:
+    def py__isub__(mut self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             self.value -= o[].value
@@ -409,7 +409,7 @@ struct NumberM(Defaultable, Movable, Writable):
         except:
             raise NotImplementedError()
 
-    fn py__imul__(mut self, other: PythonObject) raises -> PythonObject:
+    def py__imul__(mut self, other: PythonObject) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
             self.value *= o[].value
@@ -417,7 +417,7 @@ struct NumberM(Defaultable, Movable, Writable):
         except:
             raise NotImplementedError()
 
-    fn py__ipow__(
+    def py__ipow__(
         mut self, exp: PythonObject, mod: PythonObject
     ) raises -> PythonObject:
         try:
@@ -427,12 +427,12 @@ struct NumberM(Defaultable, Movable, Writable):
         except:
             raise NotImplementedError()
 
-    fn write_to(self, mut writer: Some[Writer]):
+    def write_to(self, mut writer: Some[Writer]):
         writer.write("NumberM(", self.value, ")")
 
 
 @export
-fn PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (
