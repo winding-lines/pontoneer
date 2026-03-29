@@ -9,7 +9,8 @@ without waiting for the PR to land in the stdlib.
 
 - Nightly MAX via pixi (`https://conda.modular.com/max-nightly/`)
 - `pixi run build` — packages the library to `pontoneer.mojopkg`
-- `pixi run test-example` — builds and runs the columnar DataFrame example
+- `pixi run --environment test test-example` — builds and runs the columnar DataFrame example
+- `pixi run --environment test test-all` — runs all tests
 
 ## Package structure
 

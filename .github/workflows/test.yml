@@ -20,4 +20,4 @@ jobs:
     - name: checks
       run: pixi run fmt
     - name: tests
-      run: pixi run test-all
+      run: pixi run --environment test test-all

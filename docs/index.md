@@ -34,7 +34,7 @@ Or in your `pixi.toml`:
 channels = ["https://prefix.dev/pontoneer", "https://conda.modular.com/max-nightly/", "conda-forge"]
 
 [dependencies]
-pontoneer = ">=0.6.2"
+pontoneer = ">=0.6.3"
 ```
 
 ### From source
