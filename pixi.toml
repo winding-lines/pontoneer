@@ -10,15 +10,15 @@ channels = ["https://conda.modular.com/max-nightly/", "conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
 [dependencies]
-mojo = "*"
+mojo = ">=0.26.3.0.dev2026040905,<0.27"
 
 [tasks]
 fmt = "mojo format pontoneer examples tests"
 build = "mojo package pontoneer -o pontoneer.mojopkg"
 
 [feature.test.dependencies]
-numpy = "*"
-python = "3.13.*"
+numpy = ">=2.4.3,<3"
+python = ">=3.14.4,<3.15"
 
 [feature.test.tasks]
 build-example = { cmd = "mojo build --emit shared-lib -I . examples/columnar/mojo_module.mojo -o examples/columnar/mojo_module.so", depends-on = ["build"] }
@@ -36,7 +36,7 @@ test-buffer = { cmd = "python3 tests/buffer/test_module.py", depends-on = ["buil
 test-all = { depends-on = ["test-example", "test-mapping", "test-number", "test-sequence", "test-type-protocol", "test-buffer"] }
 
 [feature.package.dependencies]
-rattler-build = "*"
+rattler-build = ">=0.61.4,<0.62"
 
 [feature.package.tasks]
 package-conda = "rattler-build build --recipe recipe/recipe.yaml -c https://conda.modular.com/max-nightly/ -c conda-forge"
