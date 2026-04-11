@@ -1,6 +1,8 @@
 .pixi/
+*.conda
 *.mojopkg
 *.so
 __pycache__/
 *.pyc
 output
+dist
