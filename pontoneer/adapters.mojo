@@ -34,7 +34,7 @@ def _unwrap_self[
 def _mp_length_wrapper[
     self_type: ImplicitlyDestructible,
     method: def(UnsafePointer[self_type, MutAnyOrigin]) thin raises -> Int,
-](py_self: PyObjectPtr) -> Py_ssize_t:
+](py_self: PyObjectPtr) abi("C") -> Py_ssize_t:
     """CPython `lenfunc` adapter for the `mp_length` slot (__len__).
 
     Parameters:
@@ -62,7 +62,7 @@ def _mp_subscript_wrapper[
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
     ) thin raises -> PythonObject,
-](py_self: PyObjectPtr, key: PyObjectPtr) -> PyObjectPtr:
+](py_self: PyObjectPtr, key: PyObjectPtr) abi("C") -> PyObjectPtr:
     """CPython `binaryfunc` adapter for the `mp_subscript` slot (__getitem__).
 
     Parameters:
@@ -95,7 +95,7 @@ def _mp_ass_subscript_wrapper[
         PythonObject,
         Variant[PythonObject, Int],
     ) thin raises -> None,
-](py_self: PyObjectPtr, key: PyObjectPtr, value: PyObjectPtr) -> c_int:
+](py_self: PyObjectPtr, key: PyObjectPtr, value: PyObjectPtr) abi("C") -> c_int:
     """CPython `objobjargproc` adapter for the `mp_ass_subscript` slot.
 
     When `value` is NULL the operation is a deletion (__delitem__); the `method`
@@ -137,7 +137,7 @@ def _unaryfunc_wrapper[
     method: def(
         UnsafePointer[self_type, MutAnyOrigin]
     ) thin raises -> PythonObject,
-](py_self: PyObjectPtr) -> PyObjectPtr:
+](py_self: PyObjectPtr) abi("C") -> PyObjectPtr:
     """CPython `unaryfunc` adapter for unary nb_ slots (__neg__, __abs__, etc.).
 
     Parameters:
@@ -165,7 +165,7 @@ def _binaryfunc_wrapper[
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
     ) thin raises -> PythonObject,
-](lhs: PyObjectPtr, rhs: PyObjectPtr) -> PyObjectPtr:
+](lhs: PyObjectPtr, rhs: PyObjectPtr) abi("C") -> PyObjectPtr:
     """CPython `binaryfunc` adapter for binary nb_ slots (__add__, __mul__, etc.).
 
     If `method` raises `NotImplementedError` (by name), the wrapper returns
@@ -205,7 +205,7 @@ def _ternaryfunc_wrapper[
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject
     ) thin raises -> PythonObject,
-](py_self: PyObjectPtr, other: PyObjectPtr, mod: PyObjectPtr) -> PyObjectPtr:
+](py_self: PyObjectPtr, other: PyObjectPtr, mod: PyObjectPtr) abi("C") -> PyObjectPtr:
     """CPython `ternaryfunc` adapter for nb_power / nb_inplace_power (__pow__).
 
     If `method` raises `NotImplementedError` (by name), the wrapper returns
@@ -246,7 +246,7 @@ def _ternaryfunc_wrapper[
 def _inquiry_wrapper[
     self_type: ImplicitlyDestructible,
     method: def(UnsafePointer[self_type, MutAnyOrigin]) thin raises -> Bool,
-](py_self: PyObjectPtr) -> c_int:
+](py_self: PyObjectPtr) abi("C") -> c_int:
     """CPython `inquiry` adapter for the `nb_bool` slot (__bool__).
 
     Parameters:
@@ -274,7 +274,7 @@ def _ssizeargfunc_wrapper[
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], Int
     ) thin raises -> PythonObject,
-](py_self: PyObjectPtr, index: Py_ssize_t) -> PyObjectPtr:
+](py_self: PyObjectPtr, index: Py_ssize_t) abi("C") -> PyObjectPtr:
     """CPython `ssizeargfunc` adapter for sq_item, sq_repeat, sq_inplace_repeat.
 
     Parameters:
@@ -302,7 +302,7 @@ def _ssizeobjargproc_wrapper[
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
     ) thin raises -> None,
-](py_self: PyObjectPtr, index: Py_ssize_t, value: PyObjectPtr) -> c_int:
+](py_self: PyObjectPtr, index: Py_ssize_t, value: PyObjectPtr) abi("C") -> c_int:
     """CPython `ssizeobjargproc` adapter for the `sq_ass_item` slot.
 
     When `value` is NULL the operation is a deletion; the `method` receives
@@ -339,7 +339,7 @@ def _objobjproc_wrapper[
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
     ) thin raises -> Bool,
-](py_self: PyObjectPtr, other: PyObjectPtr) -> c_int:
+](py_self: PyObjectPtr, other: PyObjectPtr) abi("C") -> c_int:
     """CPython `objobjproc` adapter for the `sq_contains` slot (__contains__).
 
     Parameters:
@@ -370,7 +370,7 @@ def _richcompare_wrapper[
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int
     ) thin raises -> Bool,
-](py_self: PyObjectPtr, py_other: PyObjectPtr, op: c_int) -> PyObjectPtr:
+](py_self: PyObjectPtr, py_other: PyObjectPtr, op: c_int) abi("C") -> PyObjectPtr:
     """CPython `richcmpfunc` adapter for the `tp_richcompare` slot.
 
     If `method` raises `NotImplementedError` (by name), the wrapper returns

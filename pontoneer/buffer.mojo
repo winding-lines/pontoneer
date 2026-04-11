@@ -123,7 +123,7 @@ def _bf_getbuffer_wrapper[
     raw_self: PyObjectPtr,
     view: UnsafePointer[_PyBuffer, MutAnyOrigin],
     flags: c_int,
-) -> c_int:
+) abi("C") -> c_int:
     """CPython `getbufferproc` adapter for the `bf_getbuffer` slot.
 
     Calls the user's handler to get a `BufferInfo`, then fills in the
@@ -218,7 +218,7 @@ def _bf_getbuffer_wrapper[
 
 def _bf_releasebuffer_impl(
     raw_self: PyObjectPtr, view: UnsafePointer[_PyBuffer, MutAnyOrigin]
-) -> None:
+) abi("C") -> None:
     """Default `releasebufferproc` that frees the shape/strides/format block.
 
     Called by CPython after a consumer is done with a buffer view.  The
@@ -244,7 +244,7 @@ def _install_bf_getbuffer[
     """Insert the `bf_getbuffer` slot into the builder pointed to by `ptr`."""
     comptime _getbufferproc = def(
         PyObjectPtr, UnsafePointer[_PyBuffer, MutAnyOrigin], c_int
-    ) thin -> c_int
+    ) thin abi("C") -> c_int
     var fn_ptr: _getbufferproc = _bf_getbuffer_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(_BF_GETBUFFER, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
@@ -258,7 +258,7 @@ def _install_bf_releasebuffer(
     """
     comptime _releasebufferproc = def(
         PyObjectPtr, UnsafePointer[_PyBuffer, MutAnyOrigin]
-    ) thin -> None
+    ) thin abi("C") -> None
     var fn_ptr: _releasebufferproc = _bf_releasebuffer_impl
     ptr[]._insert_slot(
         PyType_Slot(

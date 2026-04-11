@@ -220,7 +220,7 @@ def _install_unary[
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `unaryfunc` slot into the builder pointed to by `ptr`."""
-    comptime _unaryfunc = def(PyObjectPtr) thin -> PyObjectPtr
+    comptime _unaryfunc = def(PyObjectPtr) thin abi("C") -> PyObjectPtr
     var fn_ptr: _unaryfunc = _unaryfunc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
@@ -235,7 +235,7 @@ def _install_binary[
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `binaryfunc` slot into the builder pointed to by `ptr`."""
-    comptime _binaryfunc = def(PyObjectPtr, PyObjectPtr) thin -> PyObjectPtr
+    comptime _binaryfunc = def(PyObjectPtr, PyObjectPtr) thin abi("C") -> PyObjectPtr
     var fn_ptr: _binaryfunc = _binaryfunc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
@@ -252,7 +252,7 @@ def _install_ternary[
     """Insert a `ternaryfunc` slot into the builder pointed to by `ptr`."""
     comptime _ternaryfunc = def(
         PyObjectPtr, PyObjectPtr, PyObjectPtr
-    ) thin -> PyObjectPtr
+    ) thin abi("C") -> PyObjectPtr
     var fn_ptr: _ternaryfunc = _ternaryfunc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
@@ -265,7 +265,7 @@ def _install_inquiry[
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert an `inquiry` slot into the builder pointed to by `ptr`."""
-    comptime _inquiry = def(PyObjectPtr) thin -> c_int
+    comptime _inquiry = def(PyObjectPtr) thin abi("C") -> c_int
     var fn_ptr: _inquiry = _inquiry_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
@@ -282,7 +282,7 @@ def _install_richcompare[
     """
     # Assign to a typed variable first so the compiler concretizes the
     # parameterized function into a plain C function pointer before rebind.
-    comptime _richcmpfunc = def(PyObjectPtr, PyObjectPtr, c_int) thin -> PyObjectPtr
+    comptime _richcmpfunc = def(PyObjectPtr, PyObjectPtr, c_int) thin abi("C") -> PyObjectPtr
     var fn_ptr: _richcmpfunc = _richcompare_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
@@ -298,7 +298,7 @@ def _install_lenfunc[
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `lenfunc` slot (`mp_length`) into the builder pointed to by `ptr`.
     """
-    comptime _lenfunc = def(PyObjectPtr) thin -> Py_ssize_t
+    comptime _lenfunc = def(PyObjectPtr) thin abi("C") -> Py_ssize_t
     var fn_ptr: _lenfunc = _mp_length_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
@@ -315,7 +315,7 @@ def _install_mp_getitem[
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `binaryfunc` slot (`mp_subscript`) into the builder pointed to by `ptr`.
     """
-    comptime _binaryfunc = def(PyObjectPtr, PyObjectPtr) thin -> PyObjectPtr
+    comptime _binaryfunc = def(PyObjectPtr, PyObjectPtr) thin abi("C") -> PyObjectPtr
     var fn_ptr: _binaryfunc = _mp_subscript_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
@@ -334,7 +334,7 @@ def _install_objobjargproc[
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert an `objobjargproc` slot (`mp_ass_subscript`) into the builder pointed to by `ptr`.
     """
-    comptime _objobjargproc = def(PyObjectPtr, PyObjectPtr, PyObjectPtr) thin -> c_int
+    comptime _objobjargproc = def(PyObjectPtr, PyObjectPtr, PyObjectPtr) thin abi("C") -> c_int
     var fn_ptr: _objobjargproc = _mp_ass_subscript_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
@@ -351,7 +351,7 @@ def _install_ssizeargfunc[
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert a `ssizeargfunc` slot into the builder pointed to by `ptr`."""
-    comptime _ssizeargfunc = def(PyObjectPtr, Py_ssize_t) thin -> PyObjectPtr
+    comptime _ssizeargfunc = def(PyObjectPtr, Py_ssize_t) thin abi("C") -> PyObjectPtr
     var fn_ptr: _ssizeargfunc = _ssizeargfunc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
@@ -368,7 +368,7 @@ def _install_ssizeobjargproc[
     """
     comptime _ssizeobjargproc = def(
         PyObjectPtr, Py_ssize_t, PyObjectPtr
-    ) thin -> c_int
+    ) thin abi("C") -> c_int
     var fn_ptr: _ssizeobjargproc = _ssizeobjargproc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
@@ -386,7 +386,7 @@ def _install_objobjproc[
     slot: Int32,
 ](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
     """Insert an `objobjproc` slot into the builder pointed to by `ptr`."""
-    comptime _objobjproc = def(PyObjectPtr, PyObjectPtr) thin -> c_int
+    comptime _objobjproc = def(PyObjectPtr, PyObjectPtr) thin abi("C") -> c_int
     var fn_ptr: _objobjproc = _objobjproc_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
@@ -4281,7 +4281,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
         Called by `len(obj)`.
         See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_length
         """
-        comptime _lenfunc = def(PyObjectPtr) thin -> Py_ssize_t
+        comptime _lenfunc = def(PyObjectPtr) thin abi("C") -> Py_ssize_t
         var fn_ptr: _lenfunc = _mp_length_wrapper[Self.self_type, method]
         self._ptr[]._insert_slot(
             PyType_Slot(
@@ -4409,7 +4409,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
 
         See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_length
         """
-        comptime _lenfunc = def(PyObjectPtr) thin -> Py_ssize_t
+        comptime _lenfunc = def(PyObjectPtr) thin abi("C") -> Py_ssize_t
         var fn_ptr: _lenfunc = _mp_length_wrapper[
             Self.self_type, _lift_to_int[Self.self_type, method]
         ]
@@ -4542,7 +4542,7 @@ struct SequenceProtocolBuilder[self_type: ImplicitlyDestructible]:
 
         See: https://docs.python.org/3/c-api/typeobj.html#c.PySequenceMethods.sq_length
         """
-        comptime _lenfunc = def(PyObjectPtr) thin -> Py_ssize_t
+        comptime _lenfunc = def(PyObjectPtr) thin abi("C") -> Py_ssize_t
         var fn_ptr: _lenfunc = _mp_length_wrapper[
             Self.self_type, _lift_val_to_int[Self.self_type, method]
         ]
