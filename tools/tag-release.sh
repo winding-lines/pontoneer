@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+FORCE=0
+while getopts "f" opt; do
+  case "$opt" in
+    f) FORCE=1 ;;
+    *) echo "usage: $(basename "$0") [-f]" >&2; exit 1 ;;
+  esac
+done
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -28,11 +36,12 @@ echo "pontoneer version : $PONTONEER_VERSION"
 echo "mojo dev stamp    : $MOJO_DEV"
 echo "tag               : $TAG"
 
-if git -C "$REPO_ROOT" tag | grep -qx "$TAG"; then
-  echo "error: tag $TAG already exists" >&2
+if [[ "$FORCE" -eq 0 ]] && git -C "$REPO_ROOT" tag | grep -qx "$TAG"; then
+  echo "error: tag $TAG already exists (use -f to overwrite)" >&2
   exit 1
 fi
 
-git -C "$REPO_ROOT" tag "$TAG"
+FORCE_FLAG=$([[ "$FORCE" -eq 1 ]] && echo "--force" || echo "")
+git -C "$REPO_ROOT" tag $FORCE_FLAG "$TAG"
 echo "created tag $TAG"
-git -C "$REPO_ROOT" push origin "$TAG"
+git -C "$REPO_ROOT" push origin $FORCE_FLAG "$TAG"
