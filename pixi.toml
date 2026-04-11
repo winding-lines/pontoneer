@@ -40,6 +40,7 @@ publish = { cmd = "find . -name 'pontoneer*.conda' | xargs pixi upload prefix --
 [feature.test.dependencies]
 numpy = ">=2.4.3,<3"
 python = ">=3.14.4,<3.15"
+python-gil = ">=3.14.4,<3.15"
 
 [feature.test.tasks]
 build-example = { cmd = "mojo build --emit shared-lib -I . examples/columnar/mojo_module.mojo -o examples/columnar/mojo_module.so", depends-on = ["build"] }
@@ -56,6 +57,21 @@ build-test-buffer = { cmd = "mojo build --emit shared-lib -I . tests/buffer/mojo
 test-buffer = { cmd = "python3 tests/buffer/test_module.py", depends-on = ["build-test-buffer"] }
 test-all = { depends-on = ["test-example", "test-mapping", "test-number", "test-sequence", "test-type-protocol", "test-buffer"] }
 
+build-example-asan = { cmd = "bash tools/build_asan.sh examples/columnar/mojo_module.mojo examples/columnar/mojo_module.so -I .", depends-on = ["build"] }
+test-example-asan = { cmd = "bash tools/run_with_asan.sh examples/columnar/test_module.py", depends-on = ["build-example-asan"], env = { ASAN_OPTIONS = "detect_leaks=0:abort_on_error=1" } }
+build-test-mapping-asan = { cmd = "bash tools/build_asan.sh tests/mapping/mojo_module.mojo tests/mapping/mojo_module.so -I .", depends-on = ["build"] }
+test-mapping-asan = { cmd = "bash tools/run_with_asan.sh tests/mapping/test_module.py", depends-on = ["build-test-mapping-asan"], env = { ASAN_OPTIONS = "detect_leaks=0:abort_on_error=1" } }
+build-test-number-asan = { cmd = "bash tools/build_asan.sh tests/number/mojo_module.mojo tests/number/mojo_module.so -I .", depends-on = ["build"] }
+test-number-asan = { cmd = "bash tools/run_with_asan.sh tests/number/test_module.py", depends-on = ["build-test-number-asan"], env = { ASAN_OPTIONS = "detect_leaks=0:abort_on_error=1" } }
+build-test-sequence-asan = { cmd = "bash tools/build_asan.sh tests/sequence/mojo_module.mojo tests/sequence/mojo_module.so -I .", depends-on = ["build"] }
+test-sequence-asan = { cmd = "bash tools/run_with_asan.sh tests/sequence/test_module.py", depends-on = ["build-test-sequence-asan"], env = { ASAN_OPTIONS = "detect_leaks=0:abort_on_error=1" } }
+build-test-type-protocol-asan = { cmd = "bash tools/build_asan.sh tests/type_protocol/mojo_module.mojo tests/type_protocol/mojo_module.so -I .", depends-on = ["build"] }
+test-type-protocol-asan = { cmd = "bash tools/run_with_asan.sh tests/type_protocol/test_module.py", depends-on = ["build-test-type-protocol-asan"], env = { ASAN_OPTIONS = "detect_leaks=0:abort_on_error=1" } }
+build-test-buffer-asan = { cmd = "bash tools/build_asan.sh tests/buffer/mojo_module.mojo tests/buffer/mojo_module.so -I .", depends-on = ["build"] }
+test-buffer-asan = { cmd = "bash tools/run_with_asan.sh tests/buffer/test_module.py", depends-on = ["build-test-buffer-asan"], env = { ASAN_OPTIONS = "detect_leaks=0:abort_on_error=1" } }
+test-all-asan = { depends-on = ["test-example-asan", "test-mapping-asan", "test-number-asan", "test-sequence-asan", "test-type-protocol-asan", "test-buffer-asan"] }
+
 [environments]
 default = { solve-group = "main" }
 test = { features = ["test"], solve-group = "main" }
+

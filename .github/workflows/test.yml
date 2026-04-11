@@ -19,5 +19,7 @@ jobs:
         cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
     - name: checks
       run: pixi run fmt
-    - name: tests
+    - name: tests-no-asan
       run: pixi run --environment test test-all
+    - name: tests
+      run: pixi run --environment test test-all-asan
