@@ -18,7 +18,11 @@ if [[ -z "$MOJO_DEV" ]]; then
   exit 1
 fi
 
-TAG="v${PONTONEER_VERSION}-${MOJO_DEV}"
+if [[ "$PONTONEER_VERSION" == *"$MOJO_DEV"* ]]; then
+  TAG="v${PONTONEER_VERSION}"
+else
+  TAG="v${PONTONEER_VERSION}.${MOJO_DEV}"
+fi
 
 echo "pontoneer version : $PONTONEER_VERSION"
 echo "mojo dev stamp    : $MOJO_DEV"
