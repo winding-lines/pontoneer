@@ -16,7 +16,11 @@
 # Then preload the ASAN dylib via DYLD_INSERT_LIBRARIES so interceptors are
 # installed before Python's first allocation.
 #
-# On Linux the ASAN runtime is handled differently; no fixup is needed.
+# On Linux, when a Python extension (.so) is built with shared ASAN, the runtime
+# must be the first library initialized.  Since Python itself is not ASAN-instrumented,
+# loading the extension via dlopen puts ASAN after libc in the init order, causing:
+#   "ASan runtime does not come first in initial library list"
+# Fix: preload the ASAN shared library via LD_PRELOAD before Python starts.
 
 set -e
 
@@ -45,6 +49,14 @@ if [[ "$(uname)" == "Darwin" ]]; then
     done
 
     export DYLD_INSERT_LIBRARIES="$ASAN_LIB"
+elif [[ "$(uname)" == "Linux" ]]; then
+    ASAN_LIB=$(find "${CONDA_PREFIX:-/nonexistent}" -name "libclang_rt.asan-*.so" 2>/dev/null | head -1)
+    if [[ -z "$ASAN_LIB" ]]; then
+        echo "ERROR: libclang_rt.asan-*.so not found in conda environment." >&2
+        echo "       Ensure the MAX/Mojo pixi environment is active." >&2
+        exit 1
+    fi
+    export LD_PRELOAD="${ASAN_LIB}${LD_PRELOAD:+:$LD_PRELOAD}"
 fi
 
 exec python3 "$@"

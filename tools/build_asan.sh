@@ -33,6 +33,14 @@ if [[ "$(uname)" == "Darwin" ]]; then
         exit 1
     fi
     EXTRA_LINK_FLAGS=(--shared-libasan -Xlinker "$ASAN_LIB")
+elif [[ "$(uname)" == "Linux" ]]; then
+    ASAN_LIB=$(find "${CONDA_PREFIX:-/nonexistent}" -name "libclang_rt.asan-*.so" 2>/dev/null | head -1)
+    if [[ -z "$ASAN_LIB" ]]; then
+        echo "ERROR: libclang_rt.asan-*.so not found in conda environment." >&2
+        echo "       Ensure the MAX/Mojo pixi environment is active." >&2
+        exit 1
+    fi
+    EXTRA_LINK_FLAGS=(--shared-libasan -Xlinker "$ASAN_LIB")
 fi
 
 exec mojo build -sanitize address "${EXTRA_LINK_FLAGS[@]}" --emit shared-lib "$@" "$SOURCE" -o "$OUTPUT"
