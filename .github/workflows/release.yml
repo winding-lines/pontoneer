@@ -14,9 +14,13 @@ jobs:
 
   release:
     needs: test
-    runs-on: ubuntu-latest
-    env:
-      MODULAR_HOME: "/home/runner/.modular"
+    strategy:
+      matrix:
+        include:
+          - { target: linux-64, os: ubuntu-latest }
+          - { target: osx-arm64, os: macos-latest }
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -29,9 +33,7 @@ jobs:
     - name: Build mojopkg
       run: pixi run build
     - name: Build conda package
-      run: |
-       # Build the Conda package using pixi-build-mojo
-        pixi build
+      run: pixi build
     - name: Upload to prefix.dev
       run: |
         pixi auth login prefix.dev --token "$PREFIX_API_KEY"
@@ -45,4 +47,4 @@ jobs:
         files: |
           package/pontoneer.mojopkg
           output/*/pontoneer-*.conda
-        generate_release_notes: true
+        generate_release_notes: ${{ matrix.target == 'linux-64' }}
