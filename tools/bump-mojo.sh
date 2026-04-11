@@ -35,4 +35,13 @@ echo "bumping mojo: $OLD_VER -> $NEW_VER"
 
 sed -i '' "s/==[0-9][0-9.]*\.dev[0-9]*/==${NEW_VER}/g" "$PIXI_TOML"
 
+# Extract just the dev suffix (e.g. "dev2026041105") and update package.version
+DEV_SUFFIX=$(echo "$NEW_VER" | grep -o 'dev[0-9]*')
+OLD_PKG_VER=$(grep -m1 '^version = ' "$PIXI_TOML" | grep -o '"[^"]*"')
+# Strip any existing .devXXX suffix, then append the new one
+BASE_VER=$(echo "$OLD_PKG_VER" | sed 's/\.dev[0-9]*//')
+NEW_PKG_VER=$(echo "$BASE_VER" | sed 's/"$/\.'"$DEV_SUFFIX"'"/')
+sed -i '' "s/^version = $OLD_PKG_VER/version = $NEW_PKG_VER/" "$PIXI_TOML"
+echo "updated package.version: $OLD_PKG_VER -> $NEW_PKG_VER"
+
 echo "updated $PIXI_TOML"
