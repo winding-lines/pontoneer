@@ -1,4 +1,13 @@
 [workspace]
+channels = [
+  "https://conda.modular.com/max-nightly/",
+  "conda-forge",
+  "https://prefix.dev/pixi-build-backends"
+]
+platforms = ["osx-arm64", "linux-64"]
+preview = ["pixi-build"]
+
+[package]
 name = "pontoneer"
 version = "0.6.4"
 description = "Mojo library providing additional type protocol extensions for Python interop."
@@ -6,15 +15,27 @@ authors = ["Marius Seritan <39998+winding-lines@users.noreply.github.com>"]
 license = "Apache-2.0 WITH LLVM-exception"
 homepage = "https://github.com/winding-lines/pontoneer"
 repository = "https://github.com/winding-lines/pontoneer"
-channels = ["https://conda.modular.com/max-nightly/", "conda-forge"]
-platforms = ["osx-arm64", "linux-64"]
+
+[package.build]
+backend = { name = "pixi-build-mojo", version = "0.1.*" }
+
+[package.build-dependencies]
+mojo-compiler = "==0.26.3.0.dev2026041020"
+
+[package.host-dependencies]
+mojo = "==0.26.3.0.dev2026041020"
+
+[package.run-dependencies]
+mojo = "==0.26.3.0.dev2026041020"
+python = ">=3.14.2,<3.15"
 
 [dependencies]
-mojo = ">=0.26.3.0.dev2026040905,<0.27"
+mojo = "==0.26.3.0.dev2026041020"
 
 [tasks]
 fmt = "mojo format pontoneer examples tests"
 build = "mojo package pontoneer -o pontoneer.mojopkg"
+publish = { cmd = "find . -name 'pontoneer*.conda' | xargs pixi upload prefix --channel mojo-community" }
 
 [feature.test.dependencies]
 numpy = ">=2.4.3,<3"
@@ -35,13 +56,6 @@ build-test-buffer = { cmd = "mojo build --emit shared-lib -I . tests/buffer/mojo
 test-buffer = { cmd = "python3 tests/buffer/test_module.py", depends-on = ["build-test-buffer"] }
 test-all = { depends-on = ["test-example", "test-mapping", "test-number", "test-sequence", "test-type-protocol", "test-buffer"] }
 
-[feature.package.dependencies]
-rattler-build = ">=0.61.4,<0.62"
-
-[feature.package.tasks]
-package-conda = "rattler-build build --recipe recipe/recipe.yaml -c https://conda.modular.com/max-nightly/ -c conda-forge"
-
 [environments]
 default = { solve-group = "main" }
-package = { features = ["package"], solve-group = "main" }
 test = { features = ["test"], solve-group = "main" }
