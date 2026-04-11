@@ -33,7 +33,7 @@ def _unwrap_self[
 
 def _mp_length_wrapper[
     self_type: ImplicitlyDestructible,
-    method: def(UnsafePointer[self_type, MutAnyOrigin]) raises -> Int,
+    method: def(UnsafePointer[self_type, MutAnyOrigin]) thin raises -> Int,
 ](py_self: PyObjectPtr) -> Py_ssize_t:
     """CPython `lenfunc` adapter for the `mp_length` slot (__len__).
 
@@ -61,7 +61,7 @@ def _mp_subscript_wrapper[
     self_type: ImplicitlyDestructible,
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
-    ) raises -> PythonObject,
+    ) thin raises -> PythonObject,
 ](py_self: PyObjectPtr, key: PyObjectPtr) -> PyObjectPtr:
     """CPython `binaryfunc` adapter for the `mp_subscript` slot (__getitem__).
 
@@ -94,7 +94,7 @@ def _mp_ass_subscript_wrapper[
         UnsafePointer[self_type, MutAnyOrigin],
         PythonObject,
         Variant[PythonObject, Int],
-    ) raises -> None,
+    ) thin raises -> None,
 ](py_self: PyObjectPtr, key: PyObjectPtr, value: PyObjectPtr) -> c_int:
     """CPython `objobjargproc` adapter for the `mp_ass_subscript` slot.
 
@@ -134,7 +134,9 @@ def _mp_ass_subscript_wrapper[
 
 def _unaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
-    method: def(UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject,
+    method: def(
+        UnsafePointer[self_type, MutAnyOrigin]
+    ) thin raises -> PythonObject,
 ](py_self: PyObjectPtr) -> PyObjectPtr:
     """CPython `unaryfunc` adapter for unary nb_ slots (__neg__, __abs__, etc.).
 
@@ -162,7 +164,7 @@ def _binaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
-    ) raises -> PythonObject,
+    ) thin raises -> PythonObject,
 ](lhs: PyObjectPtr, rhs: PyObjectPtr) -> PyObjectPtr:
     """CPython `binaryfunc` adapter for binary nb_ slots (__add__, __mul__, etc.).
 
@@ -202,7 +204,7 @@ def _ternaryfunc_wrapper[
     self_type: ImplicitlyDestructible,
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject
-    ) raises -> PythonObject,
+    ) thin raises -> PythonObject,
 ](py_self: PyObjectPtr, other: PyObjectPtr, mod: PyObjectPtr) -> PyObjectPtr:
     """CPython `ternaryfunc` adapter for nb_power / nb_inplace_power (__pow__).
 
@@ -243,7 +245,7 @@ def _ternaryfunc_wrapper[
 
 def _inquiry_wrapper[
     self_type: ImplicitlyDestructible,
-    method: def(UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool,
+    method: def(UnsafePointer[self_type, MutAnyOrigin]) thin raises -> Bool,
 ](py_self: PyObjectPtr) -> c_int:
     """CPython `inquiry` adapter for the `nb_bool` slot (__bool__).
 
@@ -271,7 +273,7 @@ def _ssizeargfunc_wrapper[
     self_type: ImplicitlyDestructible,
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], Int
-    ) raises -> PythonObject,
+    ) thin raises -> PythonObject,
 ](py_self: PyObjectPtr, index: Py_ssize_t) -> PyObjectPtr:
     """CPython `ssizeargfunc` adapter for sq_item, sq_repeat, sq_inplace_repeat.
 
@@ -299,7 +301,7 @@ def _ssizeobjargproc_wrapper[
     self_type: ImplicitlyDestructible,
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
-    ) raises -> None,
+    ) thin raises -> None,
 ](py_self: PyObjectPtr, index: Py_ssize_t, value: PyObjectPtr) -> c_int:
     """CPython `ssizeobjargproc` adapter for the `sq_ass_item` slot.
 
@@ -336,7 +338,7 @@ def _objobjproc_wrapper[
     self_type: ImplicitlyDestructible,
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject
-    ) raises -> Bool,
+    ) thin raises -> Bool,
 ](py_self: PyObjectPtr, other: PyObjectPtr) -> c_int:
     """CPython `objobjproc` adapter for the `sq_contains` slot (__contains__).
 
@@ -367,7 +369,7 @@ def _richcompare_wrapper[
     self_type: ImplicitlyDestructible,
     method: def(
         UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int
-    ) raises -> Bool,
+    ) thin raises -> Bool,
 ](py_self: PyObjectPtr, py_other: PyObjectPtr, op: c_int) -> PyObjectPtr:
     """CPython `richcmpfunc` adapter for the `tp_richcompare` slot.
 
