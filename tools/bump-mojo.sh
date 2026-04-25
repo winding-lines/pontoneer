@@ -22,18 +22,20 @@ else
 fi
 
 # Validate the version looks like a mojo nightly version
-if [[ ! "$NEW_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\.dev[0-9]+$ ]]; then
-  echo "error: version '$NEW_VER' does not match expected format (e.g. 0.26.3.0.dev2026041020)" >&2
+# Accepts either a 4-segment release (0.26.3.0.devN) or a PEP 440 prerelease
+# (1.0.0b1.devN, 1.0.0rc2.devN, etc.)
+if [[ ! "$NEW_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+|(a|b|rc)[0-9]+)\.dev[0-9]+$ ]]; then
+  echo "error: version '$NEW_VER' does not match expected format (e.g. 0.26.3.0.dev2026041020 or 1.0.0b1.dev2026042405)" >&2
   exit 1
 fi
 
 PIXI_TOML="$REPO_ROOT/pixi.toml"
 
 # Show what will change
-OLD_VER=$(grep -m1 'mojo.*==[0-9]' "$PIXI_TOML" | grep -o '[0-9][0-9.]*\.dev[0-9]*')
+OLD_VER=$(grep -m1 'mojo.*==[0-9]' "$PIXI_TOML" | grep -o '[0-9][0-9a-z.]*\.dev[0-9]*')
 echo "bumping mojo: $OLD_VER -> $NEW_VER"
 
-sed -i '' "s/==[0-9][0-9.]*\.dev[0-9]*/==${NEW_VER}/g" "$PIXI_TOML"
+sed -i '' "s/==[0-9][0-9a-z.]*\.dev[0-9]*/==${NEW_VER}/g" "$PIXI_TOML"
 
 # Extract just the dev suffix (e.g. "dev2026041105") and update package.version
 DEV_SUFFIX=$(echo "$NEW_VER" | grep -o 'dev[0-9]*')
