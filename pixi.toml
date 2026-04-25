@@ -9,7 +9,7 @@ preview = ["pixi-build"]
 
 [package]
 name = "pontoneer"
-version = "0.6.6.dev2026042205"
+version = "0.6.6.dev2026042405"
 description = "Mojo library providing additional type protocol extensions for Python interop."
 authors = ["Marius Seritan <39998+winding-lines@users.noreply.github.com>"]
 license = "Apache-2.0 WITH LLVM-exception"
@@ -20,17 +20,17 @@ repository = "https://github.com/winding-lines/pontoneer"
 backend = { name = "pixi-build-mojo", version = "0.1.*" }
 
 [package.build-dependencies]
-mojo-compiler = "==0.26.3.0.dev2026042205"
+mojo-compiler = "==1.0.0b1.dev2026042405"
 
 [package.host-dependencies]
-mojo = "==0.26.3.0.dev2026042205"
+mojo = "==1.0.0b1.dev2026042405"
 
 [package.run-dependencies]
-mojo = "==0.26.3.0.dev2026042205"
+mojo = "==1.0.0b1.dev2026042405"
 python = ">=3.14.2,<3.15"
 
 [dependencies]
-mojo = "==0.26.3.0.dev2026042205"
+mojo = "==1.0.0b1.dev2026042405"
 
 [tasks]
 fmt = "mojo format pontoneer examples tests"
