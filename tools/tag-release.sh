@@ -19,21 +19,22 @@ if [[ -z "$PONTONEER_VERSION" ]]; then
   exit 1
 fi
 
-# Extract the dev date stamp from pixi.lock (e.g. dev2026040405)
-MOJO_DEV=$(grep -m1 'mojo-' "$REPO_ROOT/pixi.lock" | grep -o 'dev[0-9]\+')
-if [[ -z "$MOJO_DEV" ]]; then
-  echo "error: could not extract mojo dev version from pixi.lock" >&2
+# Extract the full mojo version from pixi.lock (e.g. 1.0.0b1.dev2026042405)
+MOJO_VERSION=$(grep -m1 'mojo-compiler-' "$REPO_ROOT/pixi.lock" \
+  | grep -oE 'mojo-compiler-[0-9][0-9a-z.]*\.dev[0-9]+' \
+  | sed 's/^mojo-compiler-//')
+if [[ -z "$MOJO_VERSION" ]]; then
+  echo "error: could not extract mojo version from pixi.lock" >&2
   exit 1
 fi
 
-if [[ "$PONTONEER_VERSION" == *"$MOJO_DEV"* ]]; then
-  TAG="v${PONTONEER_VERSION}"
-else
-  TAG="v${PONTONEER_VERSION}.${MOJO_DEV}"
-fi
+# Strip any .devXXX suffix from pontoneer version so the tag base is clean
+PONTONEER_BASE="${PONTONEER_VERSION%.dev[0-9]*}"
+
+TAG="v${PONTONEER_BASE}+mojo${MOJO_VERSION}"
 
 echo "pontoneer version : $PONTONEER_VERSION"
-echo "mojo dev stamp    : $MOJO_DEV"
+echo "mojo version      : $MOJO_VERSION"
 echo "tag               : $TAG"
 
 if [[ "$FORCE" -eq 0 ]] && git -C "$REPO_ROOT" tag | grep -qx "$TAG"; then
