@@ -225,7 +225,7 @@ def _bf_releasebuffer_impl(
     heap block allocated by `_bf_getbuffer_wrapper` is stored in
     `view->internal`; this function frees it and clears the field.
     """
-    if view[].internal:
+    if view[].internal != OpaquePointer[MutAnyOrigin](unsafe_from_address=0):
         rebind[UnsafePointer[UInt8, MutAnyOrigin]](view[].internal).free()
         view[].internal = OpaquePointer[MutAnyOrigin](unsafe_from_address=0)
 
