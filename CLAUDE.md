@@ -16,15 +16,24 @@ without waiting for the PR to land in the stdlib.
 
 ```
 pontoneer/
-├── __init__.mojo               # Public API: 6 exports (see below)
+├── __init__.mojo               # Public API: 8 exports (see below)
 ├── utils.mojo                  # NotImplementedError, RichCompareOps
-├── adapters.mojo               # Internal C-ABI adapters (_mp_length_wrapper, etc.)
-└── builders.mojo               # TypeProtocolBuilder, NumberProtocolBuilder,
-│                               #   MappingProtocolBuilder, SequenceProtocolBuilder
+├── slots.mojo                  # Internal: _PySlotIndex slot-index constants
+├── adapters.mojo               # Internal: C-ABI adapters (_mp_length_wrapper, etc.)
+│                               #   + shared _install_/_lift_/_conv_ slot helpers
+├── type_protocol.mojo          # TypeProtocolBuilder
+├── number.mojo                 # NumberProtocolBuilder
+├── mapping.mojo                # MappingProtocolBuilder
+├── sequence.mojo               # SequenceProtocolBuilder
+├── buffer.mojo                 # BufferProtocolBuilder, BufferInfo
+└── builders.mojo               # Thin re-export shim for the four builders above
 examples/columnar/
 ├── mojo_module.mojo            # DataFrame example (Mojo extension module)
 └── test_module.py              # Python integration test
 ```
+
+This mirrors the per-protocol file organization of the upstream stdlib PR
+https://github.com/modular/modular/pull/6453.
 
 ## Public API (`from pontoneer import …`)
 
@@ -49,12 +58,17 @@ When bumping the version, keep the minimum version constraint in sync across:
 
 ## Design decisions
 
-- **Four specialized builders** replace a single monolithic builder. Each takes
+- **Four specialized builders** replace a single monolithic builder, each in its
+  own per-protocol module (`type_protocol.mojo`, `number.mojo`, `mapping.mojo`,
+  `sequence.mojo`). Each takes
   `mut inner: PythonTypeBuilder` and stores an `UnsafePointer` into it. The caller
   must ensure the `PythonTypeBuilder` (owned by the module builder) outlives the
   protocol builder, which is naturally satisfied within a single `PyInit_*` function.
-- **`adapters.mojo` is internal** — the `_`-prefixed wrapper functions are not
-  re-exported from `__init__.mojo`; they are only used by `builders.mojo`.
+  `builders.mojo` is a thin re-export shim preserving the historical import path.
+- **`adapters.mojo` and `slots.mojo` are internal** — the `_`-prefixed wrapper
+  functions, the shared `_install_`/`_lift_`/`_conv_` slot helpers (in
+  `adapters.mojo`), and the `_PySlotIndex` constants (in `slots.mojo`) are not
+  re-exported from `__init__.mojo`; they are only used by the per-protocol builders.
 - **`_insert_slot` dependency** — all builders call `PythonTypeBuilder._insert_slot`,
   which is convention-private (underscore) but accessible in nightly Mojo. If a future
   compiler enforces visibility, the builders will need updating.

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Internal reorganization (non-breaking): `builders.mojo` was split into per-protocol modules — `type_protocol.mojo` (`TypeProtocolBuilder`), `number.mojo` (`NumberProtocolBuilder`), `mapping.mojo` (`MappingProtocolBuilder`), and `sequence.mojo` (`SequenceProtocolBuilder`) — to mirror the file organization of the upstream stdlib PR https://github.com/modular/modular/pull/6453. `builders.mojo` is now a thin re-export shim, so the `from pontoneer.builders import ...` path still works.
+- The slot-index constants (`_PySlotIndex`) moved to a new internal `slots.mojo` module; the shared `_install_`/`_lift_`/`_conv_` slot-installation helpers moved into `adapters.mojo`. Both are internal and not re-exported. The public API (`from pontoneer import ...`) is unchanged.
+
 ## [0.6.2] - 2026-03-22
 
 ### Changed
