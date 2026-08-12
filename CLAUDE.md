@@ -7,8 +7,8 @@ without waiting for the PR to land in the stdlib.
 
 ## Target environment
 
-- Nightly MAX via pixi (`https://conda.modular.com/max-nightly/`)
-- `pixi run build` — packages the library to `pontoneer.mojopkg`
+- Mojo 1.0 stable via pixi (`https://conda.modular.com/max/`)
+- `pixi run build` — packages the library to `pontoneer.mojoc`
 - `pixi run --environment test test-example` — builds and runs the columnar DataFrame example
 - `pixi run --environment test test-all` — runs all tests
 
@@ -41,10 +41,10 @@ https://github.com/modular/modular/pull/6453.
 |---|---|
 | `NotImplementedError` | Raise from a rich compare or binary handler to return `Py_NotImplemented` to Python |
 | `RichCompareOps` | Constants `Py_LT=0` … `Py_GE=5` for use inside rich compare handlers |
-| `TypeProtocolBuilder` | Installs `tp_richcompare` via `def_richcompare[method]()`; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
-| `NumberProtocolBuilder` | Installs nb_ slots: `def_neg`, `def_add`, `def_bool`, `def_pow`, etc.; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
-| `MappingProtocolBuilder` | Installs mp_ slots: `def_len`, `def_getitem`, `def_setitem`; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
-| `SequenceProtocolBuilder` | Installs sq_ slots: `def_len`, `def_getitem`, `def_setitem`, `def_contains`, `def_concat`, `def_repeat`, `def_iconcat`, `def_irepeat`; handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self` |
+| `TypeProtocolBuilder` | Installs `tp_richcompare` via `def_richcompare[method]()`; handlers receive `Pointer[T, MutAnyOrigin]` as `self` |
+| `NumberProtocolBuilder` | Installs nb_ slots: `def_neg`, `def_add`, `def_bool`, `def_pow`, etc.; handlers receive `Pointer[T, MutAnyOrigin]` as `self` |
+| `MappingProtocolBuilder` | Installs mp_ slots: `def_len`, `def_getitem`, `def_setitem`; handlers receive `Pointer[T, MutAnyOrigin]` as `self` |
+| `SequenceProtocolBuilder` | Installs sq_ slots: `def_len`, `def_getitem`, `def_setitem`, `def_contains`, `def_concat`, `def_repeat`, `def_iconcat`, `def_irepeat`; handlers receive `Pointer[T, MutAnyOrigin]` as `self` |
 
 ## Documentation
 
@@ -61,7 +61,7 @@ When bumping the version, keep the minimum version constraint in sync across:
 - **Four specialized builders** replace a single monolithic builder, each in its
   own per-protocol module (`type_protocol.mojo`, `number.mojo`, `mapping.mojo`,
   `sequence.mojo`). Each takes
-  `mut inner: PythonTypeBuilder` and stores an `UnsafePointer` into it. The caller
+  `mut inner: PythonTypeBuilder` and stores a `Pointer` into it. The caller
   must ensure the `PythonTypeBuilder` (owned by the module builder) outlives the
   protocol builder, which is naturally satisfied within a single `PyInit_*` function.
   `builders.mojo` is a thin re-export shim preserving the historical import path.

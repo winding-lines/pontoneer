@@ -7,7 +7,7 @@
 # module-level visibility, so the call compiles on nightly MAX.
 # ===----------------------------------------------------------------------=== #
 
-from std.memory import UnsafePointer
+from std.memory import Pointer
 from std.python import PythonObject
 from std.python.bindings import PythonTypeBuilder
 
@@ -18,7 +18,7 @@ from .adapters import (
 )
 
 
-struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
+struct TypeProtocolBuilder[self_type: Deinitable]:
     """Wraps a `PythonTypeBuilder` reference and installs CPython type protocol slots.
 
     `TypeProtocolBuilder` holds a pointer to a `PythonTypeBuilder` that is
@@ -42,11 +42,10 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     # Unsafe pointer into the module builder's type_builders list.
     # The pointed-to builder must outlive this TypeProtocolBuilder.
-    var _ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
+    var _ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]
 
     def __init__(out self, mut inner: PythonTypeBuilder):
-        var ptr = UnsafePointer(to=inner)
-        self._ptr = ptr
+        self._ptr = Pointer(to=inner).unsafe_origin_cast[MutUntrackedOrigin]()
 
     # ------------------------------------------------------------------
     # Type Protocol — tp_richcompare (__lt__, __eq__, etc.)
@@ -54,7 +53,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_richcompare[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, Int
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject, Int
         ) thin raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install rich comparison via the `tp_richcompare` slot.
@@ -66,7 +65,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
 
         Parameters:
             method: Static method with signature
-                `def(self_ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool`
+                `def(self_ptr: Pointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool`
                 where `op` is one of `RichCompareOps.Py_LT` … `Py_GE`.
 
         See: https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_richcompare
@@ -76,7 +75,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_richcompare[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject, Int
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject, Int
         ) thin -> Bool
     ](mut self) -> ref[self] Self:
         """Install rich comparison via the `tp_richcompare` slot (non-raising overload).

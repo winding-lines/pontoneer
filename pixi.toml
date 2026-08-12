@@ -1,6 +1,6 @@
 [workspace]
 channels = [
-  "https://conda.modular.com/max-nightly/",
+  "https://conda.modular.com/max/",
   "conda-forge",
   "https://prefix.dev/pixi-build-backends"
 ]
@@ -9,7 +9,7 @@ preview = ["pixi-build"]
 
 [package]
 name = "pontoneer"
-version = "0.6.6.dev2026050306"
+version = "1.0.0"
 description = "Mojo library providing additional type protocol extensions for Python interop."
 authors = ["Marius Seritan <39998+winding-lines@users.noreply.github.com>"]
 license = "Apache-2.0 WITH LLVM-exception"
@@ -17,25 +17,25 @@ homepage = "https://github.com/winding-lines/pontoneer"
 repository = "https://github.com/winding-lines/pontoneer"
 
 [package.build]
-backend = { name = "pixi-build-mojo", version = "0.1.*" }
+backend = { name = "pixi-build-mojo", version = "0.2.*" }
 
 [package.build-dependencies]
-mojo-compiler = "==1.0.0b2.dev2026050306"
+mojo-compiler = "==1.0.0"
 
 [package.host-dependencies]
-mojo = "==1.0.0b2.dev2026050306"
+mojo = "==1.0.0"
 
 [package.run-dependencies]
-mojo = "==1.0.0b2.dev2026050306"
+mojo = "==1.0.0"
 python = ">=3.14.2,<3.15"
 
 [dependencies]
-mojo = "==1.0.0b2.dev2026050306"
+mojo = "==1.0.0"
 
 [tasks]
 fmt = "mojo format pontoneer examples tests"
-build = "mojo package pontoneer -o pontoneer.mojopkg"
-publish = { cmd = "find . -name 'pontoneer*.conda' | xargs pixi upload prefix --channel mojo-community" }
+build = "mojo precompile pontoneer -o pontoneer.mojoc"
+publish = { cmd = "find . -path ./.pixi -prune -o -name 'pontoneer*.conda' -print | xargs pixi upload prefix --channel mojo-community" }
 
 [feature.test.dependencies]
 numpy = ">=2.4.3,<3"

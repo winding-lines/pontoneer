@@ -9,7 +9,7 @@
 # ===----------------------------------------------------------------------=== #
 
 from std.os import abort
-from std.memory import UnsafePointer
+from std.memory import Pointer
 from std.utils import Variant
 from std.python import PythonObject
 from std.python.bindings import PythonModuleBuilder
@@ -31,12 +31,12 @@ struct SimpleList(Defaultable, Movable, Writable):
         return PythonObject(alloc=result^)
 
     @staticmethod
-    def py__len__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Int:
+    def py__len__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> Int:
         return len(self_ptr[].data)
 
     @staticmethod
     def py__getitem__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], index: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], index: PythonObject
     ) raises -> PythonObject:
         var i = Int(py=index)
         if i < 0 or i >= len(self_ptr[].data):
@@ -45,7 +45,7 @@ struct SimpleList(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__setitem__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        self_ptr: Pointer[Self, MutAnyOrigin],
         index: PythonObject,
         value: Variant[PythonObject, Int],
     ) raises -> None:
@@ -62,7 +62,7 @@ struct SimpleList(Defaultable, Movable, Writable):
 
 
 # SimpleListV uses value-receiver handlers (def(self: Self, ...) instead of
-# def(self_ptr: UnsafePointer[Self, MutAnyOrigin], ...)).
+# def(self_ptr: Pointer[Self, MutAnyOrigin], ...)).
 # Read-only handlers use the non-raising overload; mutating ones use raising
 # ptr-receiver since they need to modify the Python-owned object in place.
 struct SimpleListV(Defaultable, Movable, Writable):
@@ -92,7 +92,7 @@ struct SimpleListV(Defaultable, Movable, Writable):
     # Mutation still uses pointer receiver so changes are visible on the Python object
     @staticmethod
     def py__setitem__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        self_ptr: Pointer[Self, MutAnyOrigin],
         index: PythonObject,
         value: Variant[PythonObject, Int],
     ) raises -> None:
@@ -109,7 +109,7 @@ struct SimpleListV(Defaultable, Movable, Writable):
 
 
 @export
-def PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() abi("C") -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (

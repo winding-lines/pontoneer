@@ -7,7 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-11
+
+Pontoneer 1.0 targets stable Mojo 1.0.0 from the `https://conda.modular.com/max/`
+channel (previously: nightly builds from `max-nightly`).
+
 ### Changed
+- **Breaking:** handler signatures now use `Pointer[T, MutAnyOrigin]` instead of
+  the removed `UnsafePointer[T, MutAnyOrigin]` for pointer-receiver methods,
+  following the stdlib rename. Value-receiver handlers are unchanged.
+- **Breaking:** `BufferInfo.buf` is now stored as `Pointer[UInt8, MutUntrackedOrigin]`
+  (the constructor still accepts any mutable-origin pointer).
+- The precompiled library is now built with `mojo precompile` and named
+  `pontoneer.mojoc` (previously `mojo package` / `pontoneer.mojopkg`).
+- Protocol builders store their `PythonTypeBuilder` pointer with
+  `MutUntrackedOrigin` (struct fields may no longer expose `MutAnyOrigin`).
+- Error paths in the slot adapters now use the stdlib's `raise_python_exception`
+  / `_set_python_error` helpers instead of hand-rolled `PyErr_SetString` calls.
+- `PyType_Slot` construction updated to the 1.0 fieldwise form via the stdlib's
+  `_fn_ptr_as_opaque` helper.
+- The buffer protocol's shape/strides/format scratch block is allocated with
+  `unsafe_alloc[UInt8]` and nullable `Py_buffer` pointer fields are modeled as
+  `OptionalPointer` (assigning `None` for NULL).
+- `PyInit_*` exports in the examples and tests declare `abi("C")` explicitly, as
+  required by Mojo 1.0.
+- Release tooling (`tools/bump-mojo.sh`, `tools/tag-release.sh`) now accepts
+  stable Mojo versions in addition to nightly `.devN` versions.
 - Internal reorganization (non-breaking): `builders.mojo` was split into per-protocol modules — `type_protocol.mojo` (`TypeProtocolBuilder`), `number.mojo` (`NumberProtocolBuilder`), `mapping.mojo` (`MappingProtocolBuilder`), and `sequence.mojo` (`SequenceProtocolBuilder`) — to mirror the file organization of the upstream stdlib PR https://github.com/modular/modular/pull/6453. `builders.mojo` is now a thin re-export shim, so the `from pontoneer.builders import ...` path still works.
 - The slot-index constants (`_PySlotIndex`) moved to a new internal `slots.mojo` module; the shared `_install_`/`_lift_`/`_conv_` slot-installation helpers moved into `adapters.mojo`. Both are internal and not re-exported. The public API (`from pontoneer import ...`) is unchanged.
 

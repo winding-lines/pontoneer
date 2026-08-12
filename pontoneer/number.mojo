@@ -7,7 +7,7 @@
 # module-level visibility, so the call compiles on nightly MAX.
 # ===----------------------------------------------------------------------=== #
 
-from std.memory import UnsafePointer
+from std.memory import Pointer
 from std.python import PythonObject
 from std.python.bindings import PythonTypeBuilder
 
@@ -40,12 +40,12 @@ from .adapters import (
 )
 
 
-struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
+struct NumberProtocolBuilder[self_type: Deinitable]:
     """Installs CPython number protocol slots on a `PythonTypeBuilder`.
 
     Construct directly from a `PythonTypeBuilder`.  Each method is named after the
     corresponding Python dunder and accepts only the matching function signature.
-    Handler functions receive `UnsafePointer[T, MutAnyOrigin]` as their first
+    Handler functions receive `Pointer[T, MutAnyOrigin]` as their first
     argument instead of a raw `PythonObject`.
 
     Binary methods (`def_add`, `def_mul`, etc.) and ternary methods (`def_pow`,
@@ -62,14 +62,14 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         ```
     """
 
-    var _ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
+    var _ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]
 
     def __init__(out self, mut inner: PythonTypeBuilder):
-        self._ptr = UnsafePointer(to=inner)
+        self._ptr = Pointer(to=inner).unsafe_origin_cast[MutUntrackedOrigin]()
 
     def __init__(
         out self,
-        ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin],
+        ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin],
     ):
         self._ptr = ptr
 
@@ -79,7 +79,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_abs[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
+            Pointer[Self.self_type, MutAnyOrigin]
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot.
@@ -94,7 +94,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_float[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
+            Pointer[Self.self_type, MutAnyOrigin]
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot.
@@ -107,7 +107,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_index[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
+            Pointer[Self.self_type, MutAnyOrigin]
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot.
@@ -120,7 +120,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_int[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
+            Pointer[Self.self_type, MutAnyOrigin]
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot.
@@ -133,7 +133,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_invert[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
+            Pointer[Self.self_type, MutAnyOrigin]
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot.
@@ -148,7 +148,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_neg[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
+            Pointer[Self.self_type, MutAnyOrigin]
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot.
@@ -163,7 +163,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_pos[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
+            Pointer[Self.self_type, MutAnyOrigin]
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot.
@@ -179,9 +179,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     # Non-raising unary overloads
 
     def def_abs[
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin -> PythonObject
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (non-raising overload).
 
@@ -195,9 +193,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         return self
 
     def def_float[
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin -> PythonObject
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (non-raising overload).
 
@@ -211,9 +207,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         return self
 
     def def_index[
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin -> PythonObject
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (non-raising overload).
 
@@ -227,9 +221,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         return self
 
     def def_int[
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin -> PythonObject
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot (non-raising overload).
 
@@ -243,9 +235,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         return self
 
     def def_invert[
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin -> PythonObject
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (non-raising overload).
 
@@ -259,9 +249,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         return self
 
     def def_neg[
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin -> PythonObject
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (non-raising overload).
 
@@ -275,9 +263,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         return self
 
     def def_pos[
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin -> PythonObject
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (non-raising overload).
 
@@ -396,9 +382,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     # ------------------------------------------------------------------
 
     def def_bool[
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin raises -> Bool
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin raises -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__bool__` via the `nb_bool` slot.
 
@@ -411,7 +395,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
         return self
 
     def def_bool[
-        method: def(UnsafePointer[Self.self_type, MutAnyOrigin]) thin -> Bool
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> Bool
     ](mut self) -> ref[self] Self:
         """Install `__bool__` via the `nb_bool` slot (non-raising overload).
 
@@ -445,7 +429,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_add[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `nb_add` slot.
@@ -458,7 +442,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_and[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__and__` via the `nb_and` slot.
@@ -471,7 +455,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_divmod[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot.
@@ -486,7 +470,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_floordiv[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot.
@@ -501,7 +485,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_lshift[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot.
@@ -516,7 +500,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_matmul[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot.
@@ -531,7 +515,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_mod[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot.
@@ -546,7 +530,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_mul[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot.
@@ -561,7 +545,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_or[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__or__` via the `nb_or` slot.
@@ -574,7 +558,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_rshift[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot.
@@ -589,7 +573,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_sub[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot.
@@ -604,7 +588,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_truediv[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot.
@@ -619,7 +603,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_xor[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__xor__` via the `nb_xor` slot.
@@ -634,7 +618,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_iadd[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot.
@@ -649,7 +633,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_iand[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot.
@@ -664,7 +648,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ifloordiv[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot.
@@ -679,7 +663,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ilshift[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot.
@@ -694,7 +678,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_imatmul[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot.
@@ -709,7 +693,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_imod[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot.
@@ -724,7 +708,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_imul[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot.
@@ -739,7 +723,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ior[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot.
@@ -754,7 +738,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_irshift[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot.
@@ -769,7 +753,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_isub[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot.
@@ -784,7 +768,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_itruediv[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot.
@@ -799,7 +783,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ixor[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot.
@@ -816,7 +800,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_add[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `nb_add` slot (non-raising overload).
@@ -832,7 +816,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_and[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__and__` via the `nb_and` slot (non-raising overload).
@@ -848,7 +832,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_divmod[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot (non-raising overload).
@@ -864,7 +848,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_floordiv[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot (non-raising overload).
@@ -880,7 +864,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_lshift[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot (non-raising overload).
@@ -896,7 +880,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_matmul[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot (non-raising overload).
@@ -912,7 +896,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_mod[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot (non-raising overload).
@@ -928,7 +912,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_mul[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot (non-raising overload).
@@ -944,7 +928,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_or[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__or__` via the `nb_or` slot (non-raising overload).
@@ -960,7 +944,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_rshift[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot (non-raising overload).
@@ -976,7 +960,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_sub[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot (non-raising overload).
@@ -992,7 +976,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_truediv[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot (non-raising overload).
@@ -1008,7 +992,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_xor[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__xor__` via the `nb_xor` slot (non-raising overload).
@@ -1024,7 +1008,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_iadd[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot (non-raising overload).
@@ -1040,7 +1024,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_iand[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot (non-raising overload).
@@ -1056,7 +1040,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ifloordiv[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (non-raising overload).
@@ -1072,7 +1056,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ilshift[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot (non-raising overload).
@@ -1088,7 +1072,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_imatmul[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (non-raising overload).
@@ -1104,7 +1088,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_imod[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot (non-raising overload).
@@ -1120,7 +1104,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_imul[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot (non-raising overload).
@@ -1136,7 +1120,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ior[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot (non-raising overload).
@@ -1152,7 +1136,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_irshift[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot (non-raising overload).
@@ -1168,7 +1152,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_isub[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot (non-raising overload).
@@ -1184,7 +1168,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_itruediv[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot (non-raising overload).
@@ -1200,7 +1184,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ixor[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot (non-raising overload).
@@ -1406,7 +1390,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_pow[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             PythonObject,
         ) thin raises -> PythonObject
@@ -1423,7 +1407,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ipow[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             PythonObject,
         ) thin raises -> PythonObject
@@ -1442,7 +1426,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_pow[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             PythonObject,
         ) thin -> PythonObject
@@ -1460,7 +1444,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_ipow[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             PythonObject,
         ) thin -> PythonObject
@@ -1706,9 +1690,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_abs[
         R: _CPython,
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin raises -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (ConvertibleToPython return overload).
 
@@ -1723,7 +1705,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_abs[
         R: _CPython,
-        method: def(UnsafePointer[Self.self_type, MutAnyOrigin]) thin -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__abs__` via the `nb_absolute` slot (ConvertibleToPython return, non-raising overload).
 
@@ -1753,9 +1735,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_float[
         R: _CPython,
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin raises -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (ConvertibleToPython return overload).
 
@@ -1770,7 +1750,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_float[
         R: _CPython,
-        method: def(UnsafePointer[Self.self_type, MutAnyOrigin]) thin -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__float__` via the `nb_float` slot (ConvertibleToPython return, non-raising overload).
 
@@ -1800,9 +1780,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_index[
         R: _CPython,
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin raises -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (ConvertibleToPython return overload).
 
@@ -1817,7 +1795,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_index[
         R: _CPython,
-        method: def(UnsafePointer[Self.self_type, MutAnyOrigin]) thin -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__index__` via the `nb_index` slot (ConvertibleToPython return, non-raising overload).
 
@@ -1847,9 +1825,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_int[
         R: _CPython,
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin raises -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot (ConvertibleToPython return overload).
 
@@ -1864,7 +1840,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_int[
         R: _CPython,
-        method: def(UnsafePointer[Self.self_type, MutAnyOrigin]) thin -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__int__` via the `nb_int` slot (ConvertibleToPython return, non-raising overload).
 
@@ -1894,9 +1870,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_invert[
         R: _CPython,
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin raises -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (ConvertibleToPython return overload).
 
@@ -1911,7 +1885,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_invert[
         R: _CPython,
-        method: def(UnsafePointer[Self.self_type, MutAnyOrigin]) thin -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__invert__` via the `nb_invert` slot (ConvertibleToPython return, non-raising overload).
 
@@ -1941,9 +1915,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_neg[
         R: _CPython,
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin raises -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (ConvertibleToPython return overload).
 
@@ -1958,7 +1930,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_neg[
         R: _CPython,
-        method: def(UnsafePointer[Self.self_type, MutAnyOrigin]) thin -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__neg__` via the `nb_negative` slot (ConvertibleToPython return, non-raising overload).
 
@@ -1988,9 +1960,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_pos[
         R: _CPython,
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin raises -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (ConvertibleToPython return overload).
 
@@ -2005,7 +1975,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_pos[
         R: _CPython,
-        method: def(UnsafePointer[Self.self_type, MutAnyOrigin]) thin -> R,
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__pos__` via the `nb_positive` slot (ConvertibleToPython return, non-raising overload).
 
@@ -2036,7 +2006,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_add[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `nb_add` slot (ConvertibleToPython return overload).
@@ -2053,7 +2023,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_add[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__add__` via the `nb_add` slot (ConvertibleToPython return, non-raising overload).
@@ -2085,7 +2055,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_and[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__and__` via the `nb_and` slot (ConvertibleToPython return overload).
@@ -2102,7 +2072,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_and[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__and__` via the `nb_and` slot (ConvertibleToPython return, non-raising overload).
@@ -2134,7 +2104,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_divmod[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot (ConvertibleToPython return overload).
@@ -2151,7 +2121,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_divmod[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__divmod__` via the `nb_divmod` slot (ConvertibleToPython return, non-raising overload).
@@ -2183,7 +2153,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_floordiv[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot (ConvertibleToPython return overload).
@@ -2200,7 +2170,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_floordiv[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__floordiv__` via the `nb_floor_divide` slot (ConvertibleToPython return, non-raising overload).
@@ -2232,7 +2202,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_lshift[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot (ConvertibleToPython return overload).
@@ -2249,7 +2219,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_lshift[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__lshift__` via the `nb_lshift` slot (ConvertibleToPython return, non-raising overload).
@@ -2281,7 +2251,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_matmul[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot (ConvertibleToPython return overload).
@@ -2298,7 +2268,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_matmul[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__matmul__` via the `nb_matrix_multiply` slot (ConvertibleToPython return, non-raising overload).
@@ -2330,7 +2300,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_mod[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot (ConvertibleToPython return overload).
@@ -2347,7 +2317,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_mod[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mod__` via the `nb_remainder` slot (ConvertibleToPython return, non-raising overload).
@@ -2379,7 +2349,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_mul[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot (ConvertibleToPython return overload).
@@ -2396,7 +2366,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_mul[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__mul__` via the `nb_multiply` slot (ConvertibleToPython return, non-raising overload).
@@ -2428,7 +2398,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_or[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__or__` via the `nb_or` slot (ConvertibleToPython return overload).
@@ -2445,7 +2415,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_or[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__or__` via the `nb_or` slot (ConvertibleToPython return, non-raising overload).
@@ -2477,7 +2447,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_rshift[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot (ConvertibleToPython return overload).
@@ -2494,7 +2464,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_rshift[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__rshift__` via the `nb_rshift` slot (ConvertibleToPython return, non-raising overload).
@@ -2526,7 +2496,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_sub[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot (ConvertibleToPython return overload).
@@ -2543,7 +2513,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_sub[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__sub__` via the `nb_subtract` slot (ConvertibleToPython return, non-raising overload).
@@ -2575,7 +2545,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_truediv[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot (ConvertibleToPython return overload).
@@ -2592,7 +2562,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_truediv[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__truediv__` via the `nb_true_divide` slot (ConvertibleToPython return, non-raising overload).
@@ -2624,7 +2594,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_xor[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__xor__` via the `nb_xor` slot (ConvertibleToPython return overload).
@@ -2641,7 +2611,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_xor[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__xor__` via the `nb_xor` slot (ConvertibleToPython return, non-raising overload).
@@ -2673,7 +2643,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_iadd[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot (ConvertibleToPython return overload).
@@ -2690,7 +2660,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_iadd[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iadd__` via the `nb_inplace_add` slot (ConvertibleToPython return, non-raising overload).
@@ -2722,7 +2692,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_iand[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot (ConvertibleToPython return overload).
@@ -2739,7 +2709,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_iand[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__iand__` via the `nb_inplace_and` slot (ConvertibleToPython return, non-raising overload).
@@ -2771,7 +2741,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ifloordiv[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (ConvertibleToPython return overload).
@@ -2788,7 +2758,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ifloordiv[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ifloordiv__` via the `nb_inplace_floor_divide` slot (ConvertibleToPython return, non-raising overload).
@@ -2820,7 +2790,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ilshift[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot (ConvertibleToPython return overload).
@@ -2837,7 +2807,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ilshift[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ilshift__` via the `nb_inplace_lshift` slot (ConvertibleToPython return, non-raising overload).
@@ -2869,7 +2839,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_imatmul[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (ConvertibleToPython return overload).
@@ -2886,7 +2856,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_imatmul[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imatmul__` via the `nb_inplace_matrix_multiply` slot (ConvertibleToPython return, non-raising overload).
@@ -2918,7 +2888,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_imod[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot (ConvertibleToPython return overload).
@@ -2935,7 +2905,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_imod[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imod__` via the `nb_inplace_remainder` slot (ConvertibleToPython return, non-raising overload).
@@ -2967,7 +2937,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_imul[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot (ConvertibleToPython return overload).
@@ -2984,7 +2954,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_imul[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__imul__` via the `nb_inplace_multiply` slot (ConvertibleToPython return, non-raising overload).
@@ -3016,7 +2986,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ior[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot (ConvertibleToPython return overload).
@@ -3033,7 +3003,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ior[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ior__` via the `nb_inplace_or` slot (ConvertibleToPython return, non-raising overload).
@@ -3065,7 +3035,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_irshift[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot (ConvertibleToPython return overload).
@@ -3082,7 +3052,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_irshift[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__irshift__` via the `nb_inplace_rshift` slot (ConvertibleToPython return, non-raising overload).
@@ -3114,7 +3084,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_isub[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot (ConvertibleToPython return overload).
@@ -3131,7 +3101,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_isub[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__isub__` via the `nb_inplace_subtract` slot (ConvertibleToPython return, non-raising overload).
@@ -3163,7 +3133,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_itruediv[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot (ConvertibleToPython return overload).
@@ -3180,7 +3150,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_itruediv[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__itruediv__` via the `nb_inplace_true_divide` slot (ConvertibleToPython return, non-raising overload).
@@ -3212,7 +3182,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ixor[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot (ConvertibleToPython return overload).
@@ -3229,7 +3199,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ixor[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__ixor__` via the `nb_inplace_xor` slot (ConvertibleToPython return, non-raising overload).
@@ -3261,7 +3231,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_pow[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             PythonObject,
         ) thin raises -> R,
@@ -3280,7 +3250,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_pow[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             PythonObject,
         ) thin -> R,
@@ -3316,7 +3286,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ipow[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             PythonObject,
         ) thin raises -> R,
@@ -3335,7 +3305,7 @@ struct NumberProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_ipow[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             PythonObject,
         ) thin -> R,

@@ -8,11 +8,20 @@
 # ===----------------------------------------------------------------------=== #
 
 from std.ffi import c_int, c_long
-from std.memory import OpaquePointer, UnsafePointer
 from std.os import abort
 from std.python import Python, PythonObject
-from std.python._cpython import PyObject, PyObjectPtr, Py_ssize_t, PyType_Slot
-from std.python.bindings import PythonTypeBuilder
+from std.python._cpython import (
+    PyObject,
+    PyObjectPtr,
+    Py_ssize_t,
+    PyType_Slot,
+    _fn_ptr_as_opaque,
+)
+from std.python.bindings import (
+    PythonTypeBuilder,
+    raise_python_exception,
+    _set_python_error,
+)
 from std.python.conversions import ConvertibleToPython
 from std.utils import Variant
 
@@ -22,8 +31,8 @@ from .slots import _PySlotIndex
 
 @always_inline
 def _unwrap_self[
-    T: ImplicitlyDestructible
-](py_self: PyObjectPtr) -> UnsafePointer[T, MutAnyOrigin]:
+    T: Deinitable
+](py_self: PyObjectPtr) -> Pointer[T, MutAnyOrigin]:
     """Downcast a raw PyObjectPtr to a typed Mojo pointer, aborting on failure.
     """
     try:
@@ -35,47 +44,41 @@ def _unwrap_self[
 
 
 def _mp_length_wrapper[
-    self_type: ImplicitlyDestructible,
-    method: def(UnsafePointer[self_type, MutAnyOrigin]) thin raises -> Int,
+    self_type: Deinitable,
+    method: def(Pointer[self_type, MutAnyOrigin]) thin raises -> Int,
 ](py_self: PyObjectPtr) abi("C") -> Py_ssize_t:
     """CPython `lenfunc` adapter for the `mp_length` slot (__len__).
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Int`.
+        method: User function `def(self: Pointer[self_type, MutAnyOrigin]) raises -> Int`.
 
     Returns:
         Length as `Py_ssize_t`, or -1 with an exception set on error.
     """
-    ref cpython = Python().cpython()
     try:
         var result = method(_unwrap_self[self_type](py_self))
         return Py_ssize_t(result)
     except e:
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        var msg = String(e)
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
+        _set_python_error(e)
         return Py_ssize_t(-1)
 
 
 def _mp_subscript_wrapper[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject
+        Pointer[self_type, MutAnyOrigin], PythonObject
     ) thin raises -> PythonObject,
 ](py_self: PyObjectPtr, key: PyObjectPtr) abi("C") -> PyObjectPtr:
     """CPython `binaryfunc` adapter for the `mp_subscript` slot (__getitem__).
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin], key: PythonObject) raises -> PythonObject`.
+        method: User function `def(self: Pointer[self_type, MutAnyOrigin], key: PythonObject) raises -> PythonObject`.
 
     Returns:
         New reference to the result, or null with an exception set on error.
     """
-    ref cpython = Python().cpython()
     try:
         var result = method(
             _unwrap_self[self_type](py_self),
@@ -83,18 +86,13 @@ def _mp_subscript_wrapper[
         )
         return result.steal_data()
     except e:
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        var msg = String(e)
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
-        return PyObjectPtr()
+        return raise_python_exception(e)
 
 
 def _mp_ass_subscript_wrapper[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin],
+        Pointer[self_type, MutAnyOrigin],
         PythonObject,
         Variant[PythonObject, Int],
     ) thin raises -> None,
@@ -115,7 +113,6 @@ def _mp_ass_subscript_wrapper[
         0 on success, -1 with an exception set on error.
     """
     comptime PassedValue = Variant[PythonObject, Int]
-    ref cpython = Python().cpython()
     try:
         var passed_value = PassedValue(
             PythonObject(from_borrowed=value)
@@ -127,46 +124,34 @@ def _mp_ass_subscript_wrapper[
         )
         return c_int(0)
     except e:
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        var msg = String(e)
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
+        _set_python_error(e)
         return c_int(-1)
 
 
 def _unaryfunc_wrapper[
-    self_type: ImplicitlyDestructible,
-    method: def(
-        UnsafePointer[self_type, MutAnyOrigin]
-    ) thin raises -> PythonObject,
+    self_type: Deinitable,
+    method: def(Pointer[self_type, MutAnyOrigin]) thin raises -> PythonObject,
 ](py_self: PyObjectPtr) abi("C") -> PyObjectPtr:
     """CPython `unaryfunc` adapter for unary nb_ slots (__neg__, __abs__, etc.).
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> PythonObject`.
+        method: User function `def(self: Pointer[self_type, MutAnyOrigin]) raises -> PythonObject`.
 
     Returns:
         New reference to the result, or null with an exception set on error.
     """
-    ref cpython = Python().cpython()
     try:
         var result = method(_unwrap_self[self_type](py_self))
         return result.steal_data()
     except e:
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        var msg = String(e)
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
-        return PyObjectPtr()
+        return raise_python_exception(e)
 
 
 def _binaryfunc_wrapper[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject
+        Pointer[self_type, MutAnyOrigin], PythonObject
     ) thin raises -> PythonObject,
 ](lhs: PyObjectPtr, rhs: PyObjectPtr) abi("C") -> PyObjectPtr:
     """CPython `binaryfunc` adapter for binary nb_ slots (__add__, __mul__, etc.).
@@ -177,7 +162,7 @@ def _binaryfunc_wrapper[
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
         method: User function
-            `def(self: UnsafePointer[self_type, MutAnyOrigin], other: PythonObject) raises -> PythonObject`.
+            `def(self: Pointer[self_type, MutAnyOrigin], other: PythonObject) raises -> PythonObject`.
 
     Returns:
         New reference to the result, `Py_NotImplemented`, or null on error.
@@ -196,17 +181,13 @@ def _binaryfunc_wrapper[
                 "Py_GetConstantBorrowed", PyObjectPtr
             ](4)
             return cpython.Py_NewRef(not_implemented)
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
-        return PyObjectPtr()
+        return raise_python_exception(e)
 
 
 def _ternaryfunc_wrapper[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject
+        Pointer[self_type, MutAnyOrigin], PythonObject, PythonObject
     ) thin raises -> PythonObject,
 ](py_self: PyObjectPtr, other: PyObjectPtr, mod: PyObjectPtr) abi(
     "C"
@@ -241,71 +222,56 @@ def _ternaryfunc_wrapper[
                 "Py_GetConstantBorrowed", PyObjectPtr
             ](4)
             return cpython.Py_NewRef(not_implemented)
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
-        return PyObjectPtr()
+        return raise_python_exception(e)
 
 
 def _inquiry_wrapper[
-    self_type: ImplicitlyDestructible,
-    method: def(UnsafePointer[self_type, MutAnyOrigin]) thin raises -> Bool,
+    self_type: Deinitable,
+    method: def(Pointer[self_type, MutAnyOrigin]) thin raises -> Bool,
 ](py_self: PyObjectPtr) abi("C") -> c_int:
     """CPython `inquiry` adapter for the `nb_bool` slot (__bool__).
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin]) raises -> Bool`.
+        method: User function `def(self: Pointer[self_type, MutAnyOrigin]) raises -> Bool`.
 
     Returns:
         1 for True, 0 for False, -1 with an exception set on error.
     """
-    ref cpython = Python().cpython()
     try:
         var result = method(_unwrap_self[self_type](py_self))
         return c_int(1) if result else c_int(0)
     except e:
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        var msg = String(e)
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
+        _set_python_error(e)
         return c_int(-1)
 
 
 def _ssizeargfunc_wrapper[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], Int
+        Pointer[self_type, MutAnyOrigin], Int
     ) thin raises -> PythonObject,
 ](py_self: PyObjectPtr, index: Py_ssize_t) abi("C") -> PyObjectPtr:
     """CPython `ssizeargfunc` adapter for sq_item, sq_repeat, sq_inplace_repeat.
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin], index: Int) raises -> PythonObject`.
+        method: User function `def(self: Pointer[self_type, MutAnyOrigin], index: Int) raises -> PythonObject`.
 
     Returns:
         New reference to the result, or null with an exception set on error.
     """
-    ref cpython = Python().cpython()
     try:
         var result = method(_unwrap_self[self_type](py_self), Int(index))
         return result.steal_data()
     except e:
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        var msg = String(e)
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
-        return PyObjectPtr()
+        return raise_python_exception(e)
 
 
 def _ssizeobjargproc_wrapper[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
+        Pointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
     ) thin raises -> None,
 ](py_self: PyObjectPtr, index: Py_ssize_t, value: PyObjectPtr) abi(
     "C"
@@ -325,7 +291,6 @@ def _ssizeobjargproc_wrapper[
         0 on success, -1 with an exception set on error.
     """
     comptime PassedValue = Variant[PythonObject, Int]
-    ref cpython = Python().cpython()
     try:
         var passed_value = PassedValue(
             PythonObject(from_borrowed=value)
@@ -333,30 +298,25 @@ def _ssizeobjargproc_wrapper[
         method(_unwrap_self[self_type](py_self), Int(index), passed_value)
         return c_int(0)
     except e:
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        var msg = String(e)
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
+        _set_python_error(e)
         return c_int(-1)
 
 
 def _objobjproc_wrapper[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject
+        Pointer[self_type, MutAnyOrigin], PythonObject
     ) thin raises -> Bool,
 ](py_self: PyObjectPtr, other: PyObjectPtr) abi("C") -> c_int:
     """CPython `objobjproc` adapter for the `sq_contains` slot (__contains__).
 
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
-        method: User function `def(self: UnsafePointer[self_type, MutAnyOrigin], item: PythonObject) raises -> Bool`.
+        method: User function `def(self: Pointer[self_type, MutAnyOrigin], item: PythonObject) raises -> Bool`.
 
     Returns:
         1 if contained, 0 if not, -1 with an exception set on error.
     """
-    ref cpython = Python().cpython()
     try:
         var result = method(
             _unwrap_self[self_type](py_self),
@@ -364,18 +324,14 @@ def _objobjproc_wrapper[
         )
         return c_int(1) if result else c_int(0)
     except e:
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        var msg = String(e)
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
+        _set_python_error(e)
         return c_int(-1)
 
 
 def _richcompare_wrapper[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int
+        Pointer[self_type, MutAnyOrigin], PythonObject, Int
     ) thin raises -> Bool,
 ](py_self: PyObjectPtr, py_other: PyObjectPtr, op: c_int) abi(
     "C"
@@ -412,11 +368,7 @@ def _richcompare_wrapper[
                 "Py_GetConstantBorrowed", PyObjectPtr
             ](4)
             return cpython.Py_NewRef(not_implemented)
-        var error_type = cpython.get_error_global("PyExc_Exception")
-        cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
-        )
-        return PyObjectPtr()
+        return raise_python_exception(e)
 
 
 # ===----------------------------------------------------------------------=== #
@@ -431,73 +383,63 @@ def _richcompare_wrapper[
 
 
 def _install_unary[
-    self_type: ImplicitlyDestructible,
-    method: def(
-        UnsafePointer[self_type, MutAnyOrigin]
-    ) thin raises -> PythonObject,
+    self_type: Deinitable,
+    method: def(Pointer[self_type, MutAnyOrigin]) thin raises -> PythonObject,
     slot: Int32,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert a `unaryfunc` slot into the builder pointed to by `ptr`."""
     comptime _unaryfunc = def(PyObjectPtr) thin abi("C") -> PyObjectPtr
     var fn_ptr: _unaryfunc = _unaryfunc_wrapper[self_type, method]
-    ptr[]._insert_slot(
-        PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
-    )
+    ptr[]._insert_slot(PyType_Slot(c_int(slot), _fn_ptr_as_opaque(fn_ptr)))
 
 
 def _install_binary[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject
+        Pointer[self_type, MutAnyOrigin], PythonObject
     ) thin raises -> PythonObject,
     slot: Int32,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert a `binaryfunc` slot into the builder pointed to by `ptr`."""
     comptime _binaryfunc = def(PyObjectPtr, PyObjectPtr) thin abi(
         "C"
     ) -> PyObjectPtr
     var fn_ptr: _binaryfunc = _binaryfunc_wrapper[self_type, method]
-    ptr[]._insert_slot(
-        PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
-    )
+    ptr[]._insert_slot(PyType_Slot(c_int(slot), _fn_ptr_as_opaque(fn_ptr)))
 
 
 def _install_ternary[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject, PythonObject
+        Pointer[self_type, MutAnyOrigin], PythonObject, PythonObject
     ) thin raises -> PythonObject,
     slot: Int32,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert a `ternaryfunc` slot into the builder pointed to by `ptr`."""
     comptime _ternaryfunc = def(PyObjectPtr, PyObjectPtr, PyObjectPtr) thin abi(
         "C"
     ) -> PyObjectPtr
     var fn_ptr: _ternaryfunc = _ternaryfunc_wrapper[self_type, method]
-    ptr[]._insert_slot(
-        PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
-    )
+    ptr[]._insert_slot(PyType_Slot(c_int(slot), _fn_ptr_as_opaque(fn_ptr)))
 
 
 def _install_inquiry[
-    self_type: ImplicitlyDestructible,
-    method: def(UnsafePointer[self_type, MutAnyOrigin]) thin raises -> Bool,
+    self_type: Deinitable,
+    method: def(Pointer[self_type, MutAnyOrigin]) thin raises -> Bool,
     slot: Int32,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert an `inquiry` slot into the builder pointed to by `ptr`."""
     comptime _inquiry = def(PyObjectPtr) thin abi("C") -> c_int
     var fn_ptr: _inquiry = _inquiry_wrapper[self_type, method]
-    ptr[]._insert_slot(
-        PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
-    )
+    ptr[]._insert_slot(PyType_Slot(c_int(slot), _fn_ptr_as_opaque(fn_ptr)))
 
 
 def _install_richcompare[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject, Int
+        Pointer[self_type, MutAnyOrigin], PythonObject, Int
     ) thin raises -> Bool,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert a `richcmpfunc` slot (`tp_richcompare`) into the builder pointed to by `ptr`.
     """
     # Assign to a typed variable first so the compiler concretizes the
@@ -508,33 +450,30 @@ def _install_richcompare[
     var fn_ptr: _richcmpfunc = _richcompare_wrapper[self_type, method]
     ptr[]._insert_slot(
         PyType_Slot(
-            _PySlotIndex.tp_richcompare,
-            rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
+            c_int(_PySlotIndex.tp_richcompare), _fn_ptr_as_opaque(fn_ptr)
         )
     )
 
 
 def _install_lenfunc[
-    self_type: ImplicitlyDestructible,
-    method: def(UnsafePointer[self_type, MutAnyOrigin]) thin raises -> Int,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+    self_type: Deinitable,
+    method: def(Pointer[self_type, MutAnyOrigin]) thin raises -> Int,
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert a `lenfunc` slot (`mp_length`) into the builder pointed to by `ptr`.
     """
     comptime _lenfunc = def(PyObjectPtr) thin abi("C") -> Py_ssize_t
     var fn_ptr: _lenfunc = _mp_length_wrapper[self_type, method]
     ptr[]._insert_slot(
-        PyType_Slot(
-            _PySlotIndex.mp_length, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)
-        )
+        PyType_Slot(c_int(_PySlotIndex.mp_length), _fn_ptr_as_opaque(fn_ptr))
     )
 
 
 def _install_mp_getitem[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject
+        Pointer[self_type, MutAnyOrigin], PythonObject
     ) thin raises -> PythonObject,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert a `binaryfunc` slot (`mp_subscript`) into the builder pointed to by `ptr`.
     """
     comptime _binaryfunc = def(PyObjectPtr, PyObjectPtr) thin abi(
@@ -542,20 +481,18 @@ def _install_mp_getitem[
     ) -> PyObjectPtr
     var fn_ptr: _binaryfunc = _mp_subscript_wrapper[self_type, method]
     ptr[]._insert_slot(
-        PyType_Slot(
-            _PySlotIndex.mp_getitem, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)
-        )
+        PyType_Slot(c_int(_PySlotIndex.mp_getitem), _fn_ptr_as_opaque(fn_ptr))
     )
 
 
 def _install_objobjargproc[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin],
+        Pointer[self_type, MutAnyOrigin],
         PythonObject,
         Variant[PythonObject, Int],
     ) thin raises -> None,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert an `objobjargproc` slot (`mp_ass_subscript`) into the builder pointed to by `ptr`.
     """
     comptime _objobjargproc = def(
@@ -563,35 +500,31 @@ def _install_objobjargproc[
     ) thin abi("C") -> c_int
     var fn_ptr: _objobjargproc = _mp_ass_subscript_wrapper[self_type, method]
     ptr[]._insert_slot(
-        PyType_Slot(
-            _PySlotIndex.mp_setitem, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr)
-        )
+        PyType_Slot(c_int(_PySlotIndex.mp_setitem), _fn_ptr_as_opaque(fn_ptr))
     )
 
 
 def _install_ssizeargfunc[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], Int
+        Pointer[self_type, MutAnyOrigin], Int
     ) thin raises -> PythonObject,
     slot: Int32,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert a `ssizeargfunc` slot into the builder pointed to by `ptr`."""
     comptime _ssizeargfunc = def(PyObjectPtr, Py_ssize_t) thin abi(
         "C"
     ) -> PyObjectPtr
     var fn_ptr: _ssizeargfunc = _ssizeargfunc_wrapper[self_type, method]
-    ptr[]._insert_slot(
-        PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
-    )
+    ptr[]._insert_slot(PyType_Slot(c_int(slot), _fn_ptr_as_opaque(fn_ptr)))
 
 
 def _install_ssizeobjargproc[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
+        Pointer[self_type, MutAnyOrigin], Int, Variant[PythonObject, Int]
     ) thin raises -> None,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert the `ssizeobjargproc` slot (`sq_ass_item`) into the builder pointed to by `ptr`.
     """
     comptime _ssizeobjargproc = def(
@@ -599,26 +532,21 @@ def _install_ssizeobjargproc[
     ) thin abi("C") -> c_int
     var fn_ptr: _ssizeobjargproc = _ssizeobjargproc_wrapper[self_type, method]
     ptr[]._insert_slot(
-        PyType_Slot(
-            _PySlotIndex.sq_ass_item,
-            rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
-        )
+        PyType_Slot(c_int(_PySlotIndex.sq_ass_item), _fn_ptr_as_opaque(fn_ptr))
     )
 
 
 def _install_objobjproc[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], PythonObject
+        Pointer[self_type, MutAnyOrigin], PythonObject
     ) thin raises -> Bool,
     slot: Int32,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert an `objobjproc` slot into the builder pointed to by `ptr`."""
     comptime _objobjproc = def(PyObjectPtr, PyObjectPtr) thin abi("C") -> c_int
     var fn_ptr: _objobjproc = _objobjproc_wrapper[self_type, method]
-    ptr[]._insert_slot(
-        PyType_Slot(slot, rebind[OpaquePointer[MutAnyOrigin]](fn_ptr))
-    )
+    ptr[]._insert_slot(PyType_Slot(c_int(slot), _fn_ptr_as_opaque(fn_ptr)))
 
 
 # ===----------------------------------------------------------------------=== #
@@ -630,51 +558,47 @@ def _install_objobjproc[
 
 
 def _lift_to_int[
-    T: ImplicitlyDestructible,
-    method: def(UnsafePointer[T, MutAnyOrigin]) thin -> Int,
-](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Int:
+    T: Deinitable,
+    method: def(Pointer[T, MutAnyOrigin]) thin -> Int,
+](ptr: Pointer[T, MutAnyOrigin]) raises -> Int:
     return method(ptr)
 
 
 def _lift_to_obj[
-    T: ImplicitlyDestructible,
-    method: def(UnsafePointer[T, MutAnyOrigin]) thin -> PythonObject,
-](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject:
+    T: Deinitable,
+    method: def(Pointer[T, MutAnyOrigin]) thin -> PythonObject,
+](ptr: Pointer[T, MutAnyOrigin]) raises -> PythonObject:
     return method(ptr)
 
 
 def _lift_to_bool[
-    T: ImplicitlyDestructible,
-    method: def(UnsafePointer[T, MutAnyOrigin]) thin -> Bool,
-](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Bool:
+    T: Deinitable,
+    method: def(Pointer[T, MutAnyOrigin]) thin -> Bool,
+](ptr: Pointer[T, MutAnyOrigin]) raises -> Bool:
     return method(ptr)
 
 
 def _lift_obj_to_obj[
-    T: ImplicitlyDestructible,
-    method: def(
-        UnsafePointer[T, MutAnyOrigin], PythonObject
-    ) thin -> PythonObject,
-](
-    ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject
-) raises -> PythonObject:
+    T: Deinitable,
+    method: def(Pointer[T, MutAnyOrigin], PythonObject) thin -> PythonObject,
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject:
     return method(ptr, other)
 
 
 def _lift_obj_to_bool[
-    T: ImplicitlyDestructible,
-    method: def(UnsafePointer[T, MutAnyOrigin], PythonObject) thin -> Bool,
-](ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> Bool:
+    T: Deinitable,
+    method: def(Pointer[T, MutAnyOrigin], PythonObject) thin -> Bool,
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject) raises -> Bool:
     return method(ptr, other)
 
 
 def _lift_obj_var_to_none[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(
-        UnsafePointer[T, MutAnyOrigin], PythonObject, Variant[PythonObject, Int]
+        Pointer[T, MutAnyOrigin], PythonObject, Variant[PythonObject, Int]
     ) thin -> None,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin],
+    ptr: Pointer[T, MutAnyOrigin],
     key: PythonObject,
     val: Variant[PythonObject, Int],
 ) raises -> None:
@@ -682,19 +606,19 @@ def _lift_obj_var_to_none[
 
 
 def _lift_int_to_obj[
-    T: ImplicitlyDestructible,
-    method: def(UnsafePointer[T, MutAnyOrigin], Int) thin -> PythonObject,
-](ptr: UnsafePointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
+    T: Deinitable,
+    method: def(Pointer[T, MutAnyOrigin], Int) thin -> PythonObject,
+](ptr: Pointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
     return method(ptr, index)
 
 
 def _lift_int_var_to_none[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(
-        UnsafePointer[T, MutAnyOrigin], Int, Variant[PythonObject, Int]
+        Pointer[T, MutAnyOrigin], Int, Variant[PythonObject, Int]
     ) thin -> None,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin],
+    ptr: Pointer[T, MutAnyOrigin],
     index: Int,
     val: Variant[PythonObject, Int],
 ) raises -> None:
@@ -702,21 +626,19 @@ def _lift_int_var_to_none[
 
 
 def _lift_obj_int_to_bool[
-    T: ImplicitlyDestructible,
-    method: def(UnsafePointer[T, MutAnyOrigin], PythonObject, Int) thin -> Bool,
-](
-    ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int
-) raises -> Bool:
+    T: Deinitable,
+    method: def(Pointer[T, MutAnyOrigin], PythonObject, Int) thin -> Bool,
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool:
     return method(ptr, other, op)
 
 
 def _lift_obj_obj_to_obj[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(
-        UnsafePointer[T, MutAnyOrigin], PythonObject, PythonObject
+        Pointer[T, MutAnyOrigin], PythonObject, PythonObject
     ) thin -> PythonObject,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
+    ptr: Pointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
 ) raises -> PythonObject:
     return method(ptr, a, b)
 
@@ -725,7 +647,7 @@ def _lift_obj_obj_to_obj[
 # Value-receiver → pointer-receiver lift helpers
 #
 # These wrap user functions that take `T` by value (typical struct methods)
-# into the `def(UnsafePointer[T, MutAnyOrigin]) raises -> R` shape expected
+# into the `def(Pointer[T, MutAnyOrigin]) raises -> R` shape expected
 # by the _install_* helpers.
 #
 # Unlike pointer-receiver functions, Mojo coerces def(T) -> R to match
@@ -735,49 +657,47 @@ def _lift_obj_obj_to_obj[
 
 
 def _lift_val_to_int[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(T) thin raises -> Int,
-](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Int:
+](ptr: Pointer[T, MutAnyOrigin]) raises -> Int:
     return method(ptr[])
 
 
 def _lift_val_to_obj[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(T) thin raises -> PythonObject,
-](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject:
+](ptr: Pointer[T, MutAnyOrigin]) raises -> PythonObject:
     return method(ptr[])
 
 
 def _lift_val_to_bool[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(T) thin raises -> Bool,
-](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> Bool:
+](ptr: Pointer[T, MutAnyOrigin]) raises -> Bool:
     return method(ptr[])
 
 
 def _lift_val_obj_to_obj[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(T, PythonObject) thin raises -> PythonObject,
-](
-    ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject
-) raises -> PythonObject:
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject:
     return method(ptr[], other)
 
 
 def _lift_val_obj_to_bool[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(T, PythonObject) thin raises -> Bool,
-](ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject) raises -> Bool:
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject) raises -> Bool:
     return method(ptr[], other)
 
 
 def _lift_val_obj_var_to_none[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(
         T, PythonObject, Variant[PythonObject, Int]
     ) thin raises -> None,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin],
+    ptr: Pointer[T, MutAnyOrigin],
     key: PythonObject,
     val: Variant[PythonObject, Int],
 ) raises -> None:
@@ -785,12 +705,12 @@ def _lift_val_obj_var_to_none[
 
 
 def _lift_mut_obj_var_to_none[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(
         mut T, PythonObject, Variant[PythonObject, Int]
     ) thin raises -> None,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin],
+    ptr: Pointer[T, MutAnyOrigin],
     key: PythonObject,
     val: Variant[PythonObject, Int],
 ) raises -> None:
@@ -798,17 +718,17 @@ def _lift_mut_obj_var_to_none[
 
 
 def _lift_val_int_to_obj[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(T, Int) thin raises -> PythonObject,
-](ptr: UnsafePointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
+](ptr: Pointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
     return method(ptr[], index)
 
 
 def _lift_val_int_var_to_none[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(T, Int, Variant[PythonObject, Int]) thin raises -> None,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin],
+    ptr: Pointer[T, MutAnyOrigin],
     index: Int,
     val: Variant[PythonObject, Int],
 ) raises -> None:
@@ -816,10 +736,10 @@ def _lift_val_int_var_to_none[
 
 
 def _lift_mut_int_var_to_none[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(mut T, Int, Variant[PythonObject, Int]) thin raises -> None,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin],
+    ptr: Pointer[T, MutAnyOrigin],
     index: Int,
     val: Variant[PythonObject, Int],
 ) raises -> None:
@@ -827,37 +747,33 @@ def _lift_mut_int_var_to_none[
 
 
 def _lift_val_obj_int_to_bool[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(T, PythonObject, Int) thin raises -> Bool,
-](
-    ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int
-) raises -> Bool:
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool:
     return method(ptr[], other, op)
 
 
 def _lift_val_obj_obj_to_obj[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(T, PythonObject, PythonObject) thin raises -> PythonObject,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
+    ptr: Pointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
 ) raises -> PythonObject:
     return method(ptr[], a, b)
 
 
 def _lift_mut_obj_to_obj[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(mut T, PythonObject) thin raises -> PythonObject,
-](
-    ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject
-) raises -> PythonObject:
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject:
     return method(ptr[], other)
 
 
 def _lift_mut_obj_obj_to_obj[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     method: def(mut T, PythonObject, PythonObject) thin raises -> PythonObject,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
+    ptr: Pointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
 ) raises -> PythonObject:
     return method(ptr[], a, b)
 
@@ -879,112 +795,104 @@ comptime _CPython = ConvertibleToPython & ImplicitlyCopyable
 
 
 def _conv_ptr_r_unary[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
-    method: def(UnsafePointer[T, MutAnyOrigin]) thin raises -> R,
-](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject:
+    method: def(Pointer[T, MutAnyOrigin]) thin raises -> R,
+](ptr: Pointer[T, MutAnyOrigin]) raises -> PythonObject:
     return method(ptr).to_python_object()
 
 
 def _conv_ptr_nr_unary[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
-    method: def(UnsafePointer[T, MutAnyOrigin]) thin -> R,
-](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject:
+    method: def(Pointer[T, MutAnyOrigin]) thin -> R,
+](ptr: Pointer[T, MutAnyOrigin]) raises -> PythonObject:
     return method(ptr).to_python_object()
 
 
 def _conv_val_r_unary[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
     method: def(T) thin raises -> R,
-](ptr: UnsafePointer[T, MutAnyOrigin]) raises -> PythonObject:
+](ptr: Pointer[T, MutAnyOrigin]) raises -> PythonObject:
     return method(ptr[]).to_python_object()
 
 
 def _conv_ptr_r_binary[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
-    method: def(UnsafePointer[T, MutAnyOrigin], PythonObject) thin raises -> R,
-](
-    ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject
-) raises -> PythonObject:
+    method: def(Pointer[T, MutAnyOrigin], PythonObject) thin raises -> R,
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject:
     return method(ptr, other).to_python_object()
 
 
 def _conv_ptr_nr_binary[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
-    method: def(UnsafePointer[T, MutAnyOrigin], PythonObject) thin -> R,
-](
-    ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject
-) raises -> PythonObject:
+    method: def(Pointer[T, MutAnyOrigin], PythonObject) thin -> R,
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject:
     return method(ptr, other).to_python_object()
 
 
 def _conv_val_r_binary[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
     method: def(T, PythonObject) thin raises -> R,
-](
-    ptr: UnsafePointer[T, MutAnyOrigin], other: PythonObject
-) raises -> PythonObject:
+](ptr: Pointer[T, MutAnyOrigin], other: PythonObject) raises -> PythonObject:
     return method(ptr[], other).to_python_object()
 
 
 def _conv_ptr_r_int_arg[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
-    method: def(UnsafePointer[T, MutAnyOrigin], Int) thin raises -> R,
-](ptr: UnsafePointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
+    method: def(Pointer[T, MutAnyOrigin], Int) thin raises -> R,
+](ptr: Pointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
     return method(ptr, index).to_python_object()
 
 
 def _conv_ptr_nr_int_arg[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
-    method: def(UnsafePointer[T, MutAnyOrigin], Int) thin -> R,
-](ptr: UnsafePointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
+    method: def(Pointer[T, MutAnyOrigin], Int) thin -> R,
+](ptr: Pointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
     return method(ptr, index).to_python_object()
 
 
 def _conv_val_r_int_arg[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
     method: def(T, Int) thin raises -> R,
-](ptr: UnsafePointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
+](ptr: Pointer[T, MutAnyOrigin], index: Int) raises -> PythonObject:
     return method(ptr[], index).to_python_object()
 
 
 def _conv_ptr_r_ternary[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
     method: def(
-        UnsafePointer[T, MutAnyOrigin], PythonObject, PythonObject
+        Pointer[T, MutAnyOrigin], PythonObject, PythonObject
     ) thin raises -> R,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
+    ptr: Pointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
 ) raises -> PythonObject:
     return method(ptr, a, b).to_python_object()
 
 
 def _conv_ptr_nr_ternary[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
-    method: def(
-        UnsafePointer[T, MutAnyOrigin], PythonObject, PythonObject
-    ) thin -> R,
+    method: def(Pointer[T, MutAnyOrigin], PythonObject, PythonObject) thin -> R,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
+    ptr: Pointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
 ) raises -> PythonObject:
     return method(ptr, a, b).to_python_object()
 
 
 def _conv_val_r_ternary[
-    T: ImplicitlyDestructible,
+    T: Deinitable,
     R: _CPython,
     method: def(T, PythonObject, PythonObject) thin raises -> R,
 ](
-    ptr: UnsafePointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
+    ptr: Pointer[T, MutAnyOrigin], a: PythonObject, b: PythonObject
 ) raises -> PythonObject:
     return method(ptr[], a, b).to_python_object()

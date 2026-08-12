@@ -33,7 +33,7 @@ to try the reflected operation on the other operand.
 
 ```mojo
 @staticmethod
-fn rich_compare(
+def rich_compare(
     self_ptr: PythonObject, other: PythonObject, op: Int
 ) raises -> Bool:
     if op == RichCompareOps.Py_EQ:
@@ -70,7 +70,7 @@ struct TypeProtocolBuilder[self_type: ImplicitlyDestructible]
 
 Wraps a `PythonTypeBuilder` reference and installs CPython type protocol slots.
 
-Handlers receive `UnsafePointer[T, MutAnyOrigin]` as `self`.
+Handlers receive `Pointer[T, MutAnyOrigin]` as `self`.
 
 ### `def_richcompare[method]()`
 
@@ -78,9 +78,9 @@ Installs `tp_richcompare`. Three overloads are available:
 
 | Overload | Handler signature |
 |----------|-------------------|
-| Pointer / raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool` |
-| Pointer / non-raising | `fn(self: UnsafePointer[T, MutAnyOrigin], other: PythonObject, op: Int) -> Bool` |
-| Value / raising | `fn(self: T, other: PythonObject, op: Int) raises -> Bool` |
+| Pointer / raising | `def(self: Pointer[T, MutAnyOrigin], other: PythonObject, op: Int) raises -> Bool` |
+| Pointer / non-raising | `def(self: Pointer[T, MutAnyOrigin], other: PythonObject, op: Int) -> Bool` |
+| Value / raising | `def(self: T, other: PythonObject, op: Int) raises -> Bool` |
 
 ---
 

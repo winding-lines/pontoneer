@@ -19,10 +19,10 @@ if [[ -z "$PONTONEER_VERSION" ]]; then
   exit 1
 fi
 
-# Extract the full mojo version from pixi.lock (e.g. 1.0.0b1.dev2026042405)
+# Extract the full mojo version from pixi.lock (e.g. 1.0.0 or 1.0.0b1.dev2026042405)
 MOJO_VERSION=$(grep -m1 'mojo-compiler-' "$REPO_ROOT/pixi.lock" \
-  | grep -oE 'mojo-compiler-[0-9][0-9a-z.]*\.dev[0-9]+' \
-  | sed 's/^mojo-compiler-//')
+  | grep -oE 'mojo-compiler-[0-9][0-9a-z.]*' \
+  | sed 's/^mojo-compiler-//;s/\.$//')
 if [[ -z "$MOJO_VERSION" ]]; then
   echo "error: could not extract mojo version from pixi.lock" >&2
   exit 1

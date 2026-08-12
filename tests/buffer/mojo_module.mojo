@@ -5,7 +5,7 @@
 # allowing zero-copy access via memoryview and numpy.frombuffer.
 # ===----------------------------------------------------------------------=== #
 
-from std.memory import UnsafePointer
+from std.memory import Pointer
 from std.os import abort
 from std.python import PythonObject
 from std.python.bindings import PythonModuleBuilder
@@ -33,12 +33,12 @@ struct FloatBuffer(Defaultable, Movable, Writable):
 
     @staticmethod
     def get_buffer(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], flags: Int32
+        self_ptr: Pointer[Self, MutAnyOrigin], flags: Int32
     ) raises -> BufferInfo:
         """Return a BufferInfo describing the internal Float64 array."""
         var data_ptr = self_ptr[].data.unsafe_ptr()
         return BufferInfo(
-            buf=rebind[UnsafePointer[UInt8, MutAnyOrigin]](data_ptr),
+            buf=rebind[Pointer[UInt8, MutAnyOrigin]](data_ptr),
             nitems=len(self_ptr[].data),
             itemsize=8,  # sizeof(Float64)
             format="d",  # Python struct code for C double
@@ -50,7 +50,7 @@ struct FloatBuffer(Defaultable, Movable, Writable):
 
 
 @export
-def PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() abi("C") -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (

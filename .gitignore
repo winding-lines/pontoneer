@@ -1,6 +1,7 @@
 .pixi/
 *.conda
 *.mojopkg
+*.mojoc
 *.so
 __pycache__/
 *.pyc

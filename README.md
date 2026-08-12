@@ -11,16 +11,16 @@ extensions for Python extension modules.
 ## Installation
 
 ```bash
-pixi add --channel https://prefix.dev/pontoneer --channel https://conda.modular.com/max-nightly pontoneer
+pixi add --channel https://prefix.dev/pontoneer --channel https://conda.modular.com/max pontoneer
 ```
 
 Or in your `pixi.toml`:
 
 ```toml
-channels = ["https://prefix.dev/pontoneer", "https://conda.modular.com/max-nightly/", "conda-forge"]
+channels = ["https://prefix.dev/pontoneer", "https://conda.modular.com/max/", "conda-forge"]
 
 [dependencies]
-pontoneer = ">=0.6.4"
+pontoneer = ">=1.0.0"
 ```
 
 ## Development

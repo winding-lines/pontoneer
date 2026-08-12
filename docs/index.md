@@ -18,23 +18,23 @@ because the CPython runtime requires the method to be wired into the type's
 ## Requirements
 
 - [pixi](https://pixi.sh) package manager
-- Nightly MAX (`pixi` will install it automatically)
+- Mojo 1.0 stable (`pixi` will install it automatically)
 
 ## Installation
 
 ### As a package
 
 ```bash
-pixi add --channel https://prefix.dev/pontoneer --channel https://conda.modular.com/max-nightly pontoneer
+pixi add --channel https://prefix.dev/pontoneer --channel https://conda.modular.com/max pontoneer
 ```
 
 Or in your `pixi.toml`:
 
 ```toml
-channels = ["https://prefix.dev/pontoneer", "https://conda.modular.com/max-nightly/", "conda-forge"]
+channels = ["https://prefix.dev/pontoneer", "https://conda.modular.com/max/", "conda-forge"]
 
 [dependencies]
-pontoneer = ">=0.6.4"
+pontoneer = ">=1.0.0"
 ```
 
 ### From source
@@ -43,7 +43,7 @@ pontoneer = ">=0.6.4"
 git clone git@github.com:winding-lines/pontoneer.git
 cd pontoneer
 pixi install
-pixi run build          # produces pontoneer.mojopkg
+pixi run build          # produces pontoneer.mojoc
 pixi run test-example   # builds and runs the columnar DataFrame example
 ```
 
@@ -64,16 +64,16 @@ from pontoneer import (
 struct MyStruct(Defaultable, Movable):
     var data: List[Float64]
 
-    fn __init__(out self):
+    def __init__(out self):
         self.data = []
 
-    fn py__len__(self) raises -> Int:
+    def py__len__(self) raises -> Int:
         return len(self.data)
 
-    fn py__getitem__(self, key: PythonObject) raises -> PythonObject:
+    def py__getitem__(self, key: PythonObject) raises -> PythonObject:
         return PythonObject(self.data[Int(py=key)])
 
-    fn py__setitem__(
+    def py__setitem__(
         mut self, key: PythonObject, value: Variant[PythonObject, Int]
     ) raises -> None:
         if value.isa[PythonObject]():
@@ -81,7 +81,7 @@ struct MyStruct(Defaultable, Movable):
         else:
             _ = self.data.pop(Int(py=key))
 
-    fn rich_compare(
+    def rich_compare(
         self, other: PythonObject, op: Int
     ) raises -> Bool:
         var other_ptr = other.downcast_value_ptr[Self]()
@@ -89,7 +89,7 @@ struct MyStruct(Defaultable, Movable):
             return len(self.data) == len(other_ptr[].data)
         raise NotImplementedError()
 
-    fn py__neg__(self) raises -> PythonObject:
+    def py__neg__(self) raises -> PythonObject:
         var result = List[Float64](capacity=len(self.data))
         for v in self.data:
             result.append(-v)
@@ -97,7 +97,7 @@ struct MyStruct(Defaultable, Movable):
         out.data = result^
         return PythonObject(alloc=out^)
 
-    fn py__add__(self, other: PythonObject) raises -> PythonObject:
+    def py__add__(self, other: PythonObject) raises -> PythonObject:
         try:
             var other_ptr = other.downcast_value_ptr[Self]()
             var result = MyStruct()
@@ -111,7 +111,7 @@ struct MyStruct(Defaultable, Movable):
 
 
 @export
-fn PyInit_mymodule() -> PythonObject:
+def PyInit_mymodule() abi("C") -> PythonObject:
     try:
         var b = PythonModuleBuilder("mymodule")
 
@@ -140,15 +140,15 @@ fn PyInit_mymodule() -> PythonObject:
 ## Handler signatures
 
 Handlers can be written as regular methods on `self` (value-receiver) or as
-`@staticmethod` functions taking `UnsafePointer[T, MutAnyOrigin]`.
+`@staticmethod` functions taking `Pointer[T, MutAnyOrigin]`.
 The value-receiver style is shown below.
 
 | Slot | Value-receiver signature |
 |------|--------------------------|
-| `mp_length` | `fn py__len__(self) raises -> Int` |
-| `mp_getitem` | `fn py__getitem__(self, key: PythonObject) raises -> PythonObject` |
-| `mp_setitem` | `fn py__setitem__(mut self, key: PythonObject, value: Variant[PythonObject, Int]) raises -> None` |
-| `tp_richcompare` | `fn rich_compare(self, other: PythonObject, op: Int) raises -> Bool` |
+| `mp_length` | `def py__len__(self) raises -> Int` |
+| `mp_getitem` | `def py__getitem__(self, key: PythonObject) raises -> PythonObject` |
+| `mp_setitem` | `def py__setitem__(mut self, key: PythonObject, value: Variant[PythonObject, Int]) raises -> None` |
+| `tp_richcompare` | `def rich_compare(self, other: PythonObject, op: Int) raises -> Bool` |
 
 For `mp_setitem`, `value` is `Variant[PythonObject, Int](Int(0))` when Python
 calls `del obj[key]`, and `Variant[PythonObject, Int](val)` for `obj[key] = val`.

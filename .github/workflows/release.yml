@@ -30,7 +30,7 @@ jobs:
       with:
         cache: true
         frozen: true
-    - name: Build mojopkg
+    - name: Build mojoc
       run: pixi run build
     - name: Build conda package
       run: pixi build
@@ -45,6 +45,6 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          package/pontoneer.mojopkg
-          output/*/pontoneer-*.conda
+          pontoneer.mojoc
+          pontoneer-*.conda
         generate_release_notes: ${{ matrix.target == 'linux-64' }}

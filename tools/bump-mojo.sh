@@ -21,25 +21,31 @@ else
   exit 1
 fi
 
-# Validate the version looks like a mojo nightly version
-# Accepts either a 4-segment release (0.26.3.0.devN) or a PEP 440 prerelease
-# (1.0.0b1.devN, 1.0.0rc2.devN, etc.)
-if [[ ! "$NEW_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+|(a|b|rc)[0-9]+)\.dev[0-9]+$ ]]; then
-  echo "error: version '$NEW_VER' does not match expected format (e.g. 0.26.3.0.dev2026041020 or 1.0.0b1.dev2026042405)" >&2
+# Validate the version looks like a mojo version: a stable release (1.0.0),
+# a 4-segment release (0.26.3.0), a PEP 440 prerelease (1.0.0b1), or any of
+# those with a .devN nightly suffix.
+if [[ ! "$NEW_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+|(a|b|rc)[0-9]+)?(\.dev[0-9]+)?$ ]]; then
+  echo "error: version '$NEW_VER' does not match expected format (e.g. 1.0.0, 0.26.3.0.dev2026041020, or 1.0.0b1.dev2026042405)" >&2
   exit 1
 fi
 
 PIXI_TOML="$REPO_ROOT/pixi.toml"
 
 # Show what will change
-OLD_VER=$(grep -m1 'mojo.*==[0-9]' "$PIXI_TOML" | grep -o '[0-9][0-9a-z.]*\.dev[0-9]*')
+OLD_VER=$(grep -m1 'mojo.*==[0-9]' "$PIXI_TOML" | grep -o '==[0-9][0-9a-z.]*' | sed 's/^==//')
 echo "bumping mojo: $OLD_VER -> $NEW_VER"
 
-sed -i '' "s/==[0-9][0-9a-z.]*\.dev[0-9]*/==${NEW_VER}/g" "$PIXI_TOML"
+sed -i '' "s/==[0-9][0-9a-z.]*/==${NEW_VER}/g" "$PIXI_TOML"
 
-# Extract just the dev suffix (e.g. "dev2026041105") and update package.version
-DEV_SUFFIX=$(echo "$NEW_VER" | grep -o 'dev[0-9]*')
+# Extract the dev suffix (e.g. "dev2026041105"), if any, and update
+# package.version; stable mojo releases leave package.version untouched.
+DEV_SUFFIX=$(echo "$NEW_VER" | grep -o 'dev[0-9]*' || true)
 OLD_PKG_VER=$(grep -m1 '^version = ' "$PIXI_TOML" | grep -o '"[^"]*"')
+if [[ -z "$DEV_SUFFIX" ]]; then
+  echo "stable mojo version; leaving package.version at $OLD_PKG_VER"
+  echo "updated $PIXI_TOML"
+  exit 0
+fi
 # Strip any existing .devXXX suffix, then append the new one
 BASE_VER=$(echo "$OLD_PKG_VER" | sed 's/\.dev[0-9]*//')
 NEW_PKG_VER=$(echo "$BASE_VER" | sed 's/"$/\.'"$DEV_SUFFIX"'"/')

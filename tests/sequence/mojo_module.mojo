@@ -12,7 +12,7 @@
 # ===----------------------------------------------------------------------=== #
 
 from std.os import abort
-from std.memory import UnsafePointer
+from std.memory import Pointer
 from std.utils import Variant
 from std.python import PythonObject
 from std.python.bindings import PythonModuleBuilder
@@ -34,12 +34,12 @@ struct Seq(Defaultable, Movable, Writable):
         return PythonObject(alloc=result^)
 
     @staticmethod
-    def py__len__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Int:
+    def py__len__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> Int:
         return len(self_ptr[].data)
 
     @staticmethod
     def py__getitem__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], index: Int
+        self_ptr: Pointer[Self, MutAnyOrigin], index: Int
     ) raises -> PythonObject:
         if index < 0 or index >= len(self_ptr[].data):
             raise Error("index out of range")
@@ -47,7 +47,7 @@ struct Seq(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__setitem__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        self_ptr: Pointer[Self, MutAnyOrigin],
         index: Int,
         value: Variant[PythonObject, Int],
     ) raises -> None:
@@ -60,7 +60,7 @@ struct Seq(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__contains__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], item: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], item: PythonObject
     ) raises -> Bool:
         var v = Int(py=item)
         for elem in self_ptr[].data:
@@ -70,7 +70,7 @@ struct Seq(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__concat__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         var other_ptr = other.downcast_value_ptr[Self]()
         var result = Seq()
@@ -82,7 +82,7 @@ struct Seq(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__repeat__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], count: Int
+        self_ptr: Pointer[Self, MutAnyOrigin], count: Int
     ) raises -> PythonObject:
         var result = Seq()
         for _ in range(count):
@@ -122,7 +122,7 @@ struct SeqV(Defaultable, Movable, Writable):
     # Mutation uses pointer receiver
     @staticmethod
     def py__setitem__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        self_ptr: Pointer[Self, MutAnyOrigin],
         index: Int,
         value: Variant[PythonObject, Int],
     ) raises -> None:
@@ -164,7 +164,7 @@ struct SeqV(Defaultable, Movable, Writable):
 
 
 @export
-def PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() abi("C") -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (

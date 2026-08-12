@@ -12,7 +12,7 @@
 # ===----------------------------------------------------------------------=== #
 
 from std.os import abort
-from std.memory import UnsafePointer
+from std.memory import Pointer
 from std.python import PythonObject
 from std.python.bindings import PythonModuleBuilder
 
@@ -31,7 +31,7 @@ struct Number(Defaultable, Movable, Writable):
     @staticmethod
     def _get_self_ptr(
         py_self: PythonObject,
-    ) -> UnsafePointer[Self, MutAnyOrigin]:
+    ) -> Pointer[Self, MutAnyOrigin]:
         try:
             return py_self.downcast_value_ptr[Self]()
         except e:
@@ -50,26 +50,20 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def py__neg__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin]
-    ) raises -> PythonObject:
+    def py__neg__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> PythonObject:
         return PythonObject(alloc=Number(-self_ptr[].value))
 
     @staticmethod
-    def py__abs__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin]
-    ) raises -> PythonObject:
+    def py__abs__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> PythonObject:
         return PythonObject(alloc=Number(abs(self_ptr[].value)))
 
     @staticmethod
-    def py__pos__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin]
-    ) raises -> PythonObject:
+    def py__pos__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> PythonObject:
         return PythonObject(alloc=Number(self_ptr[].value))
 
     @staticmethod
     def py__invert__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+        self_ptr: Pointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(alloc=Number(~self_ptr[].value))
 
@@ -78,7 +72,7 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def py__bool__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Bool:
+    def py__bool__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> Bool:
         return self_ptr[].value != 0
 
     # ------------------------------------------------------------------
@@ -86,20 +80,18 @@ struct Number(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def py__int__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin]
-    ) raises -> PythonObject:
+    def py__int__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> PythonObject:
         return PythonObject(self_ptr[].value)
 
     @staticmethod
     def py__float__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+        self_ptr: Pointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(Float64(self_ptr[].value))
 
     @staticmethod
     def py__index__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin]
+        self_ptr: Pointer[Self, MutAnyOrigin]
     ) raises -> PythonObject:
         return PythonObject(self_ptr[].value)
 
@@ -109,7 +101,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__add__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -119,7 +111,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__sub__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -129,7 +121,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__mul__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -139,7 +131,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__floordiv__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -149,7 +141,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__mod__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -159,7 +151,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__and__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -169,7 +161,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__or__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -179,7 +171,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__xor__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -189,7 +181,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__lshift__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -199,7 +191,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__rshift__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         try:
             var o = other.downcast_value_ptr[Self]()
@@ -213,7 +205,7 @@ struct Number(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__pow__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        self_ptr: Pointer[Self, MutAnyOrigin],
         exp: PythonObject,
         mod: PythonObject,
     ) raises -> PythonObject:
@@ -242,7 +234,7 @@ struct NumberV(Defaultable, Movable, Writable):
     @staticmethod
     def _get_self_ptr(
         py_self: PythonObject,
-    ) -> UnsafePointer[Self, MutAnyOrigin]:
+    ) -> Pointer[Self, MutAnyOrigin]:
         try:
             return py_self.downcast_value_ptr[Self]()
         except e:
@@ -379,7 +371,7 @@ struct NumberM(Defaultable, Movable, Writable):
     @staticmethod
     def _get_self_ptr(
         py_self: PythonObject,
-    ) -> UnsafePointer[Self, MutAnyOrigin]:
+    ) -> Pointer[Self, MutAnyOrigin]:
         try:
             return py_self.downcast_value_ptr[Self]()
         except e:
@@ -432,7 +424,7 @@ struct NumberM(Defaultable, Movable, Writable):
 
 
 @export
-def PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() abi("C") -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (

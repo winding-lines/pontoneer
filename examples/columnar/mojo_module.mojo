@@ -17,7 +17,7 @@
 # ===----------------------------------------------------------------------=== #
 
 from std.os import abort
-from std.memory import UnsafePointer
+from std.memory import Pointer
 from std.utils import Variant
 from std.python import Python, PythonObject
 from std.python.bindings import PythonModuleBuilder
@@ -36,8 +36,8 @@ comptime Coord1DColumn = List[Float64]
 
 def _extent(pos: Coord1DColumn) -> Tuple[Float64, Float64]:
     """Return the (min, max) of a column."""
-    v_min = Float64.MAX
-    v_max = Float64.MIN
+    var v_min = Float64.MAX
+    var v_max = Float64.MIN
     for v in pos:
         v_min = min(v_min, v)
         v_max = max(v_max, v)
@@ -50,8 +50,8 @@ def _compute_bounding_box_area(
 ) -> Float64:
     if len(pos_x) == 0:
         return 0.0
-    ext_x = _extent(pos_x)
-    ext_y = _extent(pos_y)
+    var ext_x = _extent(pos_x)
+    var ext_y = _extent(pos_y)
     return (ext_x[1] - ext_x[0]) * (ext_y[1] - ext_y[0])
 
 
@@ -64,7 +64,7 @@ comptime _global_call_count = _Global["call_count", _init_call_count]
 
 
 def _get_global_call_count(
-    out result: UnsafePointer[Dict[String, Int], MutExternalOrigin]
+    out result: Pointer[Dict[String, Int], MutUntrackedOrigin]
 ):
     """Gets the global calls count.
 
@@ -179,9 +179,7 @@ struct DataFrame(Defaultable, Movable, Writable):
         Only LT and EQ are implemented; all other operations raise
         NotImplementedError so Python falls back to the reflected call.
         """
-        var invocation = "{}rich_compare[{}]".format(
-            Int(UnsafePointer(to=self)), op
-        )
+        var invocation = "{}rich_compare[{}]".format(Int(Pointer(to=self)), op)
         var call_count = _get_global_call_count()
         call_count[][invocation] = call_count[].get(invocation, 0) + 1
         var other_df = other.downcast_value_ptr[Self]()
@@ -196,9 +194,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def py__neg__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin]
-    ) raises -> PythonObject:
+    def py__neg__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> PythonObject:
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
         var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
         for v in self_ptr[].pos_x:
@@ -208,9 +204,7 @@ struct DataFrame(Defaultable, Movable, Writable):
         return PythonObject(alloc=DataFrame(result_x^, result_y^))
 
     @staticmethod
-    def py__abs__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin]
-    ) raises -> PythonObject:
+    def py__abs__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> PythonObject:
         var result_x = Coord1DColumn(capacity=len(self_ptr[].pos_x))
         var result_y = Coord1DColumn(capacity=len(self_ptr[].pos_y))
         for v in self_ptr[].pos_x:
@@ -224,7 +218,7 @@ struct DataFrame(Defaultable, Movable, Writable):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def py__bool__(self_ptr: UnsafePointer[Self, MutAnyOrigin]) raises -> Bool:
+    def py__bool__(self_ptr: Pointer[Self, MutAnyOrigin]) raises -> Bool:
         return len(self_ptr[].pos_x) > 0
 
     # ------------------------------------------------------------------
@@ -233,7 +227,7 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__add__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         """Concatenate two DataFrames row-wise. Returns NotImplemented for non-DataFrames.
         """
@@ -256,7 +250,7 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__mul__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin], other: PythonObject
+        self_ptr: Pointer[Self, MutAnyOrigin], other: PythonObject
     ) raises -> PythonObject:
         """Scale all coordinates by a numeric scalar. Returns NotImplemented otherwise.
         """
@@ -278,7 +272,7 @@ struct DataFrame(Defaultable, Movable, Writable):
 
     @staticmethod
     def py__pow__(
-        self_ptr: UnsafePointer[Self, MutAnyOrigin],
+        self_ptr: Pointer[Self, MutAnyOrigin],
         exp: PythonObject,
         mod: PythonObject,
     ) raises -> PythonObject:
@@ -297,7 +291,7 @@ struct DataFrame(Defaultable, Movable, Writable):
 
 
 @export
-def PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() abi("C") -> PythonObject:
     """Entry point: create the Python extension module."""
     try:
         var b = PythonModuleBuilder("mojo_module")

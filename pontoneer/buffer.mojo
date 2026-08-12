@@ -9,9 +9,15 @@
 # ===----------------------------------------------------------------------=== #
 
 from std.ffi import c_int
-from std.memory import OpaquePointer, UnsafePointer
+from std.memory import OpaquePointer, OptionalPointer
+from std.memory.alloc import unsafe_alloc
 from std.python import Python, PythonObject
-from std.python._cpython import PyObjectPtr, Py_ssize_t, PyType_Slot
+from std.python._cpython import (
+    PyObjectPtr,
+    Py_ssize_t,
+    PyType_Slot,
+    _fn_ptr_as_opaque,
+)
 from std.python.bindings import PythonTypeBuilder
 
 from .adapters import _unwrap_self
@@ -40,11 +46,11 @@ struct BufferInfo:
         ```mojo
         @staticmethod
         def get_buffer(
-            self_ptr: UnsafePointer[Self, MutAnyOrigin], flags: Int32
+            self_ptr: Pointer[Self, MutAnyOrigin], flags: Int32
         ) raises -> BufferInfo:
             var data_ptr = self_ptr[].data.unsafe_ptr()
             return BufferInfo(
-                buf=rebind[UnsafePointer[UInt8, MutAnyOrigin]](data_ptr),
+                buf=rebind[Pointer[UInt8, MutAnyOrigin]](data_ptr),
                 nitems=len(self_ptr[].data),
                 itemsize=8,
                 format="d",
@@ -53,7 +59,7 @@ struct BufferInfo:
         ```
     """
 
-    var buf: UnsafePointer[UInt8, MutAnyOrigin]
+    var buf: Pointer[UInt8, MutUntrackedOrigin]
     """Pointer to the first byte of the buffer data."""
     var nitems: Int
     """Number of elements in the buffer."""
@@ -66,13 +72,13 @@ struct BufferInfo:
 
     def __init__(
         out self,
-        buf: UnsafePointer[UInt8, MutAnyOrigin],
+        buf: Pointer[UInt8, MutAnyOrigin],
         nitems: Int,
         itemsize: Int,
         format: String,
         readonly: Bool = True,
     ):
-        self.buf = buf
+        self.buf = buf.unsafe_origin_cast[MutUntrackedOrigin]()
         self.nitems = nitems
         self.itemsize = itemsize
         self.format = format
@@ -96,17 +102,17 @@ struct BufferInfo:
 #   offset 72: void *internal         (8 bytes)
 # ===----------------------------------------------------------------------=== #
 struct _PyBuffer:
-    var buf: OpaquePointer[MutAnyOrigin]
+    var buf: OpaquePointer[MutUntrackedOrigin]
     var obj: PyObjectPtr
     var len: Int
     var itemsize: Int
     var readonly: Int32
     var ndim: Int32
-    var format: UnsafePointer[UInt8, MutAnyOrigin]
-    var shape: UnsafePointer[Int, MutAnyOrigin]
-    var strides: UnsafePointer[Int, MutAnyOrigin]
-    var suboffsets: UnsafePointer[Int, MutAnyOrigin]
-    var internal: OpaquePointer[MutAnyOrigin]
+    var format: OptionalPointer[UInt8, MutUntrackedOrigin]
+    var shape: OptionalPointer[Int, MutUntrackedOrigin]
+    var strides: OptionalPointer[Int, MutUntrackedOrigin]
+    var suboffsets: OptionalPointer[Int, MutUntrackedOrigin]
+    var internal: OptionalPointer[NoneType, MutUntrackedOrigin]
 
 
 # ===----------------------------------------------------------------------=== #
@@ -115,13 +121,13 @@ struct _PyBuffer:
 
 
 def _bf_getbuffer_wrapper[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], Int32
+        Pointer[self_type, MutAnyOrigin], Int32
     ) thin raises -> BufferInfo,
 ](
     raw_self: PyObjectPtr,
-    view: UnsafePointer[_PyBuffer, MutAnyOrigin],
+    view: Pointer[_PyBuffer, MutAnyOrigin],
     flags: c_int,
 ) abi("C") -> c_int:
     """CPython `getbufferproc` adapter for the `bf_getbuffer` slot.
@@ -134,7 +140,7 @@ def _bf_getbuffer_wrapper[
     Parameters:
         self_type: The Mojo struct type whose instances back the Python object.
         method: User function
-            `def(self_ptr: UnsafePointer[T, MutAnyOrigin], flags: Int32) raises -> BufferInfo`.
+            `def(self_ptr: Pointer[T, MutAnyOrigin], flags: Int32) raises -> BufferInfo`.
 
     Returns:
         0 on success, -1 with an exception set on error.
@@ -149,7 +155,9 @@ def _bf_getbuffer_wrapper[
             var error_type = cpython.get_error_global("PyExc_BufferError")
             cpython.PyErr_SetString(
                 error_type,
-                "buffer is not writable".as_c_string_slice().unsafe_ptr(),
+                "buffer is not writable".as_c_string_slice()
+                .unsafe_ptr()
+                .as_unsafe_any_origin(),
             )
             return c_int(-1)
 
@@ -160,35 +168,31 @@ def _bf_getbuffer_wrapper[
         var fmt_len = len(fmt_bytes)
         var alloc_size = 16 + fmt_len + 1  # 2 * sizeof(Int64) + format + NUL
 
-        # List.steal_data() gives us an owned UnsafePointer we can free later.
-        var store = List[UInt8](capacity=alloc_size)
-        store.resize(alloc_size, 0)
-        var alloc = store.steal_data()
+        # Raw allocation; freed by _bf_releasebuffer_impl via view->internal.
+        var storage = unsafe_alloc[UInt8](alloc_size)
 
         # shape[0] = nitems  (Py_ssize_t at byte offset 0)
-        var shape_ptr = rebind[UnsafePointer[Int, MutAnyOrigin]](alloc)
-        shape_ptr[0] = info.nitems
+        var shape_ptr = storage.unsafe_bitcast[Int]()
+        shape_ptr[] = info.nitems
 
         # strides[0] = itemsize  (Py_ssize_t at byte offset 8)
-        var stride_ptr = shape_ptr + 1
-        stride_ptr[0] = info.itemsize
+        var stride_ptr = shape_ptr.unsafe_offset(1)
+        stride_ptr[] = info.itemsize
 
         # format string: copy bytes then null-terminate (byte offset 16)
-        var fmt_ptr = alloc + 16  # 2 * 8 bytes past the two Int fields
+        var fmt_ptr = storage.unsafe_offset(16)  # past the two Int fields
         for i in range(fmt_len):
-            fmt_ptr[i] = fmt_bytes[i]
-        fmt_ptr[fmt_len] = 0
+            fmt_ptr[unsafe_offset=i] = fmt_bytes[i]
+        fmt_ptr[unsafe_offset=fmt_len] = 0
 
         # Fill the Py_buffer view.
-        view[].buf = rebind[OpaquePointer[MutAnyOrigin]](info.buf)
+        view[].buf = info.buf.unsafe_bitcast[NoneType]()
         view[].obj = cpython.Py_NewRef(raw_self)
         view[].len = info.nitems * info.itemsize
         view[].itemsize = info.itemsize
         view[].readonly = Int32(1) if info.readonly else Int32(0)
         view[].ndim = Int32(1)
-        view[].suboffsets = UnsafePointer[Int, MutAnyOrigin](
-            unsafe_from_address=0
-        )
+        view[].suboffsets = None
 
         # Always provide shape; strides are provided so consumers requesting
         # PyBUF_STRIDES / PyBUF_FULL_RO (e.g. memoryview) work correctly.
@@ -197,27 +201,26 @@ def _bf_getbuffer_wrapper[
 
         # Provide format string only when the consumer requests it.
         if Int32(flags) & _PyBUF_FORMAT:
-            view[].format = rebind[UnsafePointer[UInt8, MutAnyOrigin]](fmt_ptr)
+            view[].format = fmt_ptr
         else:
-            view[].format = UnsafePointer[UInt8, MutAnyOrigin](
-                unsafe_from_address=0
-            )
+            view[].format = None
 
         # Stash the allocation for releasebuffer to free.
-        view[].internal = rebind[OpaquePointer[MutAnyOrigin]](alloc)
+        view[].internal = storage.unsafe_bitcast[NoneType]()
 
         return c_int(0)
     except e:
         var error_type = cpython.get_error_global("PyExc_BufferError")
         var msg = String(e)
         cpython.PyErr_SetString(
-            error_type, msg.as_c_string_slice().unsafe_ptr()
+            error_type,
+            msg.as_c_string_slice().unsafe_ptr().as_unsafe_any_origin(),
         )
         return c_int(-1)
 
 
 def _bf_releasebuffer_impl(
-    raw_self: PyObjectPtr, view: UnsafePointer[_PyBuffer, MutAnyOrigin]
+    raw_self: PyObjectPtr, view: Pointer[_PyBuffer, MutAnyOrigin]
 ) abi("C") -> None:
     """Default `releasebufferproc` that frees the shape/strides/format block.
 
@@ -225,9 +228,9 @@ def _bf_releasebuffer_impl(
     heap block allocated by `_bf_getbuffer_wrapper` is stored in
     `view->internal`; this function frees it and clears the field.
     """
-    if view[].internal != OpaquePointer[MutAnyOrigin](unsafe_from_address=0):
-        rebind[UnsafePointer[UInt8, MutAnyOrigin]](view[].internal).free()
-        view[].internal = OpaquePointer[MutAnyOrigin](unsafe_from_address=0)
+    if view[].internal:
+        view[].internal.value().unsafe_bitcast[UInt8]().unsafe_free()
+        view[].internal = None
 
 
 # ===----------------------------------------------------------------------=== #
@@ -236,37 +239,33 @@ def _bf_releasebuffer_impl(
 
 
 def _install_bf_getbuffer[
-    self_type: ImplicitlyDestructible,
+    self_type: Deinitable,
     method: def(
-        UnsafePointer[self_type, MutAnyOrigin], Int32
+        Pointer[self_type, MutAnyOrigin], Int32
     ) thin raises -> BufferInfo,
-](ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]):
+](ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]):
     """Insert the `bf_getbuffer` slot into the builder pointed to by `ptr`."""
     comptime _getbufferproc = def(
-        PyObjectPtr, UnsafePointer[_PyBuffer, MutAnyOrigin], c_int
+        PyObjectPtr, Pointer[_PyBuffer, MutAnyOrigin], c_int
     ) thin abi("C") -> c_int
     var fn_ptr: _getbufferproc = _bf_getbuffer_wrapper[self_type, method]
     ptr[]._insert_slot(
-        PyType_Slot(
-            _PySlotIndex.bf_getbuffer,
-            rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
-        )
+        PyType_Slot(c_int(_PySlotIndex.bf_getbuffer), _fn_ptr_as_opaque(fn_ptr))
     )
 
 
 def _install_bf_releasebuffer(
-    ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
+    ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]
 ):
     """Insert the default `bf_releasebuffer` slot into the builder pointed to by `ptr`.
     """
     comptime _releasebufferproc = def(
-        PyObjectPtr, UnsafePointer[_PyBuffer, MutAnyOrigin]
+        PyObjectPtr, Pointer[_PyBuffer, MutAnyOrigin]
     ) thin abi("C") -> None
     var fn_ptr: _releasebufferproc = _bf_releasebuffer_impl
     ptr[]._insert_slot(
         PyType_Slot(
-            _PySlotIndex.bf_releasebuffer,
-            rebind[OpaquePointer[MutAnyOrigin]](fn_ptr),
+            c_int(_PySlotIndex.bf_releasebuffer), _fn_ptr_as_opaque(fn_ptr)
         )
     )
 
@@ -276,7 +275,7 @@ def _install_bf_releasebuffer(
 # ===----------------------------------------------------------------------=== #
 
 
-struct BufferProtocolBuilder[self_type: ImplicitlyDestructible]:
+struct BufferProtocolBuilder[self_type: Deinitable]:
     """Wraps a `PythonTypeBuilder` reference and installs CPython buffer protocol slots.
 
     `BufferProtocolBuilder` holds a pointer to a `PythonTypeBuilder` that is
@@ -300,20 +299,20 @@ struct BufferProtocolBuilder[self_type: ImplicitlyDestructible]:
         ```
     """
 
-    var _ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
+    var _ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]
 
     def __init__(out self, mut inner: PythonTypeBuilder):
-        self._ptr = UnsafePointer(to=inner)
+        self._ptr = Pointer(to=inner).unsafe_origin_cast[MutUntrackedOrigin]()
 
     def __init__(
         out self,
-        ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin],
+        ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin],
     ):
         self._ptr = ptr
 
     def def_getbuffer[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], Int32
+            Pointer[Self.self_type, MutAnyOrigin], Int32
         ) thin raises -> BufferInfo
     ](mut self) -> ref[self] Self:
         """Install `__buffer__` via the `bf_getbuffer` slot.
@@ -327,7 +326,7 @@ struct BufferProtocolBuilder[self_type: ImplicitlyDestructible]:
 
         Parameters:
             method: Static method with signature
-                `def(self_ptr: UnsafePointer[T, MutAnyOrigin], flags: Int32) raises -> BufferInfo`.
+                `def(self_ptr: Pointer[T, MutAnyOrigin], flags: Int32) raises -> BufferInfo`.
 
         See: https://docs.python.org/3/c-api/typeobj.html#c.PyBufferProcs.bf_getbuffer
         """

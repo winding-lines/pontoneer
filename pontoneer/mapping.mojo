@@ -8,7 +8,7 @@
 # module-level visibility, so the call compiles on nightly MAX.
 # ===----------------------------------------------------------------------=== #
 
-from std.memory import UnsafePointer
+from std.memory import Pointer
 from std.python import PythonObject
 from std.python.bindings import PythonTypeBuilder
 from std.utils import Variant
@@ -30,12 +30,12 @@ from .adapters import (
 )
 
 
-struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
+struct MappingProtocolBuilder[self_type: Deinitable]:
     """Installs CPython mapping protocol slots on a `PythonTypeBuilder`.
 
     Construct directly from a `PythonTypeBuilder`.  The three methods correspond
     to `__len__`, `__getitem__`, and `__setitem__`/`__delitem__`.
-    Handler functions receive `UnsafePointer[T, MutAnyOrigin]` as their first
+    Handler functions receive `Pointer[T, MutAnyOrigin]` as their first
     argument instead of a raw `PythonObject`.
 
     Usage:
@@ -47,21 +47,19 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
         ```
     """
 
-    var _ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin]
+    var _ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin]
 
     def __init__(out self, mut inner: PythonTypeBuilder):
-        self._ptr = UnsafePointer(to=inner)
+        self._ptr = Pointer(to=inner).unsafe_origin_cast[MutUntrackedOrigin]()
 
     def __init__(
         out self,
-        ptr: UnsafePointer[mut=True, PythonTypeBuilder, MutAnyOrigin],
+        ptr: Pointer[PythonTypeBuilder, MutUntrackedOrigin],
     ):
         self._ptr = ptr
 
     def def_len[
-        method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin]
-        ) thin raises -> Int
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin raises -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `mp_length` slot.
 
@@ -73,7 +71,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_getitem[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot.
@@ -86,7 +84,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_setitem[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             Variant[PythonObject, Int],
         ) thin raises -> None
@@ -106,7 +104,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
     # Non-raising overloads
 
     def def_len[
-        method: def(UnsafePointer[Self.self_type, MutAnyOrigin]) thin -> Int
+        method: def(Pointer[Self.self_type, MutAnyOrigin]) thin -> Int
     ](mut self) -> ref[self] Self:
         """Install `__len__` via the `mp_length` slot (non-raising overload).
 
@@ -119,7 +117,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_getitem[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> PythonObject
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot (non-raising overload).
@@ -133,7 +131,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
 
     def def_setitem[
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin],
+            Pointer[Self.self_type, MutAnyOrigin],
             PythonObject,
             Variant[PythonObject, Int],
         ) thin -> None
@@ -192,7 +190,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_getitem[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin raises -> R,
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot (ConvertibleToPython return overload).
@@ -207,7 +205,7 @@ struct MappingProtocolBuilder[self_type: ImplicitlyDestructible]:
     def def_getitem[
         R: _CPython,
         method: def(
-            UnsafePointer[Self.self_type, MutAnyOrigin], PythonObject
+            Pointer[Self.self_type, MutAnyOrigin], PythonObject
         ) thin -> R,
     ](mut self) -> ref[self] Self:
         """Install `__getitem__` via the `mp_subscript` slot (ConvertibleToPython return, non-raising overload).

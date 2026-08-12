@@ -12,7 +12,7 @@
 # ===----------------------------------------------------------------------=== #
 
 from std.os import abort
-from std.memory import UnsafePointer
+from std.memory import Pointer
 from std.python import PythonObject
 from std.python.bindings import PythonModuleBuilder
 
@@ -31,7 +31,7 @@ struct Box(Defaultable, Movable, Writable):
     @staticmethod
     def _get_self_ptr(
         py_self: PythonObject,
-    ) -> UnsafePointer[Self, MutAnyOrigin]:
+    ) -> Pointer[Self, MutAnyOrigin]:
         try:
             return py_self.downcast_value_ptr[Self]()
         except e:
@@ -84,7 +84,7 @@ struct BoxV(Defaultable, Movable, Writable):
     @staticmethod
     def _get_self_ptr(
         py_self: PythonObject,
-    ) -> UnsafePointer[Self, MutAnyOrigin]:
+    ) -> Pointer[Self, MutAnyOrigin]:
         try:
             return py_self.downcast_value_ptr[Self]()
         except e:
@@ -121,7 +121,7 @@ struct BoxV(Defaultable, Movable, Writable):
 
 
 @export
-def PyInit_mojo_module() -> PythonObject:
+def PyInit_mojo_module() abi("C") -> PythonObject:
     try:
         var b = PythonModuleBuilder("mojo_module")
         ref tb = (
