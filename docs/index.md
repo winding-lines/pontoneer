@@ -22,20 +22,31 @@ because the CPython runtime requires the method to be wired into the type's
 
 ## Installation
 
-### As a package
+### As a git submodule
 
 ```bash
-pixi add --channel https://prefix.dev/pontoneer --channel https://conda.modular.com/max pontoneer
+git submodule add https://github.com/winding-lines/pontoneer external/pontoneer
+git -C external/pontoneer checkout v1.0.0+mojo1.0.0-2   # pin the release
 ```
 
-Or in your `pixi.toml`:
+Your project needs Mojo 1.0 from the stable Modular channel — in `pixi.toml`:
 
 ```toml
-channels = ["https://prefix.dev/pontoneer", "https://conda.modular.com/max/", "conda-forge"]
+channels = ["https://conda.modular.com/max/", "conda-forge"]
 
 [dependencies]
-pontoneer = ">=1.0.0"
+mojo = "==1.0.0"
 ```
+
+Then include the submodule path when building your extension module:
+
+```bash
+mojo build --emit shared-lib -I external/pontoneer my_module.mojo -o my_module.so
+```
+
+Prebuilt artifacts (`pontoneer.mojoc` and conda packages for osx-arm64 /
+linux-64) are also attached to each
+[GitHub release](https://github.com/winding-lines/pontoneer/releases).
 
 ### From source
 

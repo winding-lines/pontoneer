@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Installation instructions now recommend adding pontoneer as a git submodule
+  and building with `-I <submodule-path>`, instead of installing from the
+  prefix.dev conda channel (channel uploads are paused until the API token is
+  rotated; prebuilt artifacts remain attached to GitHub releases).
+
 ## [1.0.0] - 2026-08-11
 
 Pontoneer 1.0 targets stable Mojo 1.0.0 from the `https://conda.modular.com/max/`
