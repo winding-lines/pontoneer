@@ -1,0 +1,6 @@
+name = "pontoneer"
+version = "1.0.0"
+description = "Mojo library providing additional type protocol extensions for Python interop"
+tags = ["python", "interop", "protocols"]
+# other books this one depends on; omit if none
+books = []
