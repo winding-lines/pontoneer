@@ -1,6 +1,6 @@
 # pontoneer
 
-[![CodeQL](https://github.com/winding-lines/pontoneer/workflows/CodeQL/badge.svg)](https://github.com/winding-lines/pontoneer/actions/workflows/codeql.yml)
+[![CodeQL](https://github.com/winding-lines/pontoneer/workflows/CodeQL/badge.svg)](https://github.com/winding-lines/pontoneer/actions/workflows/codeql.yml) [![mojoshelf](https://mojoshelf.org/badge/pontoneer.svg)](https://mojoshelf.org/tins/pontoneer) [![mojo nightly](https://mojoshelf.org/badge/pontoneer/nightly.svg)](https://mojoshelf.org/tins/pontoneer)
 
 Mojo library providing mapping, sequence, number protocol and rich comparison
 extensions for Python extension modules.
@@ -10,7 +10,13 @@ extensions for Python extension modules.
 
 ## Installation
 
-Add pontoneer as a git submodule and point the Mojo compiler at it with `-I`:
+The easiest path is as a [mojoshelf](https://mojoshelf.org/tins/pontoneer) tin
+(`pixi shelf add pontoneer` in pixi mode, or `shelf add pontoneer` for a
+managed submodule); maintainers release new versions with `shelf publish`
+(see [getting started](https://mojoshelf.org/getting-started)).
+
+Manually, add pontoneer as a git submodule and point the Mojo compiler at it
+with `-I`:
 
 ```bash
 git submodule add https://github.com/winding-lines/pontoneer external/pontoneer
