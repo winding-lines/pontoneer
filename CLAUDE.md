@@ -52,9 +52,9 @@ When making public API changes, update both:
 - `docs/api.md` — reference documentation for all builder methods and overloads
 - `docs/index.md` — Quick Start example and Handler Signatures table
 
-When bumping the version, keep the minimum version constraint in sync across:
-- `README.md` — installation snippet
-- `docs/index.md` — installation snippet
+When bumping the version, update `shelf.toml` — it is the version published to
+[Mojo Shelf](https://mojoshelf.org/tins/pontoneer), which `README.md` and
+`docs/index.md` both point at instead of pinning a version inline.
 
 ## Design decisions
 

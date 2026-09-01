@@ -22,11 +22,25 @@ because the CPython runtime requires the method to be wired into the type's
 
 ## Installation
 
-### As a git submodule
+pontoneer is published on [Mojo Shelf](https://mojoshelf.org/tins/pontoneer) —
+that page always lists the current version and the matching install commands.
+
+### From Mojo Shelf
 
 ```bash
-git submodule add https://github.com/winding-lines/pontoneer external/pontoneer
-git -C external/pontoneer checkout v1.0.0+mojo1.0.0-2   # pin the release
+pixi shelf add pontoneer     # pixi shelf mode (requires the shelf extension)
+shelf add pontoneer          # git submodule mode
+```
+
+### With plain pixi
+
+No shelf extension needed — add the repository as a git source dependency
+(see the [tin page](https://mojoshelf.org/tins/pontoneer) for the revision to
+pin):
+
+```bash
+pixi add --git https://github.com/winding-lines/pontoneer.git \
+    --rev <revision> pontoneer
 ```
 
 Your project needs Mojo 1.0 from the stable Modular channel — in `pixi.toml`:
@@ -38,7 +52,7 @@ channels = ["https://conda.modular.com/max/", "conda-forge"]
 mojo = "==1.0.0"
 ```
 
-Then include the submodule path when building your extension module:
+Then include the pontoneer path when building your extension module:
 
 ```bash
 mojo build --emit shared-lib -I external/pontoneer my_module.mojo -o my_module.so

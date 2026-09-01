@@ -10,37 +10,25 @@ extensions for Python extension modules.
 
 ## Installation
 
-The easiest path is as a [mojoshelf](https://mojoshelf.org/tins/pontoneer) tin
-(`pixi shelf add pontoneer` in pixi mode, or `shelf add pontoneer` for a
-managed submodule); maintainers release new versions with `shelf publish`
-(see [getting started](https://mojoshelf.org/getting-started)).
-
-Manually, add pontoneer as a git submodule and point the Mojo compiler at it
-with `-I`:
+pontoneer is published on [Mojo Shelf](https://mojoshelf.org/tins/pontoneer) —
+see that page for the current version and the up-to-date install commands.
+Maintainers release new versions with `shelf publish` (see
+[getting started](https://mojoshelf.org/getting-started)).
 
 ```bash
-git submodule add https://github.com/winding-lines/pontoneer external/pontoneer
-git -C external/pontoneer checkout v1.0.0+mojo1.0.0-2   # pin the release
+pixi shelf add pontoneer     # pixi shelf mode
+shelf add pontoneer          # git submodule mode
 ```
 
-Your project needs Mojo 1.0 from the stable Modular channel — in `pixi.toml`:
-
-```toml
-channels = ["https://conda.modular.com/max/", "conda-forge"]
-
-[dependencies]
-mojo = "==1.0.0"
-```
-
-Then include the submodule path when building your extension module:
+Then include the tin path when building your extension module:
 
 ```bash
 mojo build --emit shared-lib -I external/pontoneer my_module.mojo -o my_module.so
 ```
 
-Prebuilt artifacts (`pontoneer.mojoc` and conda packages for osx-arm64 /
-linux-64) are also attached to each
-[GitHub release](https://github.com/winding-lines/pontoneer/releases).
+Full installation notes — including the plain-`pixi` git dependency form and the
+Mojo 1.0 channel setup — are in the
+[documentation](https://pontoneer.dev/#installation).
 
 ## Development
 
